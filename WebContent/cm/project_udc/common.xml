@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+xmlns:ev="http://www.w3.org/2001/xml-events"
+xmlns:w2="http://www.inswave.com/websquare"
+xmlns:xf="http://www.w3.org/2002/xforms">
+	<head meta_screenId="common.xml" meta_screenName="project UDC - common" meta_subsystem="공통" meta_author="인스웨이브" meta_type="메인" meta_desc="project UDC COMMON \nSUBMIT , DATACOLLECT 관리/생성등을 위한 Project UDC">
+		<w2:type>COMPONENT</w2:type>
+		<w2:buildDate/>
+		<w2:publicInfo method="scwin.execute,scwin.executeDynamic,scwin.create,
+		                       scwin.createDataList,scwin.createDataMap,scwin.getParameter, scwin.strSerialize,scwin.getParameter,
+		                       scwin.dynamicGridBasic,scwin.dynamicGridAdvanced" >
+    	</w2:publicInfo>
+		<xf:model>
+		
+
+
+
+			<w2:dataCollection baseNode="map">
+        		 <w2:dataMap baseNode="map" id="dma_commonCode">
+        			<w2:keyInfo>
+
+        				<w2:key id="GRP_CD" name="GRP_CD" dataType="text"></w2:key>
+         				<w2:key id="DATA_PREFIX" name="name2" dataType="text"></w2:key>
+        				<w2:key id="SCOPE_ID" name="name3" dataType="text"></w2:key>
+        			</w2:keyInfo>
+        		</w2:dataMap> 
+        		<w2:dataList baseNode="list" repeatNode="map" id="dlt_codeList" saveRemovedData="true">
+        			<w2:columnInfo>
+        				<w2:column id="CODE_NM" name="CODE_NM" dataType="text"></w2:column>
+        				<w2:column id="COM_CD" name="COM_CD" dataType="text"></w2:column>
+        				<w2:column id="GRP_CD" name="GRP_CD" dataType="text"></w2:column>
+
+        			</w2:columnInfo>
+        		</w2:dataList>
+
+        	</w2:dataCollection>
+			<w2:workflowCollection>
+			</w2:workflowCollection>
+	    	<xf:submission id="sbm_menuData" ref="" target="data:json,dataList1" action="" method="post" mediatype="application/json"
+	    			encoding="UTF-8" instance="" replace="" errorHandler="" customHandler="" mode="asynchronous" processMsg="" ev:submit=""
+	    			ev:submitdone="scwin.sbm_menuData_submitdone" ev:submiterror="" abortTrigger="">
+    		</xf:submission>
+        	<xf:submission id="sbm_selectCodeList" ref='data:json,{"id":"dma_commonCode","key":"dma_commonCode"}' target="" action="" method="get" mediatype="application/json" encoding="UTF-8"
+        		instance="" replace="" errorHandler="" customHandler="" mode="asynchronous" processMsg="" ev:submit=""
+        		ev:submitdone="scwin.sbm_selectCodeList_submitdone" ev:submiterror="" abortTrigger="">
+        	</xf:submission>    		
+
+		</xf:model>
+		<w2:layoutInfo>
+		</w2:layoutInfo>
+		<script type="text/javascript" lazy="false"><![CDATA[
+	
+    scwin.DEFAULT_OPTIONS = {
+			CONTEXT_PATH : "",// 서버 통신 서비스 호출을 위한 Context Path
+			SERVICE_URL : "",// 서버 통신 서비스 호출을 위한 Service Url (Context Path 이하 경로)
+			SUBMIT_MODE : "asynchronous",// 서버 통신 기본 모드 ( "asynchronous" / "synchronous") - "synchronous"는 비권장 통신 방식임
+			SUBMIT_MEDIATYPE : "application/json",// 서버 통신 기본 미디어 타입
+		
+	};
+
+	
+	scwin.onpageload = function() {
+        
+	};
+
+
+
+
+
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+//		                                       //
+//		Transaction project udc start          //
+//		                                       //
+/////////////////////////////////////////////////	
+/////////////////////////////////////////////////
+
+/**
+ * @method
+ * @name execute
+ * @description 서버 통신 확장 모듈, Submission를 실행합니다.
+ * @return void|desc
+ * @param <Object>|_$p|호출된 화면의  $p
+ * @param <Object>|sbmObj|호출된 화면의 submission 객체
+ * @param <Object>|requestData|요청 데이터
+ * @param <Object>|compObj|전송중 disable시킬 컴퍼넌트 
+ * @hidden N
+ * @exception 
+ * @sample 
+ */  
+	scwin.execute = function(_$p , sbmObj, requestData, compObj) {
+		if (sbmObj) {
+			var sbmObj = (typeof sbmObj == 'object') ? sbmObj : (typeof sbmObj == 'string') ? _$p.getSubmission(sbmObj) : sbmObj;
+
+			if (!sbmObj.action) {				
+				$c.popup.alert(_$p, "submission action 필수입력값입니다.");
+				return false;
+			}
+			
+			_$p.executeSubmission(sbmObj, requestData, compObj);
+		}
+	};
+	
+	
+
+
+
+/**
+ * @method
+ * @name executeDynamic
+ * @description Submission를 동적으로 생성해서 실행합니다
+ * @return void|desc
+ * @param <Object>|_$p|호출된 화면의  $p
+ * @param <Object>|options|submit 옵션 ( id , action , method, mediatype , ref, target 등 지정 )
+ * @param <Object>|requestData|요청 데이터
+ * @param <Object>|obj|전송중 disable시킬 컴퍼넌트 
+ * @hidden N
+ * @exception 
+ * @sample 
+ */         
+	scwin.executeDynamic = function(_$p, options, requestData, obj) {
+		var submissionObj = _$p.getSubmission(options.id);
+	
+		if (submissionObj === null) {
+			scwin.create(_$p, options);
+			submissionObj = _$p.getSubmission(options.id);
+		} else {
+			_$p.deleteSubmission(options.id);
+			scwin.create(_$p, options);
+			submissionObj = _$p.getSubmission(options.id);
+		}
+		
+		scwin.execute(_$p, submissionObj, requestData, obj);
+		
+	};	
+
+
+
+/**
+ * @method
+ * @name create
+ * @description Submission 객체를 동적으로 생성한다.
+ * @param <Object>|_$p|호출된 화면의  $p
+ * @param <String>|options|Submission 생성 옵션 JSON 객체
+ * {String} options.id submission 객체의 ID. 통신 모듈 실행 시 필요.
+ * {String} options.ref 서버로 보낼(request) DataCollection의 조건 표현식.(조건에 때라 표현식이 복잡하다) 또는 Instance Data의 XPath.
+ * {String} options.target 서버로 응답(response) 받은 데이터가 위치 할 DataCollection의 조건 표현식. 또는 Instance Data의 XPath.
+ * {String} options.action 통신 할 서버 측 URI.(브라우저 보안 정책으로 crossDomain은 지원되지 않는다.)
+ * {String} options.method [default: get, post, urlencoded-post]
+ * - get : 파라메타를 url에 붙이는 방식 (HTML과 동일).
+ * - post : 파라메타를 body 구간에 담는 방식 (HTML과 동일)
+ * - urlencoded-post : urlencoded-post.
+ * {String} options.mediatype [default: application/xml, text/xml, application/json, application/x-www-form-urlencoded]
+ * application/x-www-form-urlencoded 웹 form 방식(HTML방식). application/json : json 방식. application/xml : XML 방식. text/xml : xml방식
+ * (두 개 차이는 http://stackoverflow._com/questions/4832357 참조)
+ * {String} options.mode [default: synchronous, synchronous] 서버와의 통신 방식.  asynchronous:비동기식.  synchronous:동기식
+ * {String} options.encoding [default: utf-8, euc-kr, utf-16] 서버 측 encoding 타입 설정 (euc-kr/utf-16/utf-8)
+ * {String} options.replace [default: none, all, instance] action으로부터 받은 response data를 적용 구분 값.
+ *   - all : 문서 전체를 서버로부터 온 응답데이터로 교체.
+ *   - instance : 해당되는 데이터 구간.
+ *   - none : 교체안함.
+ * {String} options.processMsg submission 통신 중 보여줄 메세지.
+ * {String} options.errorHandler submission오류 발생 시 실행 할 함수명.
+ * {String} options.customHandler submssion호출 시 실행 할 함수명.
+ * {requestCallback} options.submitHandler {script type="javascript" ev:event="xforms-submit"} 에 대응하는 함수.
+ * {requestCallback} options.submitDoneHandler {script type="javascript" ev:event="xforms-submit-done"} 에 대응하는 함수
+ * {requestCallback} options.submitErrorHandler {script type="javascript" ev:event="xforms-submit-error"} 에 대응하는 함수	 
+ * @hidden N
+ * @exception 
+ * @sample $c.sbm.create(options);
+ */ 
+	scwin.create = function(_$p , options) {
+		var ref = options.ref || "";
+		var target = options.target || "";
+		var action = scwin.DEFAULT_OPTIONS.CONTEXT_PATH + scwin.DEFAULT_OPTIONS.SERVICE_URL + options.action; // ajax 요청주소
+		var mode = options.mode || scwin.DEFAULT_OPTIONS.SUBMIT_MODE; // asynchronous(default)/synchronous
+		var mediatype = options.mediatype || scwin.DEFAULT_OPTIONS.SUBMIT_MEDIATYPE; // application/x-www-form-urlencoded
+		var method = (options.method || "post").toLowerCase(); // get/post/put/delete
+		var processMsg = options.processMsg || "";
+		var instance = options.instance || "none";
+	
+		var submitHandler = (typeof options.submitHandler === "function") ? options.submitHandler
+				: ((typeof options.submitHandler === "string") ? $p.id + options.submitHandler : "");
+		var submitDoneHandler = (typeof options.submitDoneHandler === "function") ? options.submitDoneHandler
+				: ((typeof options.submitDoneHandler === "string") ? $p.id + options.submitDoneHandler : "");
+		var submitErrorHandler = (typeof options.submitErrorHandler === "function") ? options.submitErrorHandler
+				: ((typeof options.submitErrorHandler === "string") ? $p.id + options.submitErrorHandler : "");
+	
+		var resJson = null;
+	
+		if ((options.isProcessMsg === true) && (processMsg === "")) {
+			processMsg = "해당 작업을 처리중입니다";
+		} else if (options.isProcessMsg === false) {
+			processMsg = "";
+		}
+		
+		var submissionObj = {
+			"id" : options.id, // submission 객체의 ID. 통신 모듈 실행 시 필요.
+			"ref" : ref, // 서버로 보낼(request) DataCollection의 조건 표현식.(조건에 때라 표현식이 복잡하다) 또는 Instance Data의 XPath.
+			"target" : target, // 서버로 응답(response) 받은 데이터가 위치 할 DataCollection의 조건 표현식. 또는 Instance Data의 XPath.
+			"action" : action, // 통신 할 서버 측 URI.(브라우저 보안 정책으로 crossDomain은 지원되지 않는다.)
+			"method" : method, // [default: post, get, urlencoded-post] get:파라메타를 url에 붙이는 방식 (HTML과 동일).
+							   // post:파라메타를 body 구간에 담는 방식 (HTML과 동일). urlencoded-post:urlencoded-post.
+			"mediatype" : mediatype, // application/json
+			"encoding" : "UTF-8", // [default: utf-8, euc-kr, utf-16] 서버 측 encoding 타입 설정 (euc-kr/utf-16/utf-8)
+			"mode" : mode, // [default: synchronous, synchronous] 서버와의 통신 방식. asynchronous:비동기식. synchronous:동기식
+			"processMsg" : processMsg, // submission 통신 중 보여줄 메세지.
+			"submitHandler" : submitHandler,
+			"submitDoneHandler" : submitDoneHandler,
+			"submitErrorHandler" : submitErrorHandler
+		};
+		_$p.createSubmission(submissionObj);
+	};
+
+
+
+/**
+ * 모든 submission의 defaultCallback - com.sbm_errorHandler 보다 먼저 수행됨. (400 Error)
+ * config.xml에 설정
+ * 
+ * @private
+ * @date 2016.11.15
+ * @param {Object} resObj responseData 객체
+ * @param {Object} subObj Submission 객체
+ * @memberOf
+ * @author InswaveSystems
+ */
+scwin._sbm_defCallbackSubmission = function(resObj, subObj) {
+	
+};
+
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+//		                                       //
+//		Transaction project udc end            //
+//		                                       //
+/////////////////////////////////////////////////	
+/////////////////////////////////////////////////
+
+	
+	
+	
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+//		                                       //
+//		Data Collection project udc start      //
+//		                                       //
+/////////////////////////////////////////////////	
+/////////////////////////////////////////////////
+
+	
+/**
+ * dataList create ( 동일한 이름의 dataList가 존재할 경우 삭제후 재생성  )
+ * 
+ * @date 2020.12.24
+ * @param {Object:Y} _$p  common Project 를 호출한( or dataList를 생성하고자 하는 ) Page의 scope을 가진 WebSquare util 객체 
+ * @param {String:Y} dataListId dataList의 id
+ * @param {Array:Y}  columnInfoList - column 정보( id, name,dataType ) 가 있는 JSON 1차원 배열.
+ * @param {String:N} baseNode 명 ( default : list )
+ * @param {String:N} repeatNode 명 ( default : map )
+ * @author InswaveSystems
+ */	
+	scwin.createDataList = function ( _$p , dataListId , columnInfoList , baseNode , repeatNode ) {
+		
+		var baseNodeId = baseNode ? baseNode : "list";
+		var repeatNodeId = repeatNode ?  repeatNode : "map";
+		
+		_$p.data.remove(dataListId);
+		var options = {
+						"id" : dataListId,
+						"type" : "dataList",
+						"option":{ 
+				                "baseNode":baseNodeId ,
+				                "repeatNode":repeatNodeId
+								},
+				        "columnInfo": columnInfoList 
+		};
+		
+		_$p.data.create(options);
+		
+	};
+	
+/**
+ * dataMap create ( 동일한 이름의 dataMap 이 존재할 경우 삭제후 재생성  )
+ * 
+ * @date 2020.12.24
+ * @param {Object:Y} _$p  common Project 를 호출한( or dataMap을 생성하고자 하는 ) Page의 scope을 가진 WebSquare util 객체 
+ * @param {String:Y} dataMapId dataMap의 id
+ * @param {Array:Y}  keyInfoList - dataMap 정보( id, name,dataType ) 가 있는 JSON 1차원 배열.
+ * @param {String:N} baseNode 명 ( default : map )
+ * @author InswaveSystems
+ */	
+	scwin.createDataMap  = function ( _$p , dataMapId , keyInfoList , baseNode  ) {
+		var baseNodeId = baseNode ? baseNode : "map";
+		_$p.data.remove(dataMapId);
+		var options = {
+						"id" : dataMapId,
+						"type" : "dataMap",
+						"option":{ 
+				                "baseNode":baseNodeId ,
+								},
+				        "keyInfo": keyInfoList 
+		};
+		_$p.data.create(options);
+		
+	};
+	
+	
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+//		                                       //
+//		Data Collection project udc end        //
+//		                                       //
+/////////////////////////////////////////////////	
+/////////////////////////////////////////////////	
+
+scwin.dynamicGridBasic = function( _$p, gridId , datalistId ){
+
+	var tmpStr = [];
+	// 기존 그리드 옵션 get
+	
+	var gridObj = _$p.getComponentById(gridId);
+	var dataListObj = _$p.getComponentById(datalistId);
+	var options = scwin._getGridOption ( gridObj );
+	options.dataListId =  dataListObj.org_id || "";
+	
+	if ( options.rowNumVisible == "true" && parseInt( options.rowNumWidth ) <= 0 ){		
+		options.rowNumWidth = "20";
+	}
+	
+	if ( options.rowStatusVisible == "true" && parseInt( options.rowStatusWidth ) <= 0 ){		
+		options.rowStatusWidth = "20";
+	}
+	
+	//gridView 싱성 
+	tmpStr.push( '<w2:gridView ' );
+	tmpStr.push( 'xmlns:w2="http://www.inswave.com/websquare"  ');
+	tmpStr.push( 'xmlns:ev="http://www.w3.org/2001/xml-events" ');
+	tmpStr.push( 'style="'+ options.style+'" ');
+	tmpStr.push( 'autoFit="'+ options.autoFit+'" ');
+	tmpStr.push( 'autoFitMinWidth="'+ options.autoFitMinWidth+'" ');
+	tmpStr.push( 'class="'+ options.className+'" ');
+	tmpStr.push( 'columnMove="'+ options.columnMove+'" ');
+	tmpStr.push( 'dataList="data:'+ options.dataListId+'" ');
+	tmpStr.push( 'editModeEvent="'+ options.editModeEvent+'" ');
+	tmpStr.push( 'fixedColumn="'+ options.fixedColumn+'" ');
+	tmpStr.push( 'focusMode="'+ options.focusMode+'" ');
+	tmpStr.push( 'focusMove="'+ options.focusMove+'" ');
+	tmpStr.push( 'id="'+ options.gridId+'" ');
+	tmpStr.push( 'overflowX="'+ options.overflowX+'" ');
+	tmpStr.push( 'overflowY="'+ options.overflowY+'" ');
+	tmpStr.push( 'readOnly="'+ options.readOnly+'" ');
+	tmpStr.push( 'resize="'+ options.resize+'" ');
+	tmpStr.push( 'rowNumVisible="'+ options.rowNumVisible+'" ');
+	tmpStr.push( 'rowNumWidth="'+ options.rowNumWidth+'" ');
+	tmpStr.push( 'rowNumHeaderValue="'+ options.rowNumHeaderValue+'" ');
+	tmpStr.push( 'rowStatusVisible="'+ options.rowStatusVisible+'" ');
+	tmpStr.push( 'rowStatusHeaderValue="'+ options.rowStatusHeaderValue+'" ');
+	tmpStr.push( 'rowStatusWidth="'+ options.rowStatusWidth+'" ');
+	tmpStr.push( 'sortable="'+ options.sortable+'" ');
+	tmpStr.push( 'sortEvent="'+ options.sortEvent+'" ');
+	tmpStr.push( 'visibleRowNum="'+ options.visibleRowNum+'" ');
+	
+	//그리드 뷰 이벤트 달기 
+	var eventStr = scwin._getGridEvent( gridObj );
+	
+	//tmpStr.push( eventStr );
+	tmpStr.push( '>');
+	tmpStr.push( '<w2:caption id="caption1" value="this is a grid caption."/>');
+	
+	// 그리드 헤더 만들기
+	var headerStrArr = scwin._makeHearder ( dataListObj ,options.gridId );
+	for( var i = 0 ; i < headerStrArr.length ; i++ ){
+		tmpStr.push( headerStrArr[i] );	
+	}
+	
+	
+	var bodyArr = scwin._makeBody ( dataListObj ,options.gridId );
+	for( var i = 0 ; i < bodyArr.length ; i++ ){
+		tmpStr.push( bodyArr[i] );	
+	}
+	tmpStr.push( '</w2:gridView>' );
+	
+	var xmlStr = tmpStr.join("");
+	var data =  dataListObj.getAllData();
+	var xml = WebSquare.xml.parse(xmlStr, true);
+	var _gridObj = _$p.getComponentById(gridId);
+	dataListObj.setData([]);
+	_gridObj.setGridStyle( xml );
+	
+	dataListObj.setData(data);
+	
+	
+};	
+
+scwin.dynamicGridAdvanced = function( _$p, gridObj , dataListObj ){
+
+
+};	
+
+scwin._getGridOption = function(  _gridObj ){
+	var options = {
+		gridId               : _gridObj.org_id || "",
+		className            : _gridObj.options.className ||  "",
+		readOnly             : _gridObj.options.readOnly + "",
+		style                : _gridObj.options.style,
+		autoFit              : _gridObj.options.autoFit + "" || "none",
+		autoFitMinWidth      : _gridObj.options.autoFitMinWidth + ""|| "0",
+		columnMove           : _gridObj.options.columnMove || "false",
+		editModeEvent        : _gridObj.options.editModeEvent || "onclick",
+		fixedColumn          : _gridObj.options.fixedColumn || 0,
+		focusMode            : _gridObj.options.focusMode || "cell",
+		focusMove            : _gridObj.options.focusMove || "true",
+		overflowX            : _gridObj.options.overflowX || "auto",
+		overflowY            : _gridObj.options.overflowY || "auto",
+		readOnly             : _gridObj.options.readOnly || "false",
+		resize               : _gridObj.options.resize || "true",
+		rowNumVisible        : _gridObj.options.rowNumVisible + "" || "false",
+		rowNumWidth          : _gridObj.options.rowNumWidth || "0",
+		rowNumHeaderValue    : _gridObj.options.rowNumHeaderValue || "No.",
+		rowStatusVisible     : _gridObj.options.rowStatusVisible + "" || "false",
+		rowStatusHeaderValue : _gridObj.options.rowStatusHeaderValue || "상태",
+		rowStatusWidth       : _gridObj.options.rowStatusWidth || "0",
+		sortable             : _gridObj.options.sortable || "false",
+		sortEvent            : _gridObj.options.sortEvent || "ondblclick",
+		visibleRowNum        : _gridObj.options.visibleRowNum+""  || "8"
+	};
+	
+	return options;
+};	
+
+
+scwin._getGridEvent = function(  _gridObj ){
+
+
+	var gridEventList = _gridObj.userEventList;
+	var eventStr = " ";
+	for( var i = 0 ; i < gridEventList.length ; i++){
+		eventStr += ' ev:' + gridEventList[i].name +'='+'"' + gridEventList[i].param.handler +'"';
+	}
+	
+	return eventStr;
+};	
+
+scwin._makeHearder = function( _dataListObj , _gridId  , _options ){
+	
+	var defaultColWidth =  70;
+	
+	if ( _options ){
+		defaultColWidth =   _options.defaultColWidth || 70;
+	}
+	
+	var tmpStr = [];
+		
+	tmpStr.push( '<w2:header id="header_'+_gridId+'">');
+	
+	var colInfo = _dataListObj.getInfo().columnInfo;
+	var keyList = Object.keys( colInfo );
+	
+	
+	tmpStr.push( '<w2:row id="row1_'+_gridId+  '">');
+	
+	
+	for( var i = 0 ; i < keyList.length ; i++){
+		var hearderCol  = colInfo [ keyList[i] ];
+		var id =   hearderCol.id;
+		var headerId = "th_"+id;
+		if ( !id ){
+			headerId = "th_column_"+i;
+		}
+		var headerValue =   hearderCol.name;
+		
+		var colWidth = hearderCol.width;
+		if ( !colWidth ) colWidth = defaultColWidth;
+		tmpStr.push( '<w2:column width="'+colWidth+'" ');
+		tmpStr.push( 'inputType="text" ');
+		tmpStr.push( 'id="'+headerId+'" ');
+		tmpStr.push( 'value="' + headerValue +'" ');
+		tmpStr.push( 'blockSelect="false" ');
+		tmpStr.push( 'displayMode="label" ');
+		tmpStr.push( 'hidden="false">');
+		tmpStr.push( '</w2:column>');
+		
+	}
+	tmpStr.push( '</w2:row>');
+	tmpStr.push( '</w2:header>');
+
+	return tmpStr;
+
+};	
+
+scwin._makeBody = function ( _dataListObj , _gridId ,  _options ){
+	
+	var defaultColWidth =  70;
+	var textAlign = "";
+	var dateFormat   = "yyyy-MM-dd";
+	var numberFormat =  "#,###";
+	
+	if ( _options ){
+		defaultColWidth =   _options.defaultColWidth || 70;
+		dateFormat   = _options.dateFormat || "yyyy-MM-dd";
+        numberFormat = _options.numberFormat || "#,###";
+        textAlign = _options.textAlign || "center";
+	}
+	var tmpStr = [];
+	tmpStr.push( '<w2:gBody id="gBody1_'+_gridId+'">');
+	tmpStr.push( '<w2:row id="row2_'+_gridId +  '">');
+	
+	var colInfo = _dataListObj.getInfo().columnInfo;
+	var keyList = Object.keys( colInfo );
+	
+	for( var i = 0 ; i < keyList.length ; i++){
+		var bodyCol  = colInfo [ keyList[i] ];
+		var columnId = bodyCol.id;
+		var dataType = bodyCol.dataType;
+		
+		var colWidth = bodyCol.width;
+		if ( !colWidth ) colWidth = defaultColWidth;
+		
+		var displayFormat = bodyCol.displayFormat || "" ;
+		
+		if ( !displayFormat ){
+			if ( dataType == "date"){
+				displayFormat = dateFormat;
+			} else if ( dataType == "number" || dataType == "bigDecimal"){
+				displayFormat = numberFormat;
+			} 			
+		} 
+		
+		var textAlign = bodyCol.textAlign || "" ;
+		
+		if ( !textAlign ){
+			if ( dataType == "number" || dataType == "bigDecimal"){
+				textAlign = "right";
+			} 			
+		}
+		
+		var customFormatter = bodyCol.customFormatter || "" ;
+		var displayFormatter = bodyCol.displayFormatter || "" ;
+		var displayFormatFunc = bodyCol.displayFormatFunc || "" ;
+		var readOnly = bodyCol.readOnly || "" ;
+		tmpStr.push( '<w2:column width="'+colWidth+'" ');
+		tmpStr.push( ' inputType="text" id="'+columnId+'"  ');
+		tmpStr.push( ' blockSelect="false" ');
+		tmpStr.push( ' displayMode="label" ');
+		tmpStr.push( ' hidden="false" ');
+		tmpStr.push( ' dataType="'+dataType+'" ' );
+		
+		if ( displayFormat ){
+			tmpStr.push( ' displayFormat="'+displayFormat+'" ' );
+		}
+		if ( textAlign ){
+			tmpStr.push( ' textAlign="'+textAlign+'" ');
+		}
+		if ( customFormatter ){
+			tmpStr.push( ' customFormatter="'+customFormatter+'" ');
+		}
+		if ( displayFormatter ){
+			tmpStr.push( ' displayFormatter="'+displayFormatter+'" ');
+		}
+		if ( displayFormatFunc ){
+			tmpStr.push( ' displayFormatFunc="'+displayFormatFunc+'" ');
+		}
+		if ( readOnly ){
+			tmpStr.push( ' readOnly="'+readOnly+'" ');
+		}
+
+		tmpStr.push( '></w2:column>');
+	}	
+	
+	tmpStr.push( '</w2:row>');
+	tmpStr.push( '</w2:gBody>');
+	
+	return tmpStr;
+};	
+
+scwin.getParameter = function (_$p, paramKey) {
+	try {
+		if (typeof paramKey !== "undefined") {
+			param = _$p.getParameter(paramKey);
+			
+			if ((typeof param !== "undefined") && (param !== "")) {
+				return param;
+			}
+
+			var param = _$p.getParameter("param");
+			if ((typeof param !== "undefined") && (param !== "")) {
+				return param[paramKey];
+			}
+
+			return param;
+		} else {
+			return _$p.getParameter("param");
+		}
+	} catch (ex) {
+		return "";
+	}
+};
+
+scwin.strSerialize = function(_$p, object) {
+	if (typeof object == 'string') {
+		return object;
+	} else if ($c.util.isJSON(_$p, object)) {
+		return JSON.stringify(_$p, object);
+	} else if ($c.util.isXmlDoc(_$p, object)) {
+		return WebSquare.xml.serialize(object);
+	} else {
+		return object;
+	}
+};
+
+	]]></script>
+	</head>
+	<body ev:onpageload="scwin.onpageload">
+	</body>
+</html>

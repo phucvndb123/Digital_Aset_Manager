@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ev="http://www.w3.org/2001/xml-events"
+    xmlns:w2="http://www.inswave.com/websquare" xmlns:xf="http://www.w3.org/2002/xforms">
+    <head meta_screenId="commonUtil" meta_screenName="Util Project UDC" meta_subsystem="공통" meta_author="인스웨이브" meta_desc="웹스퀘어 컴포넌트 제어, 엑셀 파일 업로드/다운로드, 파일 업로드/다운로드, 기타 유틸리티 함수를 작성한다.">
+        <w2:type>COMPONENT</w2:type>
+        <w2:buildDate/>
+        <w2:MSA/>
+        <xf:model>
+            <w2:dataCollection baseNode="map"/>
+            <w2:workflowCollection/>
+        </xf:model>
+        <w2:layoutInfo/>
+        <w2:publicInfo method="scwin.getJSON,scwin.isJSON,scwin.isArray, scwin.isEmpty,scwin.getObjectType,
+                               scwin.isMobile,scwin.isXmlDoc,scwin.setGridViewDelCheckBox,scwin.getChildren,scwin.getGridViewDataList,
+                               scwin.getComponent,scwin.createComponent,scwin.setInterval,scwin.clearInterval,scwin.clearTimeout,
+                               scwin.copyClipboard,scwin.getFunctionByName,scwin.isMobile,scwin.isEmpty,scwin.getComponent,scwin.setTimeout,scwin.clearTimeout,
+                               scwin.getLanguage"/>
+        <script lazy="false" type="text/javascript"><![CDATA[
+
+/**
+ * @method
+ * @name getJSON
+ * @description JSON Object로 변환해서 반환한다.
+ * @return <Object>|JSON 객체 or null
+ * @param <String> or <XML>|value|JSON 문자열 또는 XML Document 
+ * @hidden N
+ * @exception 
+ * @sample // 유효하지 않은 JSON 문자열 일 경우
+$c.util.getJSON("");
+// return 예시)	null
+
+// 유효한 JSON 문자열
+var json = '{"tbx_sPrjNm":"1","tbx_sPrtLv":"2","tbx_sReqLv":"3"}';
+$c.util.getJSON(json);
+// return 예시)	{tbx_sPrjNm: "1", tbx_sPrtLv: "2", tbx_sReqLv: "3"}
+ */  
+scwin.getJSON = function (_$p ,value) {
+	try {
+		if (scwin.isXmlDoc(_$p ,value) === true) {
+			return JSON.parse(WebSquare.json.XML2JSONString(value));
+		} else {
+			return JSON.parse(value);
+		}
+	} catch (ex) {
+		return value;
+	}
+};
+
+
+/**
+ * @method
+ * @name isJSON
+ * @description JSON Object인지 여부를 검사한다
+ * @return <Boolean>|true or false
+ * @param <Object:jsonObj>|json|JSON Object가 맞는지 검사할 JSON Object 
+ * @hidden N
+ * @exception 
+ * @sample $c.util.isJSON("");
+// return 예시) false
+$c.util.isJSON( {"tbx_sPrjNm": "1", "tbx_sPrtLv": "2", "tbx_sReqLv": "3"} );
+// return 예시) true
+ */  
+scwin.isJSON = function(_$p ,json) {
+	try {
+		if (jQuery.isPlainObject(json) === false && scwin.isArray(_$p ,json) === false) {
+			return false;
+		}
+
+		if (typeof json === "object") {
+			try {
+				JSON.stringify(json);
+				return true;
+			} catch (ex) {
+				return false;
+			}
+		} else if (typeof json === "string") {
+			try {
+				JSON.parse(json);
+				return true;
+			} catch (ex) {
+				return false;
+			}
+		}
+		return false;
+	} catch (ex) {
+		console.error(ex);
+		return false;
+	}
+};
+
+/**
+ * @method
+ * @name isArray
+ * @description 배열 객체인지 여부를 확인한다.
+ * @return <Boolean>|Array 배열 판단 여부(Array 객체인 경우 true, 아닌경우 false)
+ * @param {Object}|array|Array Object or String 
+ * @hidden N
+ * @exception 
+ * @sample $c.util.isArray(arrObject); // return true
+ */  
+scwin.isArray = function(_$p ,array) {
+	try {
+		if ((typeof array !== "undefined") && (array !== null) && (typeof array == "object")) {
+			if (array.constructor.name && array.constructor.name.toLowerCase() == "array")
+				return true;
+			if (array.constructor && array.constructor == Array)
+				return true;
+		}
+		return false;
+	} catch (ex) {
+		console.error(ex);
+		return false;
+	}
+};
+
+/**
+ * @method
+ * @name isEmpty
+ * @description 값이 Empty 상태(undefined, null, "")인지 판별한다.
+ * @return <Boolean>|Empty 여부 (true : Empty, false : Not Empty)
+ * @param <Object>|value|Empty 여부를 판단할 값 
+ * @hidden N
+ * @exception 
+ * @sample 
+ */  
+scwin.isEmpty = function(_$p ,value) {
+	if ((typeof value === "undefined") || (value === null) || (value === "")) {
+		return true;
+	} else {
+		return false;
+	}
+};
+
+
+/**
+ * @method
+ * @name getObjectType
+ * @description 객체의 typeof 값을 반환하며 typeof의 값이 object인 경우 array, json, xml, null로 체크하여 반환한다.
+ * @return <String>| 객체의 타입으로 typeof가 object인 경우 array, json, xml, null로 세분화하여 반환한다. 그외 object타입이 아닌경우 원래의 type(string,boolean,number 등)을 반환한다.
+ * @param <Object>|obj|type을 반환 받을 객체(string,boolean,number,object 등) 
+ * @hidden N
+ * @exception 
+ * @sample $c.util.getObjectType("WebSquare");
+ // return 예시) "string"
+
+ $c.util.getObjectType({"name":"WebSquare"});
+ // return 예시) "json"
+
+ $c.util.getObjectType(["1","2"]);
+ // return 예시) "array"
+ */  
+ scwin.getObjectType = function (_$p ,obj) {
+	 var objType = typeof obj;
+	 if (objType !== "object") {
+	 	return objType;
+	 } else if (scwin.isArray(_$p ,obj)) {
+	 	return "array";
+	 } else if (scwin.isJSON(_$p ,obj)) {
+	 	return "json";
+	 } else if (obj === null) {
+	 	return "null";
+	 } else {
+	 	var tmpDoc = WebSquare.xml.parse("<data></data>");
+	 	if (obj.constructor === tmpDoc.constructor || obj.constructor === tmpDoc.childNodes[0].constructor) {
+	 		return "xml";
+	 	} else {
+	 		return objType;
+	 	}
+	 }
+ };
+
+
+/**
+ * @method
+ * @name isMobile
+ * @description 현재 클라이언트 브라우저 환경의 모바일 여부를 반환한다.
+ * @return <Boolean>|Mobile 여부 (true : mobile, false : Not mobile)
+ * @param 
+ * @hidden N
+ * @exception 
+ * @sample 
+ */  
+scwin.isMobile = function (_$p ) {
+	return WebSquare.util.isMobile();
+};
+
+
+/**
+ * @method
+ * @name isXmlDoc
+ * @description XML Document 객체인지 여부를 검사한다.
+ * @return <Boolean>|true or false
+ * @param <Object>|data|XML Document 객체인지 여부를 검사한다.
+ * @hidden N
+ * @exception 
+ * @sample 
+ */ 
+scwin.isXmlDoc = function(_$p ,data) {
+	if (typeof data != 'object')
+		return false;
+	if ((typeof data.documentElement != 'undefined' && data.nodeType == 9)
+			|| (typeof data.documentElement == 'undefined' && data.nodeType == 1)) {
+		return true;
+	}
+	return false;
+};
+/**
+ * @method
+ * @name setGridViewDelCheckBox
+ * @description GridView Row 삭제를 위한 CheckBox 동작을 세팅한다.
+  GridView에 삭제용 CheckBox가 있을 경우 onPageLoad 이벤트에서 $c.util.setGridViewDelCheckBox 함수를 호출한다.
+  이 함수가 정상 동작하려면 GridView의 Delete 처리용 CheckBox의 ColumnId와 Header Id를 "chk"로 설정해야 한다.
+ * @param <Array>|gridViewObjArr|GridView 객체 배열
+ * @hidden N
+ * @exception 
+ * @sample $c.util.setGridViewDelCheckBox(grd_OrganizationBasic);
+$c.util.setGridViewDelCheckBox([grd_Menu, grd_MenuAccess]);
+ */  
+scwin.setGridViewDelCheckBox = function ( _$p , gridViewObjArr) {
+	try {
+		if (scwin.getObjectType(_$p ,gridViewObjArr) === "array") {
+			for (idx in gridViewObjArr) {
+				setGridViewDelCheckBox(_$p ,gridViewObjArr[idx]);
+			}
+		} else {
+			setGridViewDelCheckBox(_$p ,gridViewObjArr);
+		}
+
+		function setGridViewDelCheckBox(_$p ,gridViewObj) {
+			gridViewObj.bind("oncellclick",
+				function (row, col) {
+					var columnId = gridViewObj.getColumnID(col);
+					if (columnId == "chk") {
+						var dltObj = scwin.getGridViewDataList(_$p ,this);
+						var realRowIndex = this.getRealRowIndex(row);
+
+						if(dltObj.getFilterList().length >0){
+							realRowIndex = dltObj.getFilteredRowIndex(realRowIndex);
+						}
+						var newValue = dltObj.getCellData(realRowIndex, columnId);
+						scwin._setGridViewRowCheckBox(_$p ,this, realRowIndex, newValue === "1" ? true : false);
+					}
+				}
+			);
+			gridViewObj.bind("onheaderclick",
+				function (headerId) {
+					if (headerId == "chk") {
+						var newValue = this.getHeaderValue(headerId);
+						var dltObj = scwin.getGridViewDataList(_$p ,this);
+						var rowCount = dltObj.getRowCount();
+						var removeIdx = [];
+						var deleteIdx = [];
+						var undoIdx =[];
+						for (var i = 0; i <rowCount; i++) {
+							var realRowIndex = dltObj.getRealRowIndex(i);
+
+							if (dltObj.getFilterList().length > 0) {
+								realRowIndex = dltObj.getFilteredRowIndex(realRowIndex);
+							} 
+							
+							if (dltObj.getRowStatus(realRowIndex) == "C") {
+								removeIdx.push(realRowIndex);
+								continue;
+							} 
+							
+							if (newValue) {
+								deleteIdx.push(realRowIndex);
+							} else {
+								undoIdx.push(realRowIndex)
+							}
+						}
+
+						if (newValue) {
+							dltObj.deleteRows(deleteIdx);
+							dltObj.removeRows(removeIdx);
+						} else {
+							dltObj.undeleteRows(undoIdx);
+						}
+
+					}
+				}
+			);
+		}
+	} catch (ex) {
+		console.error(ex);
+	}
+};
+
+scwin._setGridViewRowCheckBox = function (_$p ,gridViewObj, rowIndex, newValue) {
+	var rowIndexArr = gridViewObj.getChildrenRowIndexArray(rowIndex);
+	var dltObj = scwin.getGridViewDataList(_$p ,gridViewObj);
+
+	for (var idx in rowIndexArr) {
+		var childRowIndexArr = gridViewObj.getChildrenRowIndexArray(rowIndexArr[idx]);
+
+		if (childRowIndexArr.length > 0) {
+			scwin._setGridViewRowCheckBox( _$p ,gridViewObj, rowIndexArr[idx], newValue);
+		} else {
+			scwin._deleteGridViewRow(_$p ,gridViewObj, rowIndexArr[idx], newValue);
+		}
+	}
+
+	scwin._deleteGridViewRow(_$p ,gridViewObj, rowIndex, newValue);
+};
+
+
+
+scwin._deleteGridViewRow = function (_$p ,gridViewObj, rowIndex, newValue) {
+	gridViewObj.setCellChecked(rowIndex, "chk", newValue);
+	var dltObj = scwin.getGridViewDataList(_$p ,gridViewObj);
+
+	if (newValue) {
+		var rowStatus = dltObj.getRowStatus(rowIndex);
+		if (rowStatus == "C") {
+			dltObj.deleteRow(rowIndex);
+			dltObj.removeRow(rowIndex);
+		} else {
+			dltObj.deleteRow(rowIndex);
+		}
+	} else {
+		dltObj.undeleteRow(rowIndex);
+	}
+}
+
+/**
+ * @method
+ * @name getChildren
+ * @description 특정 컴포넌트의 자식 컴포넌트를 배열로 반환한다.
+ * @return <Array>|컴포넌트의 child node  
+ * @param <Object>|comObj|컴포넌트 객체
+ * @param <Object>|options|하위 컴포넌트 검색 옵션 정보 ,options.includeId 포함할 컴포넌트 id. 인자가 여러 개일 경우 공백을 구분자로 사용함.
+options.includePlugin 포함 컴포넌트 플러그인 이름. 인자가 여러 개일 경우 공백을 구분자로 사용함.
+ * @hidden N
+ * @exception 
+ * @sample $c.util.getChildren(grp_content);
+$c.util.getChildren(grp_content, {excludePlugin : "trigger input", excludeId : "treeview1_tooltip windowContainer1_tooltip");
+$c.util.getChildren(grp_content, {includeId : "ibx_name sbx_payTy"});
+$c.util.getChildren(grp_content, {includePlugin : "selectbox"});
+$c.util.getChildren(grp_content, {includeId : "ibx_name sbx_payTy", includePlugin : "input selectbox"});
+ */  
+scwin.getChildren = function(_$p ,comObj, options) {
+
+	return WebSquare.util.getChildren(comObj, options);
+};
+
+
+
+/**
+ * @method
+ * @name getGridViewDataList
+ * @description GridView와 바인딩된 DataList 객체를 반환한다.
+ * @return <Object> |바인딩 된 DataList 객체 반환 (바인된 객체가 없을 경우 null 반환)
+ * @param <Object>|_$p|GridView(gridViewObj) 객체가 소속된 화면의 scope 
+ * @param <Object>|gridViewObj|바인딩 된 DataList가 존재하는지 검증할 GridView 객체 
+ * @hidden N
+ * @exception 
+ * @sample // 바인딩 되어있는 경우
+$c.util.getGridViewDataList(grd_First);
+// return 예시) "dlt_first"
+
+// 바인딩 되어있지 않은 경우
+$c.util.getGridViewDataList(grd_First);
+// return 예시) null
+ */  
+scwin.getGridViewDataList = function (_$p, gridViewObj) {
+	var dataListId = gridViewObj.getDataList();
+
+	if (dataListId !== "") {
+		var dataList = _$p.getComponentById(dataListId);
+		if ((typeof dataList === "undefined") || (dataList === null)) {
+			console.log("DataList(" + dataListId + ")를 찾을 수 없습니다.");
+			return null;
+		} else {
+			return dataList;
+		}
+	} else {
+		console.log(gridViewObj.getID() + "는 DataList가 세팅되어 있지 않습니다.");
+		return null;
+	}
+};
+
+/**
+ * @method
+ * @name getComponent
+ * @description 주어진 아이디에 해당하는 웹스퀘어 컴포넌트를 찾아 반환한다.
+ * @return <Object>| 객체 반환 ( 객체가 없을 경우 null 반환)
+ * @param <Object>|_$p|객체가 소속된 화면 scope
+ * @param <String>|compId|찾ㅇ르 객체 ID 
+ * @hidden N
+ * @exception 
+ * @sample var object = $c.util.getGridViewDataList(compId);
+ */  
+scwin.getComponent = function(_$p, compId) {
+	var object = _$p.getComponentById(compId);
+	if (typeof object === "undefined") {
+		return null;
+	} else {
+		return object
+	}
+};
+
+
+/**
+ * @method
+ * @name createComponent
+ * @description 주어진 인자를 통해 동적으로 Component를 생성합니다.
+ * @return <Object>| 생성된 컴포넌트 객체
+ * @param <Object>|_$p|객체를 생성활 화면scope
+ * @param <String>|strCompId 컴포넌트 ID
+ * @param <String>|strCompName 컴포넌트 태그명
+ * @param <Object>|option 컴포넌트 옵션
+ * @param <String>|parent 컴포넌트 생성 부모 노드 위치
+ * @param <Object>| itemSet 컴포넌트 setItemset 옵션
+ * @hidden N
+ * @exception 
+ * @sample $c.util.createComponent("ibx_input1", "input" );
+$c.util.createComponent("ibx_input2", "input", { style: "width:120px; height:40px; float:left; margin : 20px;" });
+$c.util.createComponent("ibx_input2", "input", { style: "width:120px; height:40px; float:left; margin : 20px;" }, grp_content1);
+ */  
+scwin.createComponent = function(_$p, strCompId, strCompName, option, parent, itemSet) {
+	try {
+		
+		if ((typeof strCompId !== "undefined") && (strCompId !== "") && (typeof strCompName !== "undefined") && (strCompName !== "")) {
+
+			if (typeof option == "undefined") {
+				option = {};
+			}
+
+			if (typeof parent == "undefined") {
+				parent = "";
+			}
+
+			if (typeof itemSet == "undefined") {
+				itemSet = "";
+			}
+
+			return _$p.dynamicCreate(strCompId, strCompName, option, parent, itemSet);
+		}
+	} catch (ex) {
+		console.error(ex);
+		return null;
+	}
+};
+
+
+/**
+ * @method
+ * @name setInterval
+ * @description 사용자가 지정한 함수가 주기적으로 실행된다.
+ 실행할 함수를 함수를 setInterval로 등록하여 함수가 주기적으로 계속 실행되도록 한다.SPA모드에서 페이지 이동 시 이 함수로 등록한 타이머를 자동으로 제거한다.
+ * @param  <Object>|_$p|함수가 소속될(실행될) 화면 scope
+ * @param <String>|func|desc
+ * @param <Function>|func|실행할 함수
+options인자로는 아래와 같은 인자가 사용된다.
+options.key timer를 구별하기 위한 키값. 이 값이 지정되지 않은 경우 키값을 func.toString().slice(0,30)을 키값으로 사용한다.
+options.delay setInterval의 2번째 인자값. func함수가 delay시간 이후에 실행되도록 한다.  기본값은 1이다.
+options.caller func내에서 this값을 caller로 변경한다.
+options.args func에 전달할 인자값. array형태로 인자를 전달한다.
+options.before_call : func 함수가 실행되기 직전에 실행할 함수. func함수와 마찬가지로 data를 인자로 받는다.
+options.callback : func함수가 실행된 후에 실행할 함수. func함수의 return값을 인자로 받는다
+ * @hidden N
+ * @exception 
+ * @sample 
+ */  
+scwin.setInterval = function(_$p, func, options) {
+	_$p.setInterval(func, options);
+};
+
+
+/**
+ * @method
+ * @name clearInterval
+ * @description $c.util.setInterval API를 이용하여 등록 한 함수를 직접 Clear시킨다.
+ * @return 
+ * @param <String>|_$p|setInterval가 소속된(실행될) 화면 scope
+ * @param <String>|keyname|key로 지정한 값. ( $c.util.setInterval API 호출 시 options에 등록 한 key명)
+ * @param <Boolean>|force|keyName으로 지정 된 Interval 객체를 해제하기 전 해당 함수를 한 번 실행할지에 대한 여부. 기본값은 false. 
+ * @hidden N
+ * @exception 
+ * @sample $c.util.clearInterval("timer1");
+ */  
+scwin.clearInterval = function(_$p, keyname, force) {
+
+	_$p.clearInterval(keyname, force);
+};
+
+
+/**
+ * @method
+ * @name setTimeout
+ * @description desc
+ * @return 
+ * @param <String>|_$p|setTimeout 이 동작하는  화면 scope
+ * @param <Function>|func|실행할 함수
+ * @param <Object>|options|options인자로는 아래와 같은 인자가 사용된다.
+ options.key|timeout을 구별하기 위한 키값. 이 값이 지정되지 않은 경우 키값을 func.toString().slice(0,30)을 키값으로 사용한다.
+ options.delay|func로 지정한 함수가 실행 될 간격으로 기본값은 1ms(millisecond / 1000분의 1초)이다. javascript setTimeout의 2번째 인자값.
+ options.caller|func로 지정한 함수내에서 this값으로 지정 할 객체(웹스퀘어 컴포넌트 포함).
+ options.args|func에 전달할 인자값. array형태로 인자를 전달한다.
+ options.before_call: func로 지정한 함수가 실행되기 직전에 실행 할 함수. func함수와 마찬가지로 data를 인자로 받는다.
+ options.callback : func로 지정한 함수가 실행된 후에 실행 할 함수. func로 지정한 함수의 return값을 인자로 받는다. * @hidden N
+ * @exception 
+ * @sample $c.util.setTimeout(
+	function() {
+		com.win.alert("5분이 지났습니다.");
+	},
+	{ delay : 300000, key : "loginTimeout" }
+);
+ */  
+scwin.setTimeout = function(_$p, func, options) {
+	_$p.setTimeout(func, options);
+};
+
+
+
+
+/**
+ * @method
+ * @name clearTimeout
+ * @description $c.util.setTimer API를 이용하여 등록 한 함수를 직접 Clear시킨다
+ * @return 
+ * @param <String>|_$p|setTimeout가 소속된(실행될) 화면 scope
+ * @param <String>|keyname|key로 지정한 값. ( $c.util.setTimeout API 호출 시 options에 등록 한 key명)
+ * @param <Boolean>|force|keyName으로 지정 된ㄴsetTimeout 객체를 해제하기 전 해당 함수를 한 번 실행할지에 대한 여부. 기본값은 false.
+ * @author Inswave Systems
+ * @hidden N
+ * @exception 
+ * @sample 
+ */  
+scwin.clearTimeout = function(_$p, keyname, force) {
+
+	_$p.clearTimeout(keyname, force);
+};
+
+
+/**
+ * @method
+ * @name copyClipboard
+ * @description 입력 가능한 컴포넌트(input, textarea 등) 객체의 내용을 클립보드에 저장한다
+ ※ 주의사항
+- IE 10+, Chrome 43+, Opera 29+, Firefox에서만 사용 가능함
+- IE의 경우 클립복드 복사 허용을 묻는 확인 창이 뜸
+ * @return 
+ * @param <Object>|comObj|컴포넌트 객체 
+ * @hidden N
+ * @exception 
+ * @sample // ibx_message InputBox내 Text가 Select 되면서 Clipboard에 복사된다.
+$c.util.copyClipboard(ibx_message);
+ */  
+scwin.copyClipboard = function(_$p ,comObj) {
+	if (typeof comObj !== "undefined") {
+		comObj.select();
+	}
+	document.execCommand("Copy");
+};
+
+
+/**
+ * @method
+ * @name getFunctionByName
+ * @description 문자열을 함수로 반환한다.
+ * @return <Function>| 만들어진 함수 객체
+ * @param <String>|functionName|{String} functionName 함수명
+ * @param <String>|context|desc 
+ * @hidden N
+ * @exception 
+ * @sample 
+ */  
+scwin.getFunctionByName = function (_$p ,functionName, context ) {
+	var rtnFunc;
+	try {
+		var namespaces = functionName.split(".");
+		var func = namespaces.pop();
+		for (var i = 0; i < namespaces.length; i++) {
+			context = context[namespaces[i]];
+		}
+		rtnFunc =  context[func];
+	} catch (ex) {
+		rtnFunc = null;
+	}
+	return rtnFunc;
+};
+
+
+scwin.getLanguage = function( _$p ) {
+	var language = navigator.language || navigator.userLanguage || navigator.systemLanguage;
+	if ((scwin.isEmpty(_$p, language) === false) && (language.length > 1)) {
+		return language.substring(0,2);
+	} else {
+		return "";
+	}
+};
+
+
+scwin.getServerDateTime = function ( _$p, sDateFormat) {
+	if (scwin.isEmpty(_$p, sDateFormat)) {
+		sDateFormat = "yyyyMMdd";
+	}
+
+	return WebSquare.date.getCurrentServerDate(sDateFormat);
+};
+
+
+]]></script>
+    </head>
+    <body />
+</html>

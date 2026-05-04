@@ -1,0 +1,21 @@
+# Maven build output
+target/
+
+# Eclipse IDE files
+.classpath
+.project
+.settings/
+.tern-project
+
+# WebSquare IDE
+.metadata/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Sensitive config (optional - comment out if you want to include)
+# src/com/inswave/training/config/db.properties

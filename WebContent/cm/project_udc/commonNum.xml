@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ev="http://www.w3.org/2001/xml-events"
+    xmlns:w2="http://www.inswave.com/websquare" xmlns:xf="http://www.w3.org/2002/xforms">
+    <head meta_screenId="commonNum" meta_screenName="Number Project UDC" meta_subsystem="공통" meta_author="인스웨이브">
+        <w2:type>COMPONENT</w2:type>
+        <w2:buildDate/>
+        <w2:MSA/>
+        <xf:model>
+            <w2:dataCollection baseNode="map"/>
+            <w2:workflowCollection/>
+        </xf:model>
+        <w2:layoutInfo/>
+        <w2:publicInfo method="scwin.round, scwin.floor, scwin.ceil, scwin.formatMoney, scwin.formatNumber,
+                               scwin.isNumber, scwin.isOdd, scwin.parseInt, scwin.parseFloat, scwin.formatByte"/>
+        <script lazy="false" type="text/javascript"><![CDATA[
+
+scwin.round = function(_$p, value, point) {
+	var num = 1;
+	if (typeof point !== "undefined") {
+		num = Math.pow(10, point);
+	}
+
+	return Math.round(Number(value) * num) / num;
+};
+
+
+scwin.floor = function(_$p, value, point) {
+	var num = 1;
+	if (typeof point !== "undefined") {
+		num = Math.pow(10, point);
+	}
+
+	return Math.floor(Number(value) * num) / num;
+};
+
+scwin.ceil = function(_$p, value, point) {
+	var num = 1;
+	if (typeof point !== "undefined") {
+		num = Math.pow(10, point);
+	}
+
+	return Math.ceil(Number(value) * num) / num;
+};
+
+
+scwin.formatMoney = function (_$p, value, type) {
+	var amount;
+
+	if (type == "plusZero") {
+		amount = new String(value) + "0";
+	} else {
+		amount = new String(value);
+	}
+
+	amount = amount.split(".");
+
+	var amount1 = amount[0].split("").reverse();
+	var amount2 = amount[1];
+
+	var output = "";
+	for (var i = 0; i <= amount1.length - 1; i++) {
+		output = amount1[i] + output;
+		if ((i + 1) % 3 == 0 && (amount1.length - 1) !== i)
+			output = ',' + output;
+	}
+
+	if (type == "dollar") {
+		if (!amount2) {
+			output = "$ " + output;
+		} else {
+			output = "$ " + output + "." + amount2;
+		}
+	} else if (type == "won") {
+		if (!amount2) {
+			output = output + "원";
+		} else {
+			output = output + "." + amount2 + "원";
+		}
+	} else {
+		if (!amount2) {
+			output = output;
+		} else {
+			output = output + "." + amount2;
+		}
+	}
+
+	return output;
+};
+
+scwin.formatNumber = function (_$p, value) {
+	return WebSquare.util.setNumber(value);
+};
+
+
+scwin.isNumber = function (_$p, value) {
+	return !isNaN(value);
+};
+
+
+scwin.isOdd = function (_$p, value) {
+	return WebSquare.util.isOdd(value);
+};
+
+
+scwin.parseInt = function (_$p, value) {
+	return WebSquare.util.parseInt(value);
+};
+
+
+scwin.parseFloat = function (_$p, value) {
+	return WebSquare.util.parseFloat(value);
+};
+
+scwin.formatByte = function(_$p, value) {
+	var unitType = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+	if (value == 0 || value == "0" || isNaN(value)) {
+		return 0 + " " + unitType[0];
+	}
+	var index = Math.floor(Math.log(value) / Math.log(1024));
+	return (value / Math.pow(1024, index)).toFixed(1) + " " + unitType[index];
+};
+]]></script>
+    </head>
+    <body/>
+</html>
