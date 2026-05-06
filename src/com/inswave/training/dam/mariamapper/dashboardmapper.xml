@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inswave.training.dam.mapper.DashboardMapper">
+
+    <select id="selectStats" resultType="map">
+        SELECT
+            COUNT(*) AS TOTAL_FILES,
+            ROUND(COALESCE(SUM(FILE_SIZE), 0) / 1073741824, 2) AS TOTAL_SIZE_GB,
+            SUM(CASE WHEN DATE(UPLOAD_DT) = CURDATE() THEN 1 ELSE 0 END) AS NEW_UPLOADS_TODAY
+        FROM DAM_ASSET
+    </select>
+
+    <select id="selectDistribution" resultType="map">
+        SELECT
+            FILE_TYPE AS FILE_TYPE,
+            COUNT(*) AS CNT,
+            ROUND((COUNT(*) / t.TOTAL_CNT) * 100, 2) AS RATIO
+        FROM DAM_ASSET
+        CROSS JOIN (
+            SELECT COUNT(*) AS TOTAL_CNT
+            FROM DAM_ASSET
+        ) t
+        GROUP BY FILE_TYPE, t.TOTAL_CNT
+        ORDER BY CNT DESC, FILE_TYPE ASC
+    </select>
+
+    <select id="selectStorageTrend" resultType="map">
+        SELECT
+            DATE_FORMAT(UPLOAD_DT, '%Y-%m') AS MONTH_LABEL,
+            ROUND(SUM(FILE_SIZE) / 1073741824, 2) AS STORAGE_GB
+        FROM DAM_ASSET
+        GROUP BY DATE_FORMAT(UPLOAD_DT, '%Y-%m')
+        ORDER BY MONTH_LABEL ASC
+    </select>
+
+    <select id="selectRecentUploads" resultType="map">
+        SELECT
+            ASSET_ID AS ASSET_ID,
+            FILE_NM AS FILE_NM,
+            FILE_TYPE AS FILE_TYPE,
+            OWNER_NM AS OWNER_NM,
+            STATUS AS STATUS,
+            PREVIEW_URL AS PREVIEW_URL,
+            DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
+        FROM DAM_ASSET
+        ORDER BY UPLOAD_DT DESC
+        LIMIT 5
+    </select>
+
+</mapper>

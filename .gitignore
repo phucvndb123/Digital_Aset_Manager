@@ -19,3 +19,5 @@ Thumbs.db
 
 # Sensitive config (optional - comment out if you want to include)
 # src/com/inswave/training/config/db.properties
+
+WebContent/_wpack_/
