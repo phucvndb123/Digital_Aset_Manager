@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.inswave.training.dam.mapper.DamMapper">
+
+	<resultMap id="folderMap" type="com.inswave.training.dam.vo.DamFolderVo">
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="folderNm" column="FOLDER_NM" />
+		<result property="parentFolderId" column="PARENT_FOLDER_ID" />
+		<result property="pathDepth" column="PATH_DEPTH" />
+	</resultMap>
+
+	<resultMap id="assetMap" type="com.inswave.training.dam.vo.DamAssetVo">
+		<id property="assetId" column="ASSET_ID" />
+		<result property="fileNm" column="FILE_NM" />
+		<result property="folderId" column="FOLDER_ID" />
+		<result property="fileType" column="FILE_TYPE" />
+		<result property="fileSize" column="FILE_SIZE" />
+		<result property="ownerNm" column="OWNER_NM" />
+		<result property="uploadDt" column="UPLOAD_DT" />
+	</resultMap>
+
+	<resultMap id="versionMap" type="com.inswave.training.dam.vo.DamVersionVo">
+		<id property="verId" column="VER_ID" />
+		<result property="assetId" column="ASSET_ID" />
+		<result property="verNo" column="VER_NO" />
+		<result property="fileUrl" column="FILE_URL" />
+		<result property="changeLog" column="CHANGE_LOG" />
+	</resultMap>
+
+	<select id="selectFolderTree" resultMap="folderMap">
+		SELECT FOLDER_ID, FOLDER_NM, PARENT_FOLDER_ID, PATH_DEPTH
+		FROM DAM_FOLDER
+		ORDER BY PATH_DEPTH, FOLDER_ID
+	</select>
+
+	<select id="selectAssetsByFolderId" parameterType="int" resultMap="assetMap">
+		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_SIZE, OWNER_NM,
+		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
+		FROM DAM_ASSET
+		WHERE FOLDER_ID = #{folderId}
+		ORDER BY ASSET_ID DESC
+	</select>
+
+	<select id="selectAssetById" parameterType="int" resultMap="assetMap">
+		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_SIZE, OWNER_NM,
+		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
+		FROM DAM_ASSET
+		WHERE ASSET_ID = #{assetId}
+	</select>
+
+	<select id="selectVersionsByAssetId" parameterType="int" resultMap="versionMap">
+		SELECT VER_ID, ASSET_ID, VER_NO, FILE_URL, CHANGE_LOG
+		FROM DAM_VERSION
+		WHERE ASSET_ID = #{assetId}
+		ORDER BY VER_ID DESC
+	</select>
+
+</mapper>
