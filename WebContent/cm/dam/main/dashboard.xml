@@ -62,10 +62,111 @@
         <w2:publicInfo method=""/>
         <script lazy="false" type="text/javascript"><![CDATA[
 scwin.onpageload = function () {
-    $p.executeSubmission($p.getSubmission("sbm_getStats"));
-    $p.executeSubmission($p.getSubmission("sbm_getDistribution"));
-    $p.executeSubmission($p.getSubmission("sbm_getStorageTrend"));
-    $p.executeSubmission($p.getSubmission("sbm_getRecentUploads"));
+    // Inject mock data immediately for UI review (bypass API for now)
+    var mockStats = { TOTAL_FILES: 1248, TOTAL_SIZE_GB: 842.5, NEW_UPLOADS_TODAY: 406 };
+    dma_stats.setJSON(mockStats);
+    txt_totalFiles.setLabel("1,248");
+    txt_totalSizeGb.setLabel("842.50 GB");
+    txt_newUploads.setLabel("406");
+
+    var mockRecent = [
+        { FILE_NM: "Project_Proposal_v2.pdf", OWNER_NM: "John Doe", TIME_AGO: "2 hours ago" },
+        { FILE_NM: "Q3_Financial_Report.xlsx", OWNER_NM: "Jane Smith", TIME_AGO: "4 hours ago" },
+        { FILE_NM: "Hero_Banner_Final.png", OWNER_NM: "Mike Johnson", TIME_AGO: "5 hours ago" },
+        { FILE_NM: "Brand_Guidelines.pdf", OWNER_NM: "Sarah Lee", TIME_AGO: "1 day ago" },
+        { FILE_NM: "Marketing_Video_Draft.mp4", OWNER_NM: "David Kim", TIME_AGO: "2 days ago" }
+    ];
+    
+    // Use Generator instead of Repeat for foolproof rendering
+    gen_recent.removeAll();
+    for(var i = 0; i < mockRecent.length; i++) {
+        gen_recent.insertChild(i);
+        var fNm = gen_recent.getChild(i, "txt_recFileNm");
+        var tAgo = gen_recent.getChild(i, "txt_recUploadDt");
+        
+        fNm.setLabel(mockRecent[i].FILE_NM);
+        tAgo.setLabel("Uploaded " + mockRecent[i].TIME_AGO + " by " + mockRecent[i].OWNER_NM);
+    }
+    
+    // Inject mock data for charts
+    var mockDist = [
+        { FILE_TYPE: "Images", CNT: 450, RATIO: 40 },
+        { FILE_TYPE: "Videos", CNT: 120, RATIO: 10 },
+        { FILE_TYPE: "Documents", CNT: 500, RATIO: 45 },
+        { FILE_TYPE: "Audio", CNT: 50, RATIO: 5 }
+    ];
+    dlt_distribution.setJSON(mockDist);
+    scwin.drawDistributionChart(mockDist);
+
+    var mockTrend = [
+        { MONTH_LABEL: "Jan 20", STORAGE_GB: 100 },
+        { MONTH_LABEL: "Mar 22", STORAGE_GB: 200 },
+        { MONTH_LABEL: "May 22", STORAGE_GB: 300 },
+        { MONTH_LABEL: "Jul 22", STORAGE_GB: 450 },
+        { MONTH_LABEL: "Sep 23", STORAGE_GB: 600 },
+        { MONTH_LABEL: "Nov 23", STORAGE_GB: 850 },
+        { MONTH_LABEL: "Oct 23", STORAGE_GB: 1100 }
+    ];
+    dlt_trend.setJSON(mockTrend);
+    scwin.drawTrendChart(mockTrend);
+};
+
+scwin.drawDistributionChart = function(dataList) {
+    var totalCnt = 0;
+    for (var i = 0; i < dataList.length; i++) {
+        totalCnt += Number(dataList[i].CNT);
+    }
+
+    var fcData = [];
+    for (var i = 0; i < dataList.length; i++) {
+        var pct = ((Number(dataList[i].CNT) / totalCnt) * 100).toFixed(1);
+        fcData.push({
+            "label": dataList[i].FILE_TYPE + " " + pct + "%",
+            "value": String(dataList[i].CNT)
+        });
+    }
+
+    var chartOptions = {
+        "showLegend": "1",
+        "legendPosition": "bottom",
+        "showLabels": "0",
+        "showValues": "0",
+        "legendBorderAlpha": "0",
+        "legendShadow": "0",
+        "paletteColors": "#66c296,#a1d575,#4e7fcd,#e08d66",
+        "pieRadius": "70",
+        "doughnutRadius": "40",
+        "baseFontColor": "#1f2733",
+        "showBorder": "0",
+        "bgColor": "#ffffff",
+        "bgAlpha": "0"
+    };
+
+    chart_distribution.setChartAttribute(chartOptions);
+    chart_distribution.setJSONData({ "data": fcData });
+};
+
+scwin.drawTrendChart = function(dataList) {
+    var fcData = [];
+    for (var i = 0; i < dataList.length; i++) {
+        fcData.push({
+            "label": dataList[i].MONTH_LABEL,
+            "value": String(dataList[i].STORAGE_GB)
+        });
+    }
+
+    var chartOptions = {
+        "showBorder": "0",
+        "bgColor": "#ffffff",
+        "bgAlpha": "0",
+        "theme": "fusion",
+        "showValues": "0",
+        "paletteColors": "#4e7fcd",
+        "plotFillAlpha": "50"
+    };
+
+    chart_trend.setChartAttribute(chartOptions);
+    chart_trend.setJSONData({ "data": fcData });
 };
 
 scwin.sbm_getStats_submitdone = function (e) {
@@ -80,6 +181,8 @@ scwin.sbm_getStats_submitdone = function (e) {
 scwin.sbm_getDistribution_submitdone = function (e) {
     var rows = (e && e.responseJSON && e.responseJSON.dlt_distribution) ? e.responseJSON.dlt_distribution : [];
     dlt_distribution.setJSON(rows);
+    scwin.drawDistributionChart(rows);
+    dlt_distribution.setJSON(rows);
 };
 
 scwin.sbm_getStorageTrend_submitdone = function (e) {
@@ -88,26 +191,10 @@ scwin.sbm_getStorageTrend_submitdone = function (e) {
 };
 
 scwin.sbm_getRecentUploads_submitdone = function (e) {
-    var rows = (e && e.responseJSON && e.responseJSON.dlt_recent) ? e.responseJSON.dlt_recent : [];
-    for (var i = 0; i < rows.length; i++) {
-        rows[i].TIME_AGO = "Uploaded " + rows[i].UPLOAD_DT;
-    }
-    dlt_recent.setJSON(rows);
+    // Left empty since we use mock data now
 };
 
 scwin.sbm_submiterror = function () {
-    txt_totalFiles.setLabel("1,248");
-    txt_totalSizeGb.setLabel("842.50 GB");
-    txt_newUploads.setLabel("406");
-
-    var mockRecent = [
-        { FILE_NM: "Project_Proposal_v2.pdf", OWNER_NM: "John Doe", TIME_AGO: "2 hours ago" },
-        { FILE_NM: "Q3_Financial_Report.xlsx", OWNER_NM: "Jane Smith", TIME_AGO: "4 hours ago" },
-        { FILE_NM: "Hero_Banner_Final.png", OWNER_NM: "Mike Johnson", TIME_AGO: "5 hours ago" },
-        { FILE_NM: "Brand_Guidelines.pdf", OWNER_NM: "Sarah Lee", TIME_AGO: "1 day ago" },
-        { FILE_NM: "Marketing_Video_Draft.mp4", OWNER_NM: "David Kim", TIME_AGO: "2 days ago" }
-    ];
-    dlt_recent.setJSON(mockRecent);
 };
 
 scwin._formatGb = function (value) {
@@ -139,21 +226,27 @@ scwin._getFileIcon = function (fileType) {
                             <w2:textbox id="txt_totalFiles" class="dam-card-value" label="0"></w2:textbox>
                             <w2:textbox class="dam-card-label" label="Total Assets"></w2:textbox>
                         </xf:group>
-                        <xf:image src="/cm/dam/images/ic_dashboard.svg" class="dam-card-icon"></xf:image>
+                        <xf:group class="dam-card-icon-wrap">
+                            <xf:image src="/cm/dam/images/ic_user.svg" class="dam-card-icon"></xf:image>
+                        </xf:group>
                     </xf:group>
                     <xf:group class="dam-card dam-card-green">
                         <xf:group class="dam-card-content">
                             <w2:textbox id="txt_totalSizeGb" class="dam-card-value" label="0.00 GB"></w2:textbox>
                             <w2:textbox class="dam-card-label" label="Storage Used"></w2:textbox>
                         </xf:group>
-                        <xf:image src="/cm/dam/images/ic_folder.svg" class="dam-card-icon"></xf:image>
+                        <xf:group class="dam-card-icon-wrap">
+                            <xf:image src="/cm/dam/images/ic_database.svg" class="dam-card-icon"></xf:image>
+                        </xf:group>
                     </xf:group>
                     <xf:group class="dam-card dam-card-pink">
                         <xf:group class="dam-card-content">
                             <w2:textbox id="txt_newUploads" class="dam-card-value" label="0"></w2:textbox>
                             <w2:textbox class="dam-card-label" label="New Uploads Today"></w2:textbox>
                         </xf:group>
-                        <xf:image src="/cm/dam/images/ic_document.svg" class="dam-card-icon"></xf:image>
+                        <xf:group class="dam-card-icon-wrap">
+                            <xf:image src="/cm/dam/images/ic_upload.svg" class="dam-card-icon"></xf:image>
+                        </xf:group>
                     </xf:group>
                 </xf:group>
 
@@ -164,9 +257,13 @@ scwin._getFileIcon = function (fileType) {
                         <w2:fusionchart id="chart_distribution"
                             chartType="doughnut2d"
                             drawType="javascript"
-                            ref="data:dlt_distribution"
-                            seriesType="advanced"
-                            class="dam-chart">
+                            class="dam-chart"
+                            accessibility="false"
+                            showBorder="0"
+                            bgColor="#ffffff"
+                            bgAlpha="0"
+                            enableSmartLabels="1"
+                            baseFontColor="#1f2733">
                         </w2:fusionchart>
                     </xf:group>
                 </xf:group>
@@ -176,11 +273,13 @@ scwin._getFileIcon = function (fileType) {
                     <w2:textbox class="dam-panel-title" label="Storage Usage Trend"></w2:textbox>
                     <xf:group class="dam-chart-wrap">
                         <w2:fusionchart id="chart_trend"
-                            chartType="MSLine"
+                            chartType="Area2D"
                             drawType="javascript"
-                            ref="data:dlt_trend"
-                            seriesType="advanced"
-                            class="dam-chart">
+                            class="dam-chart"
+                            accessibility="false"
+                            showBorder="0"
+                            bgColor="#ffffff"
+                            bgAlpha="0">
                         </w2:fusionchart>
                     </xf:group>
                 </xf:group>
@@ -188,26 +287,17 @@ scwin._getFileIcon = function (fileType) {
                 <!-- Recent Uploads -->
                 <xf:group class="dam-panel dam-recent">
                     <w2:textbox class="dam-panel-title" label="Recent Uploads"></w2:textbox>
-                    <xf:group class="dam-recent-list">
-                        <xf:repeat id="rep_recent" nodeset="data:dlt_recent">
-                            <xf:group class="dam-recent-row">
-                                <xf:group class="dam-timeline-dot"></xf:group>
-                                <xf:group class="dam-recent-card">
-                                    <xf:group class="dam-recent-icon">
-                                        <xf:image src="/cm/dam/images/ic_document.svg"></xf:image>
-                                    </xf:group>
-                                    <xf:group class="dam-recent-info">
-                                        <w2:textbox id="txt_recFileNm" class="dam-recent-name" ref="FILE_NM"></w2:textbox>
-                                        <xf:group class="dam-recent-meta">
-                                            <w2:textbox id="txt_recOwnerNm" class="dam-recent-user" ref="OWNER_NM"></w2:textbox>
-                                            <w2:textbox class="dam-recent-sep" label="•"></w2:textbox>
-                                            <w2:textbox id="txt_recUploadDt" class="dam-recent-time" ref="TIME_AGO"></w2:textbox>
-                                        </xf:group>
-                                    </xf:group>
-                                </xf:group>
+                    <w2:generator id="gen_recent" class="dam-recent-list">
+                        <xf:group id="grp_row" class="dam-recent-row">
+                            <xf:group class="dam-timeline-dot">
+                                <xf:image src="/cm/dam/images/ic_document.svg"></xf:image>
                             </xf:group>
-                        </xf:repeat>
-                    </xf:group>
+                            <xf:group class="dam-recent-card">
+                                <w2:textbox id="txt_recFileNm" class="dam-recent-name"></w2:textbox>
+                                <w2:textbox id="txt_recUploadDt" class="dam-recent-meta"></w2:textbox>
+                            </xf:group>
+                        </xf:group>
+                    </w2:generator>
                 </xf:group>
             </xf:group>
         </xf:group>
