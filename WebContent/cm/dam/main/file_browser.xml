@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
+<?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:w2="http://www.inswave.com/websquare"
+	xmlns:xf="http://www.w3.org/2002/xforms">
+	<head>
+		<w2:type>COMPONENT</w2:type>
+		<xf:model>
+			<w2:dataCollection baseNode="map">
+				<w2:dataMap id="dmFolder" baseNode="map">
+					<w2:keyInfo>
+						<w2:key id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+						<w2:key id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+						<w2:key id="PARENT_FOLDER_ID" name="PARENT_FOLDER_ID" dataType="text" />
+						<w2:key id="PATH_DEPTH" name="PATH_DEPTH" dataType="text" />
+					</w2:keyInfo>
+				</w2:dataMap>
+				<w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
+					<w2:columnInfo>
+						<w2:column id="CHK" name="CHK" dataType="text" />
+						<w2:column id="ICON" name="ICON" dataType="text" />
+						<w2:column id="FILE_NM" name="FILE_NM" dataType="text" />
+						<w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
+						<w2:column id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
+						<w2:column id="STATUS" name="STATUS" dataType="text" />
+						<w2:column id="OWNER_NM" name="OWNER_NM" dataType="text" />
+						<w2:column id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
+					</w2:columnInfo>
+				</w2:dataList>
+				<w2:dataMap id="dmAssetDetail" baseNode="map">
+					<w2:keyInfo>
+						<w2:key id="FILE_NM" name="FILE_NM" dataType="text" />
+						<w2:key id="DESCRIPTION" name="DESCRIPTION" dataType="text" />
+						<w2:key id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
+						<w2:key id="ASSET_DATA" name="ASSET_DATA" dataType="text" />
+						<w2:key id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
+						<w2:key id="OWNER_NM" name="OWNER_NM" dataType="text" />
+						<w2:key id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
+					</w2:keyInfo>
+				</w2:dataMap>
+			</w2:dataCollection>
+		</xf:model>
+		<script lazy="false" type="text/javascript"><![CDATA[
+            scwin.onpageload = function() {
+                scwin.loadFolders();
+            };
+
+            scwin.callApi = function(url, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            callback(JSON.parse(xhr.responseText || "{}"));
+                        }
+                    }
+                };
+                xhr.send();
+            };
+
+            scwin.loadFolders = function() {
+                scwin.callApi("/api/dam/folders", function(folders) {
+                    if (folders && folders.length > 0) {
+                        var defaultFolderId = folders[0].folderId || folders[0].FOLDER_ID;
+                        dmFolder.set("FOLDER_ID", defaultFolderId);
+                        dmFolder.set("FOLDER_NM", folders[0].folderNm || folders[0].FOLDER_NM || "");
+                        scwin.loadAssets(defaultFolderId);
+                    }
+                });
+            };
+
+            scwin.loadAssets = function(folderId) {
+                scwin.callApi("/api/dam/assets?folderId=" + folderId, function(list) {
+                    var rows = [];
+                    for (var i = 0; i < (list || []).length; i++) {
+                        var item = list[i];
+                        rows.push({
+                            "CHK":"",
+                            "ICON": item.fileType || "",
+                            "ASSET_ID": item.assetId,
+                            "FILE_NM": item.fileNm || "",
+                            "FILE_TYPE": item.fileType || "",
+                            "FILE_SIZE": item.fileSize || "",
+                            "STATUS": "Published",
+                            "OWNER_NM": item.ownerNm || "",
+                            "UPLOAD_DT": item.uploadDt || ""
+                        });
+                    }
+                    dlAsset.setJSON(rows);
+                    if (rows.length > 0) {
+                        scwin.loadAssetDetail(rows[0].ASSET_ID, rows[0]);
+                    }
+                });
+            };
+
+            scwin.grdAsset_onrowindexchange = function(gridObj, oldRowIndex, newRowIndex) {
+                var rowData = dlAsset.getRowJSON(newRowIndex);
+                if (rowData && rowData.ASSET_ID) {
+                    scwin.loadAssetDetail(rowData.ASSET_ID, rowData);
+                }
+            };
+
+            scwin.loadAssetDetail = function(assetId, fallbackRow) {
+                scwin.callApi("/api/dam/assets/" + assetId, function(response) {
+                    var base = fallbackRow || {};
+                    var asset = response.asset || base;
+                    dmAssetDetail.set("FILE_NM", asset.fileNm || base.FILE_NM || "");
+                    dmAssetDetail.set("DESCRIPTION", asset.fileNm || base.FILE_NM || "");
+                    dmAssetDetail.set("FILE_TYPE", asset.fileType || base.FILE_TYPE || "");
+                    dmAssetDetail.set("ASSET_DATA", (response.versions && response.versions.length > 0) ? response.versions[0].verNo : "-");
+                    dmAssetDetail.set("FILE_SIZE", asset.fileSize || base.FILE_SIZE || "");
+                    dmAssetDetail.set("OWNER_NM", asset.ownerNm || base.OWNER_NM || "");
+                    dmAssetDetail.set("UPLOAD_DT", asset.uploadDt || base.UPLOAD_DT || "");
+                });
+            };
+        ]]></script>
+	</head>
+	<body ev:onpageload="scwin.onpageload">
+		<xf:group id="grp_appShell" class="dam-shell">
+			<xf:group id="grp_header" class="dam-header">
+				<xf:group class="dam-header-left">
+					<xf:image id="img_logo" class="dam-logo" src="/cm/dam/images/logo.svg"></xf:image>
+					<w2:textbox id="txt_appTitle" class="dam-app-title" label="Digital Asset Manager"></w2:textbox>
+					<xf:image id="img_hamburger" class="dam-hamburger" src="/cm/dam/images/hamburger.svg"></xf:image>
+				</xf:group>
+				<xf:group class="dam-header-right">
+					<xf:image id="img_bell" class="dam-bell" src="/cm/dam/images/bell.svg"></xf:image>
+					<xf:image id="img_avatar" class="dam-avatar" src="/cm/dam/images/avatar.svg"></xf:image>
+				</xf:group>
+			</xf:group>
+			<xf:group id="grp_body" class="dam-body">
+				<xf:group id="grp_sidebar" class="dam-sidebar">
+					<xf:group class="dam-nav-item">
+						<xf:image class="dam-nav-icon" src="/cm/dam/images/ic_dashboard.svg"></xf:image>
+						<w2:textbox class="dam-nav-text" label="Dashboard"></w2:textbox>
+					</xf:group>
+					<xf:group class="dam-nav-item dam-active">
+						<xf:image class="dam-nav-icon" src="/cm/dam/images/ic_folder.svg"></xf:image>
+						<w2:textbox class="dam-nav-text" label="File Browser"></w2:textbox>
+					</xf:group>
+					<xf:group class="dam-nav-item">
+						<xf:image class="dam-nav-icon" src="/cm/dam/images/ic_document.svg"></xf:image>
+						<w2:textbox class="dam-nav-text" label="Asset Details"></w2:textbox>
+					</xf:group>
+					<xf:group class="dam-nav-item">
+						<xf:image class="dam-nav-icon" src="/cm/dam/images/ic_clock.svg"></xf:image>
+						<w2:textbox class="dam-nav-text" label="Version Control"></w2:textbox>
+					</xf:group>
+				</xf:group>
+				<xf:group id="grp_content" class="dam-content">
+					<xf:group class="sub_contents" style="height:100%;">
+						<xf:group class="pgtbox">
+							<w2:textbox class="pgt_tit" label="File Browser" tagname="h2" />
+						</xf:group>
+
+						<xf:group class="lybox" style="height:92%;">
+							<xf:group class="ly_column col_7" style="height:100%;">
+								<xf:group class="sbx" style="padding:12px;height:48%;border:1px solid #d9dde3;border-radius:8px;box-sizing:border-box;">
+									<xf:group class="titbox">
+										<w2:textbox label="Folder Structure" tagname="h3" />
+									</xf:group>
+									<xf:group class="tvwbox" style="height:calc(100% - 32px);">
+										<w2:treeview id="trvFolder" class="tvw" style="height:100%;" dataType="listed" tooltipGroupClass="false">
+											<w2:node>
+												<w2:label><![CDATA[Digital Assets]]></w2:label>
+												<w2:value><![CDATA[1]]></w2:value>
+												<w2:folder><![CDATA[true]]></w2:folder>
+												<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
+												<w2:node>
+													<w2:label><![CDATA[Marketing Documents]]></w2:label>
+													<w2:value><![CDATA[2]]></w2:value>
+													<w2:folder><![CDATA[true]]></w2:folder>
+													<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
+													<w2:node>
+														<w2:label><![CDATA[Campaign Banners]]></w2:label>
+														<w2:value><![CDATA[3]]></w2:value>
+														<w2:folder><![CDATA[true]]></w2:folder>
+														<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
+													</w2:node>
+													<w2:node>
+														<w2:label><![CDATA[PDF Brochures]]></w2:label>
+														<w2:value><![CDATA[4]]></w2:value>
+														<w2:folder><![CDATA[true]]></w2:folder>
+														<w2:iconImage><![CDATA[/cm/images/base/ico_docu.png]]></w2:iconImage>
+													</w2:node>
+													<w2:node>
+														<w2:label><![CDATA[Social Media Assets]]></w2:label>
+														<w2:value><![CDATA[5]]></w2:value>
+														<w2:folder><![CDATA[true]]></w2:folder>
+														<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
+													</w2:node>
+												</w2:node>
+												<w2:node>
+													<w2:label><![CDATA[Video Assets]]></w2:label>
+													<w2:value><![CDATA[6]]></w2:value>
+													<w2:folder><![CDATA[true]]></w2:folder>
+													<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
+												</w2:node>
+												<w2:node>
+													<w2:label><![CDATA[Internal Manuals]]></w2:label>
+													<w2:value><![CDATA[7]]></w2:value>
+													<w2:folder><![CDATA[true]]></w2:folder>
+													<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
+												</w2:node>
+											</w2:node>
+										</w2:treeview>
+									</xf:group>
+									 </xf:group>
+                </xf:group>
+            </xf:group>
+								</xf:group>
+
+								<xf:group class="sbx"
+									style="padding:12px;height:48%;margin-top:8px;border:1px solid #d9dde3;border-radius:8px;box-sizing:border-box;">
+									<xf:group class="titbox">
+										<w2:textbox label="File List" tagname="h3" />
+									</xf:group>
+									<xf:group class="gvwbox" style="height:calc(100% - 32px);">
+										<w2:gridView id="grdAsset" class="gvw" dataList="data:dlAsset" autoFit="allColumn" focusMode="row"
+											ev:onrowindexchange="scwin.grdAsset_onrowindexchange">
+											<w2:header>
+												<w2:row>
+													<w2:column id="hdChk" inputType="checkbox" width="38" value="" />
+													<w2:column id="hdIcon" inputType="text" width="60" value="Icon" />
+													<w2:column id="hdFileNm" inputType="text" width="240" value="Name" />
+													<w2:column id="hdType" inputType="text" width="140" value="Type" />
+													<w2:column id="hdSize" inputType="text" width="120" value="Size" />
+													<w2:column id="hdStatus" inputType="text" width="120" value="Status" />
+												</w2:row>
+											</w2:header>
+											<w2:gBody>
+												<w2:row>
+													<w2:column id="CHK" inputType="checkbox" width="38" displayMode="always" />
+													<w2:column id="ICON" inputType="text" width="60" displayMode="label" />
+													<w2:column id="FILE_NM" inputType="text" width="240" displayMode="label" />
+													<w2:column id="FILE_TYPE" inputType="text" width="140" displayMode="label" />
+													<w2:column id="FILE_SIZE" inputType="text" width="120" displayMode="label" />
+													<w2:column id="STATUS" inputType="text" width="120" displayMode="label" />
+												</w2:row>
+											</w2:gBody>
+										</w2:gridView>
+									</xf:group>
+								</xf:group>
+							</xf:group>
+
+							<xf:group class="ly_column col_3" style="height:100%;">
+								<xf:group class="sbx" style="padding:12px;height:97%;border:1px solid #d9dde3;border-radius:8px;box-sizing:border-box;">
+									<xf:group class="titbox">
+										<w2:textbox label="Asset Details" tagname="h3" />
+									</xf:group>
+									<xf:group style="margin-top:8px;">
+										<w2:textbox label="Name" />
+										<xf:input ref="data:dmAssetDetail/FILE_NM" style="width:100%;" />
+									</xf:group>
+									<xf:group style="margin-top:8px;">
+										<w2:textbox label="Description" />
+										<xf:textarea ref="data:dmAssetDetail/DESCRIPTION" style="width:100%;height:120px;" />
+									</xf:group>
+									<xf:group style="margin-top:8px;">
+										<w2:textbox label="Asset Type" />
+										<xf:input ref="data:dmAssetDetail/FILE_TYPE" style="width:100%;" />
+									</xf:group>
+									<xf:group style="margin-top:8px;">
+										<w2:textbox label="Asset Data" />
+										<xf:select1 ref="data:dmAssetDetail/ASSET_DATA" style="width:100%;">
+											<xf:choices>
+												<xf:item>
+													<xf:label>Draft</xf:label>
+													<xf:value>Draft</xf:value>
+												</xf:item>
+												<xf:item>
+													<xf:label>Published</xf:label>
+													<xf:value>Published</xf:value>
+												</xf:item>
+											</xf:choices>
+										</xf:select1>
+									</xf:group>
+								</xf:group>
+							</xf:group>
+						</xf:group>
+					</xf:group>
+	</body>
+</html>

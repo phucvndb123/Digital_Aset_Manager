@@ -92,7 +92,7 @@ scwin.btn_logout_onclick = function () {
                         <w2:tabs id="tab_assetDetails" label="Asset Details"></w2:tabs>
                         <w2:tabs id="tab_versionControl" label="Version Control"></w2:tabs>
                         <w2:content id="cnt_dashboard" src="/cm/dam/main/dashboard.xml" scope="true"></w2:content>
-                        <w2:content id="cnt_fileBrowser" src="/cm/dam/main/fileBrowser.xml" scope="true"></w2:content>
+                        <w2:content id="cnt_fileBrowser" src="/cm/dam/main/file_browser.xml" scope="true"></w2:content>
                         <w2:content id="cnt_assetDetails" src="/cm/dam/main/assetDetails.xml" scope="true"></w2:content>
                         <w2:content id="cnt_versionControl" src="/cm/dam/main/versionControl.xml" scope="true"></w2:content>
                     </w2:tabControl>
