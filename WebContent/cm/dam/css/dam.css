@@ -1,0 +1,104 @@
+/* =========================================
+   1. Shell Layout
+========================================= */
+.dam-shell { width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-family: 'Inter', sans-serif; }
+
+.dam-header { width: 100%; height: 6vh; min-height: 50px; background: #343a40; color: #fff; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2b2f36; box-sizing: border-box; }
+.dam-header-left { display: flex; align-items: center; height: 100%; padding-left: 1.5%; box-sizing: border-box; gap: 0.75rem; }
+.dam-header-right { display: flex; align-items: center; height: 100%; padding-right: 1.5%; gap: 1.5rem; justify-content: flex-end; flex: 1; }
+.dam-logo { width: 2.5rem; height: 2.5rem; flex-shrink: 0; }
+.dam-app-title { font-size: 1.125rem; font-weight: 700; white-space: nowrap; color: #fff; margin-right: 1rem; }
+.dam-hamburger { font-size: 1.5rem; color: #aab1bc; cursor: pointer; width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+.dam-bell { height: 1.5rem; width: 1.5rem; flex-shrink: 0; }
+.dam-avatar { height: 2rem; width: 2rem; border-radius: 50%; flex-shrink: 0; }
+.dam-btn-logout { display: flex !important; align-items: center !important; justify-content: center !important; height: 2rem !important; padding: 0 1rem !important; background: #eaedf2 !important; color: #1f2733 !important; border-radius: 0.25rem !important; cursor: pointer !important; font-size: 0.875rem !important; border: none !important; font-weight: 600 !important; flex-shrink: 0 !important; text-shadow: none !important; box-shadow: none !important; }
+
+.dam-body { width: 100%; height: 94vh; display: flex; flex-direction: row; }
+
+.dam-sidebar { width: 14%; min-width: 240px; height: 100%; background: #2b2f36; display: flex; flex-direction: column; padding-top: 1rem; box-sizing: border-box; flex-shrink: 0; }
+.dam-nav-item { width: 100%; height: 3.5rem; display: flex; align-items: center; color: #aab1bc; cursor: pointer; padding-left: 1.5rem; box-sizing: border-box; font-size: 0.875rem; background: transparent; border-left: 0.25rem solid transparent; border-top: 1px solid transparent; border-bottom: 1px solid transparent; }
+.dam-nav-item:hover { background: #33373d; color: #fff; }
+.dam-nav-item.dam-active { background: #3a3f46 !important; color: #fff !important; border-left: 0.25rem solid #e74c3c !important; font-weight: 600 !important; border-top: 1px solid #2b2f36 !important; border-bottom: 1px solid #2b2f36 !important; }
+.dam-nav-icon { width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; opacity: 0.7; flex-shrink: 0; filter: brightness(0) invert(1); }
+.dam-nav-item:hover .dam-nav-icon, .dam-nav-item.dam-active .dam-nav-icon { opacity: 1 !important; }
+.dam-nav-text { line-height: 1.5; pointer-events: none; }
+
+.dam-content { flex: 1; width: auto; height: 100%; background: #f4f6f8; display: flex; flex-direction: column; padding: 1.5%; box-sizing: border-box; gap: 1%; overflow: hidden; }
+.dam-page-title { width: 100%; font-size: 1.25rem; font-weight: 700; color: #1f2733; margin-bottom: 1%; flex-shrink: 0; }
+
+/* Hide TabControl tabs to act as a shell */
+.dam-tab-shell { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.dam-tab-shell .w2tabcontrol_tabs, .dam-tab-shell .w2tabcontrol_control, .dam-tab-shell > ul { display: none !important; }
+.dam-tab-shell .w2tabcontrol_contents, .dam-tab-shell .w2tabcontrol_content { width: 100%; height: 100%; overflow: hidden; border: none !important; }
+
+
+
+
+/* =========================================
+   2. Dashboard Layout
+========================================= */
+.dam-page { width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
+
+/* The inner title can be hidden if the shell title is enough */
+.dam-title { display: none !important; }
+
+.dam-dashboard-grid {
+    flex: 1;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1.5rem;
+    min-height: 0;
+}
+
+.dam-panel {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    padding: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.dam-stats { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.dam-donut { grid-column: 2; grid-row: 1; }
+.dam-line  { grid-column: 1 / span 2; grid-row: 2; }
+.dam-recent{ grid-column: 3; grid-row: 1 / span 2; }
+
+/* Cards inside Stats */
+.dam-stats-title { font-size: 1rem; font-weight: 700; color: #1f2733; margin-bottom: 0.5rem; flex-shrink: 0; }
+
+.dam-card { flex: 1; width: 100%; border-radius: 0.5rem; box-sizing: border-box; padding: 0 1.25rem; display: flex; flex-direction: row; align-items: center; justify-content: space-between; position: relative; overflow: hidden; margin-bottom: 0.5rem; }
+.dam-card:last-child { margin-bottom: 0; }
+.dam-card-purple { background: #f3e8ff; }
+.dam-card-green  { background: #dcfce7; }
+.dam-card-pink   { background: #ffe4e6; }
+
+.dam-card-content { display: flex; flex-direction: column; justify-content: center; z-index: 2; }
+.dam-card-value { font-size: 1.5rem; font-weight: 700; color: #1f2733; margin-bottom: 0.15rem; line-height: 1.2; }
+.dam-card-label { font-size: 0.8rem; color: #64748b; font-weight: 600; line-height: 1.2; }
+.dam-card-icon { width: 3.5rem; height: 3.5rem; position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); z-index: 1; opacity: 0.15; }
+
+/* Panels */
+.dam-panel-title { font-size: 1rem; font-weight: 700; color: #1f2733; margin-bottom: 4%; flex-shrink: 0; }
+.dam-chart-wrap { flex: 1; width: 100%; min-height: 0; }
+.dam-chart { width: 100%; height: 100%; }
+
+/* Recent Uploads List (Timeline) */
+.dam-recent-list { flex: 1; width: 100%; overflow-y: auto; padding-right: 2%; display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 1.5rem; }
+.dam-recent-list::before { content: ''; position: absolute; left: 0.4rem; top: 1.5rem; bottom: 1.5rem; width: 2px; background: #eaedf2; z-index: 1; }
+.dam-recent-row { width: 100%; display: flex; flex-direction: row; align-items: flex-start; padding: 0.75rem 0; gap: 1rem; position: relative; z-index: 2; }
+.dam-timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: #aab1bc; position: absolute; left: -1.45rem; top: 1.5rem; border: 2px solid #fff; box-sizing: border-box; }
+.dam-recent-card { flex: 1; border: 1px solid #eaedf2; border-radius: 0.5rem; padding: 0.75rem; display: flex; flex-direction: row; align-items: center; gap: 0.75rem; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+.dam-recent-icon { width: 2rem; height: 2rem; border-radius: 0.25rem; background: #f8f9fa; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+.dam-recent-icon img { width: 60%; height: 60%; opacity: 0.6; }
+.dam-recent-info { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; overflow: hidden; }
+.dam-recent-name { font-size: 0.875rem; font-weight: 600; color: #1f2733; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dam-recent-meta { display: flex; flex-direction: row; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #7a818c; }
+.dam-recent-user { font-weight: 500; }
+.dam-recent-sep { opacity: 0.5; }

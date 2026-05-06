@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
+<?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ev="http://www.w3.org/2001/xml-events"
+    xmlns:w2="http://www.inswave.com/websquare"
+    xmlns:xf="http://www.w3.org/2002/xforms">
+    <head>
+        <w2:type>COMPONENT</w2:type>
+        <w2:buildDate/>
+        <w2:MSA/>
+        <xf:model>
+            <w2:dataCollection baseNode="map"/>
+            <w2:workflowCollection/>
+        </xf:model>
+        <w2:layoutInfo/>
+        <w2:publicInfo method=""/>
+        <script lazy="false" type="text/javascript"><![CDATA[
+scwin.onpageload = function () {
+    scwin._setActive(0);
+};
+
+scwin._setActive = function (idx) {
+    var ids = ["btn_navDashboard","btn_navFileBrowser","btn_navAssetDetails","btn_navVersionControl"];
+    var titles = ["Dashboard","File Browser","Asset Details","Version Control"];
+    for (var i = 0; i < ids.length; i++) {
+        var comp = $p.getComponentById(ids[i]);
+        if(comp) comp.removeClass("dam-active");
+    }
+    var activeComp = $p.getComponentById(ids[idx]);
+    if(activeComp) activeComp.addClass("dam-active");
+    txt_pageTitle.setLabel(titles[idx]);
+    tab_main.setSelectedTab(idx);
+};
+
+scwin.btn_navDashboard_onclick      = function () { scwin._setActive(0); };
+scwin.btn_navFileBrowser_onclick    = function () { scwin._setActive(1); };
+scwin.btn_navAssetDetails_onclick   = function () { scwin._setActive(2); };
+scwin.btn_navVersionControl_onclick = function () { scwin._setActive(3); };
+
+scwin.btn_logout_onclick = function () {
+    if (confirm("Logout?")) location.href = "/";
+};
+]]></script>
+    </head>
+    <body ev:onpageload="scwin.onpageload">
+        <xf:group id="grp_appShell" class="dam-shell">
+            <!-- Header -->
+            <xf:group id="grp_header" class="dam-header">
+                <xf:group class="dam-header-left">
+                    <xf:image id="img_logo" class="dam-logo" src="/cm/dam/images/logo.svg"></xf:image>
+                    <w2:textbox id="txt_appTitle" class="dam-app-title" label="Digital Asset Manager"></w2:textbox>
+                    <xf:image id="img_hamburger" class="dam-hamburger" src="/cm/dam/images/hamburger.svg"></xf:image>
+                </xf:group>
+                <xf:group class="dam-header-right">
+                    <xf:image id="img_bell" class="dam-bell" src="/cm/dam/images/bell.svg"></xf:image>
+                    <xf:image id="img_avatar" class="dam-avatar" src="/cm/dam/images/avatar.svg"></xf:image>
+                    <xf:trigger id="btn_logout" class="dam-btn-logout" ev:onclick="scwin.btn_logout_onclick">
+                        <xf:label><![CDATA[Logout]]></xf:label>
+                    </xf:trigger>
+                </xf:group>
+            </xf:group>
+            
+            <!-- Body wrapper -->
+            <xf:group id="grp_body" class="dam-body">
+                <!-- Sidebar -->
+                <xf:group id="grp_sidebar" class="dam-sidebar">
+                    <xf:group id="btn_navDashboard" class="dam-nav-item dam-active" ev:onclick="scwin.btn_navDashboard_onclick">
+                        <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_dashboard.svg"></xf:image>
+                        <w2:textbox class="dam-nav-text" label="Dashboard"></w2:textbox>
+                    </xf:group>
+                    <xf:group id="btn_navFileBrowser" class="dam-nav-item" ev:onclick="scwin.btn_navFileBrowser_onclick">
+                        <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_folder.svg"></xf:image>
+                        <w2:textbox class="dam-nav-text" label="File Browser"></w2:textbox>
+                    </xf:group>
+                    <xf:group id="btn_navAssetDetails" class="dam-nav-item" ev:onclick="scwin.btn_navAssetDetails_onclick">
+                        <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_document.svg"></xf:image>
+                        <w2:textbox class="dam-nav-text" label="Asset Details"></w2:textbox>
+                    </xf:group>
+                    <xf:group id="btn_navVersionControl" class="dam-nav-item" ev:onclick="scwin.btn_navVersionControl_onclick">
+                        <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_clock.svg"></xf:image>
+                        <w2:textbox class="dam-nav-text" label="Version Control"></w2:textbox>
+                    </xf:group>
+                </xf:group>
+                
+                <!-- Content Area -->
+                <xf:group id="grp_content" class="dam-content">
+                    <w2:textbox id="txt_pageTitle" class="dam-page-title" label="Dashboard"></w2:textbox>
+                    <w2:tabControl id="tab_main" class="dam-tab-shell" alwaysDraw="false">
+                        <w2:tabs id="tab_dashboard" label="Dashboard"></w2:tabs>
+                        <w2:tabs id="tab_fileBrowser" label="File Browser"></w2:tabs>
+                        <w2:tabs id="tab_assetDetails" label="Asset Details"></w2:tabs>
+                        <w2:tabs id="tab_versionControl" label="Version Control"></w2:tabs>
+                        <w2:content id="cnt_dashboard" src="/cm/dam/main/dashboard.xml" scope="true"></w2:content>
+                        <w2:content id="cnt_fileBrowser" src="/cm/dam/main/fileBrowser.xml" scope="true"></w2:content>
+                        <w2:content id="cnt_assetDetails" src="/cm/dam/main/assetDetails.xml" scope="true"></w2:content>
+                        <w2:content id="cnt_versionControl" src="/cm/dam/main/versionControl.xml" scope="true"></w2:content>
+                    </w2:tabControl>
+                </xf:group>
+            </xf:group>
+            
+        </xf:group>
+    </body>
+</html>

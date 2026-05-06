@@ -1,0 +1,21 @@
+(function () {
+    window.WebSquareExternal = window.WebSquareExternal || {};
+
+    var baseURI = window.WebSquareExternal.baseURI || "/websquare/";
+    if (!baseURI.endsWith("/")) {
+        baseURI += "/";
+    }
+
+    window.WebSquare = window.WebSquare || {};
+    window.WebSquare.baseURI = baseURI;
+    window.WebSquare.baseServletURI = window.WebSquareExternal.baseServletURI || baseURI;
+    window.WebSquare.configPath = baseURI + "config.js";
+    window.WebSquareExternal.baseURI = baseURI;
+    window.WebSquareExternal._mode = "dev";
+
+    document.write(
+        '<script type="text/javascript" src="' +
+            baseURI +
+            '_websquare_/wqm_B5112_main.js"><\\/script>'
+    );
+})();

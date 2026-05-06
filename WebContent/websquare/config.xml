@@ -1,17 +1,17 @@
 <WebSquare>
     <convertPageXML value="true"/>
     <wpack use="true">
-    	<contextRoot value="/" />
-    	<srcExtension value="xml" />
-    	<destExtension value="js" />
-    	<destRoot value="_wpack_" />
-    	<babelDestRoot value="_wpackbabel_" />
-    	<loadingMode value="wpack" />
-    	<common name="co" value="true" />
+    	<contextRoot value="/"/>
+    	<srcExtension value="xml"/>
+    	<destExtension value="js"/>
+    	<destRoot value="_wpack_"/>
+    	<babelDestRoot value="_wpackbabel_"/>
+    	<loadingMode value="wpack"/>
+    	<common name="co" value="true"/>
     	<commonPath>
-    		<path src="/cm/js/commonGlobal.js"></path>
-    		<path src="/cm/js/commonScope.js"></path>
-    		<path src="/cm/js/main.js"></path>
+    		<path src="/cm/js/commonGlobal.js"/>
+    		<path src="/cm/js/commonScope.js"/>
+    		<path src="/cm/js/main.js"/>
     	</commonPath>
     </wpack>
     <allValue value="all"/>

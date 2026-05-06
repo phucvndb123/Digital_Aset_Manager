@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
+<?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ev="http://www.w3.org/2001/xml-events"
+    xmlns:w2="http://www.inswave.com/websquare"
+    xmlns:xf="http://www.w3.org/2002/xforms">
+    <head>
+        <w2:type>COMPONENT</w2:type>
+        <w2:buildDate/>
+        <w2:MSA/>
+        <xf:model>
+            <w2:dataCollection baseNode="map">
+                <w2:dataMap baseNode="map" id="dma_stats">
+                    <w2:keyInfo>
+                        <w2:key id="TOTAL_FILES" name="TOTAL_FILES" dataType="number"></w2:key>
+                        <w2:key id="TOTAL_SIZE_GB" name="TOTAL_SIZE_GB" dataType="number"></w2:key>
+                        <w2:key id="NEW_UPLOADS_TODAY" name="NEW_UPLOADS_TODAY" dataType="number"></w2:key>
+                    </w2:keyInfo>
+                </w2:dataMap>
+                <w2:dataList baseNode="list" repeatNode="map" id="dlt_distribution" saveRemovedData="true">
+                    <w2:columnInfo>
+                        <w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text"></w2:column>
+                        <w2:column id="CNT" name="CNT" dataType="number"></w2:column>
+                        <w2:column id="RATIO" name="RATIO" dataType="number"></w2:column>
+                    </w2:columnInfo>
+                </w2:dataList>
+                <w2:dataList baseNode="list" repeatNode="map" id="dlt_trend" saveRemovedData="true">
+                    <w2:columnInfo>
+                        <w2:column id="MONTH_LABEL" name="MONTH_LABEL" dataType="text"></w2:column>
+                        <w2:column id="STORAGE_GB" name="STORAGE_GB" dataType="number"></w2:column>
+                    </w2:columnInfo>
+                </w2:dataList>
+                <w2:dataList baseNode="list" repeatNode="map" id="dlt_recent" saveRemovedData="true">
+                    <w2:columnInfo>
+                        <w2:column id="ASSET_ID" name="ASSET_ID" dataType="number"></w2:column>
+                        <w2:column id="FILE_NM" name="FILE_NM" dataType="text"></w2:column>
+                        <w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text"></w2:column>
+                        <w2:column id="OWNER_NM" name="OWNER_NM" dataType="text"></w2:column>
+                        <w2:column id="STATUS" name="STATUS" dataType="text"></w2:column>
+                        <w2:column id="PREVIEW_URL" name="PREVIEW_URL" dataType="text"></w2:column>
+                        <w2:column id="UPLOAD_DT" name="UPLOAD_DT" dataType="text"></w2:column>
+                        <w2:column id="TIME_AGO" name="TIME_AGO" dataType="text"></w2:column>
+                    </w2:columnInfo>
+                </w2:dataList>
+            </w2:dataCollection>
+            <w2:workflowCollection/>
+            <xf:submission id="sbm_getStats" action="/api/dashboard/getStats" method="post"
+                mediatype="application/json" encoding="UTF-8" mode="asynchronous"
+                ev:submitdone="scwin.sbm_getStats_submitdone" ev:submiterror="scwin.sbm_submiterror"></xf:submission>
+            <xf:submission id="sbm_getDistribution" action="/api/dashboard/getDistribution" method="post"
+                mediatype="application/json" encoding="UTF-8" mode="asynchronous"
+                ev:submitdone="scwin.sbm_getDistribution_submitdone" ev:submiterror="scwin.sbm_submiterror"></xf:submission>
+            <xf:submission id="sbm_getStorageTrend" action="/api/dashboard/getStorageTrend" method="post"
+                mediatype="application/json" encoding="UTF-8" mode="asynchronous"
+                ev:submitdone="scwin.sbm_getStorageTrend_submitdone" ev:submiterror="scwin.sbm_submiterror"></xf:submission>
+            <xf:submission id="sbm_getRecentUploads" action="/api/dashboard/getRecentUploads" method="post"
+                mediatype="application/json" encoding="UTF-8" mode="asynchronous"
+                ev:submitdone="scwin.sbm_getRecentUploads_submitdone" ev:submiterror="scwin.sbm_submiterror"></xf:submission>
+        </xf:model>
+        <w2:layoutInfo/>
+        <w2:publicInfo method=""/>
+        <script lazy="false" type="text/javascript"><![CDATA[
+scwin.onpageload = function () {
+    $p.executeSubmission($p.getSubmission("sbm_getStats"));
+    $p.executeSubmission($p.getSubmission("sbm_getDistribution"));
+    $p.executeSubmission($p.getSubmission("sbm_getStorageTrend"));
+    $p.executeSubmission($p.getSubmission("sbm_getRecentUploads"));
+};
+
+scwin.sbm_getStats_submitdone = function (e) {
+    var payload = (e && e.responseJSON && e.responseJSON.dma_stats) ? e.responseJSON.dma_stats : {};
+    dma_stats.setJSON(payload);
+
+    txt_totalFiles.setLabel(String(payload.TOTAL_FILES || 0));
+    txt_totalSizeGb.setLabel(scwin._formatGb(payload.TOTAL_SIZE_GB));
+    txt_newUploads.setLabel(String(payload.NEW_UPLOADS_TODAY || 0));
+};
+
+scwin.sbm_getDistribution_submitdone = function (e) {
+    var rows = (e && e.responseJSON && e.responseJSON.dlt_distribution) ? e.responseJSON.dlt_distribution : [];
+    dlt_distribution.setJSON(rows);
+};
+
+scwin.sbm_getStorageTrend_submitdone = function (e) {
+    var rows = (e && e.responseJSON && e.responseJSON.dlt_trend) ? e.responseJSON.dlt_trend : [];
+    dlt_trend.setJSON(rows);
+};
+
+scwin.sbm_getRecentUploads_submitdone = function (e) {
+    var rows = (e && e.responseJSON && e.responseJSON.dlt_recent) ? e.responseJSON.dlt_recent : [];
+    for (var i = 0; i < rows.length; i++) {
+        rows[i].TIME_AGO = "Uploaded " + rows[i].UPLOAD_DT;
+    }
+    dlt_recent.setJSON(rows);
+};
+
+scwin.sbm_submiterror = function () {
+    txt_totalFiles.setLabel("1,248");
+    txt_totalSizeGb.setLabel("842.50 GB");
+    txt_newUploads.setLabel("406");
+
+    var mockRecent = [
+        { FILE_NM: "Project_Proposal_v2.pdf", OWNER_NM: "John Doe", TIME_AGO: "2 hours ago" },
+        { FILE_NM: "Q3_Financial_Report.xlsx", OWNER_NM: "Jane Smith", TIME_AGO: "4 hours ago" },
+        { FILE_NM: "Hero_Banner_Final.png", OWNER_NM: "Mike Johnson", TIME_AGO: "5 hours ago" },
+        { FILE_NM: "Brand_Guidelines.pdf", OWNER_NM: "Sarah Lee", TIME_AGO: "1 day ago" },
+        { FILE_NM: "Marketing_Video_Draft.mp4", OWNER_NM: "David Kim", TIME_AGO: "2 days ago" }
+    ];
+    dlt_recent.setJSON(mockRecent);
+};
+
+scwin._formatGb = function (value) {
+    var n = Number(value);
+    if (isNaN(n)) {
+        n = 0;
+    }
+    return n.toFixed(2) + " GB";
+};
+
+scwin._getFileIcon = function (fileType) {
+    if (fileType === "Images") return "/cm/dam/images/preview/image.svg";
+    if (fileType === "Videos") return "/cm/dam/images/preview/video.svg";
+    if (fileType === "Audio") return "/cm/dam/images/preview/audio.svg";
+    return "/cm/dam/images/preview/document.svg";
+};
+]]></script>
+    </head>
+    <body ev:onpageload="scwin.onpageload">
+        <xf:group class="dam-page">
+            <w2:textbox id="txt_pageTitle" class="dam-title" label="Dashboard"></w2:textbox>
+
+            <xf:group class="dam-dashboard-grid">
+                <!-- Stats -->
+                <xf:group class="dam-panel dam-stats">
+                    <w2:textbox class="dam-stats-title" label="Key Asset Stats"></w2:textbox>
+                    <xf:group class="dam-card dam-card-purple">
+                        <xf:group class="dam-card-content">
+                            <w2:textbox id="txt_totalFiles" class="dam-card-value" label="0"></w2:textbox>
+                            <w2:textbox class="dam-card-label" label="Total Assets"></w2:textbox>
+                        </xf:group>
+                        <xf:image src="/cm/dam/images/ic_dashboard.svg" class="dam-card-icon"></xf:image>
+                    </xf:group>
+                    <xf:group class="dam-card dam-card-green">
+                        <xf:group class="dam-card-content">
+                            <w2:textbox id="txt_totalSizeGb" class="dam-card-value" label="0.00 GB"></w2:textbox>
+                            <w2:textbox class="dam-card-label" label="Storage Used"></w2:textbox>
+                        </xf:group>
+                        <xf:image src="/cm/dam/images/ic_folder.svg" class="dam-card-icon"></xf:image>
+                    </xf:group>
+                    <xf:group class="dam-card dam-card-pink">
+                        <xf:group class="dam-card-content">
+                            <w2:textbox id="txt_newUploads" class="dam-card-value" label="0"></w2:textbox>
+                            <w2:textbox class="dam-card-label" label="New Uploads Today"></w2:textbox>
+                        </xf:group>
+                        <xf:image src="/cm/dam/images/ic_document.svg" class="dam-card-icon"></xf:image>
+                    </xf:group>
+                </xf:group>
+
+                <!-- Donut Chart -->
+                <xf:group class="dam-panel dam-donut">
+                    <w2:textbox class="dam-panel-title" label="Asset Distribution by Type"></w2:textbox>
+                    <xf:group class="dam-chart-wrap">
+                        <w2:fusionchart id="chart_distribution"
+                            chartType="doughnut2d"
+                            drawType="javascript"
+                            ref="data:dlt_distribution"
+                            seriesType="advanced"
+                            class="dam-chart">
+                        </w2:fusionchart>
+                    </xf:group>
+                </xf:group>
+
+                <!-- Line Chart -->
+                <xf:group class="dam-panel dam-line">
+                    <w2:textbox class="dam-panel-title" label="Storage Usage Trend"></w2:textbox>
+                    <xf:group class="dam-chart-wrap">
+                        <w2:fusionchart id="chart_trend"
+                            chartType="MSLine"
+                            drawType="javascript"
+                            ref="data:dlt_trend"
+                            seriesType="advanced"
+                            class="dam-chart">
+                        </w2:fusionchart>
+                    </xf:group>
+                </xf:group>
+
+                <!-- Recent Uploads -->
+                <xf:group class="dam-panel dam-recent">
+                    <w2:textbox class="dam-panel-title" label="Recent Uploads"></w2:textbox>
+                    <xf:group class="dam-recent-list">
+                        <xf:repeat id="rep_recent" nodeset="data:dlt_recent">
+                            <xf:group class="dam-recent-row">
+                                <xf:group class="dam-timeline-dot"></xf:group>
+                                <xf:group class="dam-recent-card">
+                                    <xf:group class="dam-recent-icon">
+                                        <xf:image src="/cm/dam/images/ic_document.svg"></xf:image>
+                                    </xf:group>
+                                    <xf:group class="dam-recent-info">
+                                        <w2:textbox id="txt_recFileNm" class="dam-recent-name" ref="FILE_NM"></w2:textbox>
+                                        <xf:group class="dam-recent-meta">
+                                            <w2:textbox id="txt_recOwnerNm" class="dam-recent-user" ref="OWNER_NM"></w2:textbox>
+                                            <w2:textbox class="dam-recent-sep" label="•"></w2:textbox>
+                                            <w2:textbox id="txt_recUploadDt" class="dam-recent-time" ref="TIME_AGO"></w2:textbox>
+                                        </xf:group>
+                                    </xf:group>
+                                </xf:group>
+                            </xf:group>
+                        </xf:repeat>
+                    </xf:group>
+                </xf:group>
+            </xf:group>
+        </xf:group>
+    </body>
+</html>

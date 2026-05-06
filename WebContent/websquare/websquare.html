@@ -4,7 +4,25 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<title>	WebSquare </title>
-		<script type="text/javascript" src="./_websquare_/javascriptLoader.wq"></script>
+		<script type="text/javascript">
+			(function () {
+				var baseURI = "/websquare/";
+				window.WebSquareExternal = window.WebSquareExternal || {};
+				window.WebSquareExternal.baseURI = baseURI;
+				window.WebSquareExternal.baseServletURI = baseURI;
+				window.WebSquareExternal._mode = "dev";
+				window.WebSquareExternal.w2xPath = "";
+				try {
+					var p = new URLSearchParams(location.search).get("w2xPath");
+					if (p) window.WebSquareExternal.w2xPath = p;
+				} catch (e) {}
+				window.WebSquare = window.WebSquare || {};
+				window.WebSquare.baseURI = baseURI;
+				window.WebSquare.baseServletURI = baseURI;
+				window.WebSquare.configPath = baseURI + "config.js";
+			})();
+		</script>
+		<script type="text/javascript" src="./_websquare_/wqm_B5112_main.js"></script>
 		<script type="text/javascript" src="app.js"></script>
 	</head>
 <body></body>

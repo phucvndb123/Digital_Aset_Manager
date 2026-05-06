@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="300" fill="#e74c3c"/>
+    <g fill="#ffffff" stroke="none">
+        <path d="M150 80 H230 L260 110 V220 H150 Z" opacity="0.95"/>
+        <path d="M230 80 V110 H260 Z" fill="#c0392b"/>
+        <g fill="#e74c3c">
+            <rect x="165" y="130" width="80" height="6" rx="2"/>
+            <rect x="165" y="148" width="80" height="6" rx="2"/>
+            <rect x="165" y="166" width="60" height="6" rx="2"/>
+            <rect x="165" y="184" width="80" height="6" rx="2"/>
+            <rect x="165" y="202" width="50" height="6" rx="2"/>
+        </g>
+    </g>
+    <text x="200" y="265" fill="#ffffff" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="600" text-anchor="middle" letter-spacing="2">DOCUMENT</text>
+</svg>
