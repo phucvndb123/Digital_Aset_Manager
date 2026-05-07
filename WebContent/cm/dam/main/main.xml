@@ -30,7 +30,7 @@ scwin._setActive = function (idx) {
     var activeComp = $p.getComponentById(ids[idx]);
     if(activeComp) activeComp.addClass("dam-active");
     txt_pageTitle.setLabel(titles[idx]);
-    tab_main.setSelectedTab(idx);
+    tab_main.setSelectedIndex(idx);
 };
 
 scwin.btn_navDashboard_onclick      = function () { scwin._setActive(0); };
@@ -86,7 +86,7 @@ scwin.btn_logout_onclick = function () {
                 <!-- Content Area -->
                 <xf:group id="grp_content" class="dam-content">
                     <w2:textbox id="txt_pageTitle" class="dam-page-title" label="Dashboard"></w2:textbox>
-                    <w2:tabControl id="tab_main" class="dam-tab-shell" alwaysDraw="false">
+                    <w2:tabControl id="tab_main" class="dam-tab-shell" alwaysDraw="true">
                         <w2:tabs id="tab_dashboard" label="Dashboard"></w2:tabs>
                         <w2:tabs id="tab_fileBrowser" label="File Browser"></w2:tabs>
                         <w2:tabs id="tab_assetDetails" label="Asset Details"></w2:tabs>
