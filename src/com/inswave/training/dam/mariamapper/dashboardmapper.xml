@@ -26,14 +26,15 @@
 
     <select id="selectStorageTrend" resultType="map">
         SELECT
-            DATE_FORMAT(UPLOAD_DT, '%Y-%m') AS MONTH_LABEL,
+            DATE_FORMAT(UPLOAD_DT, '%b %y') AS MONTH_LABEL,
             ROUND(SUM(FILE_SIZE) / 1073741824, 2) AS STORAGE_GB
         FROM DAM_ASSET
-        GROUP BY DATE_FORMAT(UPLOAD_DT, '%Y-%m')
-        ORDER BY MONTH_LABEL ASC
+        GROUP BY DATE_FORMAT(UPLOAD_DT, '%Y-%m'), DATE_FORMAT(UPLOAD_DT, '%b %y')
+        ORDER BY DATE_FORMAT(UPLOAD_DT, '%Y-%m') ASC
     </select>
 
     <select id="selectRecentUploads" resultType="map">
+        <![CDATA[
         SELECT
             ASSET_ID AS ASSET_ID,
             FILE_NM AS FILE_NM,
@@ -41,10 +42,16 @@
             OWNER_NM AS OWNER_NM,
             STATUS AS STATUS,
             PREVIEW_URL AS PREVIEW_URL,
-            DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
+            DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT,
+            CASE
+                WHEN TIMESTAMPDIFF(MINUTE, UPLOAD_DT, NOW()) < 60 THEN CONCAT('Uploaded ', TIMESTAMPDIFF(MINUTE, UPLOAD_DT, NOW()), ' minutes ago')
+                WHEN TIMESTAMPDIFF(HOUR, UPLOAD_DT, NOW()) < 24 THEN CONCAT('Uploaded ', TIMESTAMPDIFF(HOUR, UPLOAD_DT, NOW()), ' hours ago')
+                ELSE CONCAT('Uploaded ', TIMESTAMPDIFF(DAY, UPLOAD_DT, NOW()), ' days ago')
+            END AS TIME_AGO
         FROM DAM_ASSET
         ORDER BY UPLOAD_DT DESC
-        LIMIT 5
+        LIMIT 6
+        ]]>
     </select>
 
 </mapper>

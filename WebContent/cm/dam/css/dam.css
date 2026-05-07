@@ -446,17 +446,6 @@
    padding-left: 0.5rem;
 }
 
-.dam-recent-list::before {
-   content: '';
-   position: absolute;
-   left: 1.2rem;
-   top: 1rem;
-   bottom: 1rem;
-   width: 2px;
-   background: #e2e8f0;
-   z-index: 1;
-}
-
 .dam-recent-row {
    width: 100%;
    display: flex;
@@ -467,22 +456,34 @@
    z-index: 2;
 }
 
+.dam-recent-row:not(:last-child)::after {
+   content: '';
+   position: absolute;
+   left: 1.1rem;
+   top: 2.5rem;
+   bottom: -1.2rem;
+   width: 2px;
+   background: #f1f5f9;
+   z-index: 1;
+}
+
 .dam-timeline-dot {
-   width: 1.5rem;
-   height: 1.5rem;
+   width: 2.2rem;
+   height: 2.2rem;
    border-radius: 50%;
-   background: #bcf0d3;
+   background: #e6f4ea;
    display: flex;
    justify-content: center;
    align-items: center;
    flex-shrink: 0;
-   margin-top: 0.2rem;
+   margin-top: 0;
 }
 
 .dam-timeline-dot img {
    width: 50%;
    height: 50%;
-   filter: brightness(0) invert(1);
+   /* Convert black/white SVG to Dark Green (#2e7d32 approx) */
+   filter: invert(39%) sepia(50%) saturate(674%) hue-rotate(85deg) brightness(97%) contrast(93%);
 }
 
 .dam-recent-card {
@@ -497,16 +498,17 @@
 }
 
 .dam-recent-name {
-   font-size: 0.9rem;
-   font-weight: 700;
+   font-size: 1rem;
+   font-weight: 600;
    color: #1f2733;
    white-space: nowrap;
    overflow: hidden;
    text-overflow: ellipsis;
+   margin-bottom: 0.2rem;
 }
 
 .dam-recent-meta {
-   font-size: 0.8rem;
+   font-size: 0.85rem;
    color: #64748b;
 }
 
