@@ -61,55 +61,19 @@
         <w2:layoutInfo/>
         <w2:publicInfo method=""/>
         <script lazy="false" type="text/javascript"><![CDATA[
-scwin.onpageload = function () {
-    // Inject mock data immediately for UI review (bypass API for now)
-    var mockStats = { TOTAL_FILES: 1248, TOTAL_SIZE_GB: 842.5, NEW_UPLOADS_TODAY: 406 };
-    dma_stats.setJSON(mockStats);
-    txt_totalFiles.setLabel("1,248");
-    txt_totalSizeGb.setLabel("842.50 GB");
-    txt_newUploads.setLabel("406");
-
-    var mockRecent = [
-        { FILE_NM: "Project_Proposal_v2.pdf", OWNER_NM: "John Doe", TIME_AGO: "2 hours ago" },
-        { FILE_NM: "Q3_Financial_Report.xlsx", OWNER_NM: "Jane Smith", TIME_AGO: "4 hours ago" },
-        { FILE_NM: "Hero_Banner_Final.png", OWNER_NM: "Mike Johnson", TIME_AGO: "5 hours ago" },
-        { FILE_NM: "Brand_Guidelines.pdf", OWNER_NM: "Sarah Lee", TIME_AGO: "1 day ago" },
-        { FILE_NM: "Marketing_Video_Draft.mp4", OWNER_NM: "David Kim", TIME_AGO: "2 days ago" }
-    ];
-    
-    // Use Generator instead of Repeat for foolproof rendering
-    gen_recent.removeAll();
-    for(var i = 0; i < mockRecent.length; i++) {
-        gen_recent.insertChild(i);
-        var fNm = gen_recent.getChild(i, "txt_recFileNm");
-        var tAgo = gen_recent.getChild(i, "txt_recUploadDt");
-        
-        fNm.setLabel(mockRecent[i].FILE_NM);
-        tAgo.setLabel("Uploaded " + mockRecent[i].TIME_AGO + " by " + mockRecent[i].OWNER_NM);
+scwin._triggerLoad = function () {
+    if (scwin._loaded) {
+        return;
     }
-    
-    // Inject mock data for charts
-    var mockDist = [
-        { FILE_TYPE: "Images", CNT: 450, RATIO: 40 },
-        { FILE_TYPE: "Videos", CNT: 120, RATIO: 10 },
-        { FILE_TYPE: "Documents", CNT: 500, RATIO: 45 },
-        { FILE_TYPE: "Audio", CNT: 50, RATIO: 5 }
-    ];
-    dlt_distribution.setJSON(mockDist);
-    scwin.drawDistributionChart(mockDist);
+    scwin._loaded = true;
 
-    var mockTrend = [
-        { MONTH_LABEL: "Jan 20", STORAGE_GB: 100 },
-        { MONTH_LABEL: "Mar 22", STORAGE_GB: 200 },
-        { MONTH_LABEL: "May 22", STORAGE_GB: 300 },
-        { MONTH_LABEL: "Jul 22", STORAGE_GB: 450 },
-        { MONTH_LABEL: "Sep 23", STORAGE_GB: 600 },
-        { MONTH_LABEL: "Nov 23", STORAGE_GB: 850 },
-        { MONTH_LABEL: "Oct 23", STORAGE_GB: 1100 }
-    ];
-    dlt_trend.setJSON(mockTrend);
-    scwin.drawTrendChart(mockTrend);
+    sbm_getStats.submit();
+    sbm_getDistribution.submit();
+    sbm_getStorageTrend.submit();
+    sbm_getRecentUploads.submit();
 };
+
+scwin.onpageload = scwin._triggerLoad;
 
 scwin.drawDistributionChart = function(dataList) {
     var totalCnt = 0;
@@ -121,7 +85,8 @@ scwin.drawDistributionChart = function(dataList) {
     for (var i = 0; i < dataList.length; i++) {
         var pct = ((Number(dataList[i].CNT) / totalCnt) * 100).toFixed(1);
         fcData.push({
-            "label": dataList[i].FILE_TYPE + " " + pct + "%",
+            "label": dataList[i].FILE_TYPE, 
+            "displayValue": dataList[i].FILE_TYPE + "{br}" + pct + "%",
             "value": String(dataList[i].CNT)
         });
     }
@@ -130,12 +95,23 @@ scwin.drawDistributionChart = function(dataList) {
         "showLegend": "1",
         "legendPosition": "bottom",
         "showLabels": "0",
-        "showValues": "0",
+        "showValues": "1",
+        "placeValuesInside": "0", 
+        "enableSmartLabels": "1",
+        "smartLabelClearance": "5",
+        "pieRadius": "70",
+        "doughnutRadius": "40",
+        "chartTopMargin": "0",
+        "chartBottomMargin": "0",
+        "chartLeftMargin": "0",
+        "chartRightMargin": "0",
+        "captionPadding": "0",
+        "legendPadding": "5",
+        "smartLineColor": "#aab1bc",
+        "smartLineThickness": "1",
         "legendBorderAlpha": "0",
         "legendShadow": "0",
         "paletteColors": "#66c296,#a1d575,#4e7fcd,#e08d66",
-        "pieRadius": "70",
-        "doughnutRadius": "40",
         "baseFontColor": "#1f2733",
         "showBorder": "0",
         "bgColor": "#ffffff",
@@ -161,8 +137,26 @@ scwin.drawTrendChart = function(dataList) {
         "bgAlpha": "0",
         "theme": "fusion",
         "showValues": "0",
+        "yAxisName": "Storage (GB)",
+        "yAxisNameFontSize": "13",
+        "yAxisNameFontColor": "#000000",
+        "drawAnchors": "1",
+        "anchorRadius": "5",
+        "anchorBgColor": "#4e7fcd",
+        "anchorBorderColor": "#4e7fcd",
         "paletteColors": "#4e7fcd",
-        "plotFillAlpha": "50"
+        "plotFillAlpha": "20",
+        "plotBorderThickness": "3",
+        "showAlternateHGridColor": "0",
+        "divLineColor": "#e2e8f0",
+        "divLineAlpha": "100",
+        "divLineThickness": "1",
+        "yAxisMinValue": "0",
+        "yAxisMaxValue": "1200",
+        "numDivLines": "3",
+        "baseFontColor": "#1f2733",
+        "chartTopMargin": "15",
+        "chartBottomMargin": "15"
     };
 
     chart_trend.setChartAttribute(chartOptions);
@@ -170,28 +164,56 @@ scwin.drawTrendChart = function(dataList) {
 };
 
 scwin.sbm_getStats_submitdone = function (e) {
-    var payload = (e && e.responseJSON && e.responseJSON.dma_stats) ? e.responseJSON.dma_stats : {};
-    dma_stats.setJSON(payload);
+    var response = (e && e.responseJSON) ? e.responseJSON : {};
+    var payload = response.body && response.body.dma_stats ? response.body.dma_stats : {};
 
+    dma_stats.setJSON(payload);
     txt_totalFiles.setLabel(String(payload.TOTAL_FILES || 0));
     txt_totalSizeGb.setLabel(scwin._formatGb(payload.TOTAL_SIZE_GB));
     txt_newUploads.setLabel(String(payload.NEW_UPLOADS_TODAY || 0));
 };
 
 scwin.sbm_getDistribution_submitdone = function (e) {
-    var rows = (e && e.responseJSON && e.responseJSON.dlt_distribution) ? e.responseJSON.dlt_distribution : [];
+    var response = (e && e.responseJSON) ? e.responseJSON : {};
+    var rows = response.body && response.body.dlt_distribution ? response.body.dlt_distribution : [];
+
     dlt_distribution.setJSON(rows);
     scwin.drawDistributionChart(rows);
-    dlt_distribution.setJSON(rows);
 };
 
 scwin.sbm_getStorageTrend_submitdone = function (e) {
-    var rows = (e && e.responseJSON && e.responseJSON.dlt_trend) ? e.responseJSON.dlt_trend : [];
+    var response = (e && e.responseJSON) ? e.responseJSON : {};
+    var rows = response.body && response.body.dlt_trend ? response.body.dlt_trend : [];
+
     dlt_trend.setJSON(rows);
+    scwin.drawTrendChart(rows);
 };
 
 scwin.sbm_getRecentUploads_submitdone = function (e) {
-    // Left empty since we use mock data now
+    var response = (e && e.responseJSON) ? e.responseJSON : {};
+    var rows = response.body && response.body.dlt_recent ? response.body.dlt_recent : [];
+
+    scwin._renderRecentUploads(rows);
+};
+
+scwin._renderRecentUploads = function (rows) {
+    gen_recent.removeAll();
+
+    for (var i = 0; i < rows.length; i++) {
+        gen_recent.insertChild(i);
+        var fNm = gen_recent.getChild(i, "txt_recFileNm");
+        var tAgo = gen_recent.getChild(i, "txt_recUploadDt");
+        var iconObj = gen_recent.getChild(i, "img_recentIcon");
+
+        fNm.setLabel(rows[i].FILE_NM || "");
+        tAgo.setLabel(rows[i].TIME_AGO || rows[i].UPLOAD_DT || "");
+
+        if (rows[i].STATUS === "PROCESSED" || rows[i].STATUS === "COMPLETED") {
+            iconObj.setSrc("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjIwIDYgOSAxNyA0IDEyIj48L3BvbHlsaW5lPjwvc3ZnPg==");
+        } else {
+            iconObj.setSrc("/cm/dam/images/ic_document.svg");
+        }
+    }
 };
 
 scwin.sbm_submiterror = function () {
@@ -211,6 +233,12 @@ scwin._getFileIcon = function (fileType) {
     if (fileType === "Audio") return "/cm/dam/images/preview/audio.svg";
     return "/cm/dam/images/preview/document.svg";
 };
+// Fallback: ensure requests fire even if onpageload is skipped.
+setTimeout(function () {
+    if (scwin && scwin._triggerLoad) {
+        scwin._triggerLoad();
+    }
+}, 0);
 ]]></script>
     </head>
     <body ev:onpageload="scwin.onpageload">
@@ -227,7 +255,7 @@ scwin._getFileIcon = function (fileType) {
                             <w2:textbox class="dam-card-label" label="Total Assets"></w2:textbox>
                         </xf:group>
                         <xf:group class="dam-card-icon-wrap">
-                            <xf:image src="/cm/dam/images/ic_user.svg" class="dam-card-icon"></xf:image>
+                            <xf:image src="/cm/dam/images/avatar.svg" class="dam-card-icon"></xf:image>
                         </xf:group>
                     </xf:group>
                     <xf:group class="dam-card dam-card-green">
@@ -236,7 +264,7 @@ scwin._getFileIcon = function (fileType) {
                             <w2:textbox class="dam-card-label" label="Storage Used"></w2:textbox>
                         </xf:group>
                         <xf:group class="dam-card-icon-wrap">
-                            <xf:image src="/cm/dam/images/ic_database.svg" class="dam-card-icon"></xf:image>
+                            <xf:image src="/cm/dam/images/ic_folder.svg" class="dam-card-icon"></xf:image>
                         </xf:group>
                     </xf:group>
                     <xf:group class="dam-card dam-card-pink">
@@ -245,7 +273,7 @@ scwin._getFileIcon = function (fileType) {
                             <w2:textbox class="dam-card-label" label="New Uploads Today"></w2:textbox>
                         </xf:group>
                         <xf:group class="dam-card-icon-wrap">
-                            <xf:image src="/cm/dam/images/ic_upload.svg" class="dam-card-icon"></xf:image>
+                            <xf:image src="/cm/dam/images/ic_clock.svg" class="dam-card-icon"></xf:image>
                         </xf:group>
                     </xf:group>
                 </xf:group>
@@ -290,7 +318,7 @@ scwin._getFileIcon = function (fileType) {
                     <w2:generator id="gen_recent" class="dam-recent-list">
                         <xf:group id="grp_row" class="dam-recent-row">
                             <xf:group class="dam-timeline-dot">
-                                <xf:image src="/cm/dam/images/ic_document.svg"></xf:image>
+                                <xf:image id="img_recentIcon" src="/cm/dam/images/ic_document.svg"></xf:image>
                             </xf:group>
                             <xf:group class="dam-recent-card">
                                 <w2:textbox id="txt_recFileNm" class="dam-recent-name"></w2:textbox>

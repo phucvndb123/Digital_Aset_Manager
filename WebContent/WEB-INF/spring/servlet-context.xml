@@ -19,6 +19,7 @@
 	<resources mapping="/cm/**" location="/cm/" />
 	<resources mapping="/ui/**" location="/ui/" />
 	<resources mapping="/favicon.ico" location="/favicon.ico" />
+	<view-controller path="/" view-name="redirect:/websquare/websquare.html?w2xPath=/cm/dam/main/main.xml" />
 
 	<beans:import resource="appServlet/application-context.xml" />
 	<beans:import resource="appServlet/database-context.xml" />
