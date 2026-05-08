@@ -66,14 +66,44 @@ scwin._triggerLoad = function () {
         return;
     }
     scwin._loaded = true;
+    scwin._tryLoad(0);
+};
 
-    sbm_getStats.submit();
-    sbm_getDistribution.submit();
-    sbm_getStorageTrend.submit();
-    sbm_getRecentUploads.submit();
+scwin._tryLoad = function (attempt) {
+    var sbmStats = (typeof sbm_getStats !== "undefined") ? sbm_getStats : $p.getSubmission("sbm_getStats");
+    var sbmDist = (typeof sbm_getDistribution !== "undefined") ? sbm_getDistribution : $p.getSubmission("sbm_getDistribution");
+    var sbmTrend = (typeof sbm_getStorageTrend !== "undefined") ? sbm_getStorageTrend : $p.getSubmission("sbm_getStorageTrend");
+    var sbmRecent = (typeof sbm_getRecentUploads !== "undefined") ? sbm_getRecentUploads : $p.getSubmission("sbm_getRecentUploads");
+
+    if (!sbmStats && !sbmDist && !sbmTrend && !sbmRecent) {
+        if (attempt < 5) {
+            setTimeout(function () {
+                scwin._tryLoad(attempt + 1);
+            }, 200);
+        }
+        return;
+    }
+
+    if (window.com && com.sbm && com.sbm.execute) {
+        if (sbmStats) com.sbm.execute(sbmStats);
+        if (sbmDist) com.sbm.execute(sbmDist);
+        if (sbmTrend) com.sbm.execute(sbmTrend);
+        if (sbmRecent) com.sbm.execute(sbmRecent);
+    } else {
+        if (sbmStats) $p.executeSubmission(sbmStats);
+        if (sbmDist) $p.executeSubmission(sbmDist);
+        if (sbmTrend) $p.executeSubmission(sbmTrend);
+        if (sbmRecent) $p.executeSubmission(sbmRecent);
+    }
 };
 
 scwin.onpageload = scwin._triggerLoad;
+
+setTimeout(function () {
+    if (scwin && scwin._triggerLoad) {
+        scwin._triggerLoad();
+    }
+}, 0);
 
 scwin.drawDistributionChart = function(dataList) {
     var totalCnt = 0;
@@ -124,12 +154,19 @@ scwin.drawDistributionChart = function(dataList) {
 
 scwin.drawTrendChart = function(dataList) {
     var fcData = [];
+    var maxVal = 0;
     for (var i = 0; i < dataList.length; i++) {
+        var val = Number(dataList[i].STORAGE_GB);
+        if (!isNaN(val) && val > maxVal) {
+            maxVal = val;
+        }
         fcData.push({
             "label": dataList[i].MONTH_LABEL,
             "value": String(dataList[i].STORAGE_GB)
         });
     }
+
+    var yMax = maxVal > 0 ? Math.ceil(maxVal * 1.2 * 100) / 100 : 10;
 
     var chartOptions = {
         "showBorder": "0",
@@ -152,7 +189,7 @@ scwin.drawTrendChart = function(dataList) {
         "divLineAlpha": "100",
         "divLineThickness": "1",
         "yAxisMinValue": "0",
-        "yAxisMaxValue": "1200",
+        "yAxisMaxValue": String(yMax),
         "numDivLines": "3",
         "baseFontColor": "#1f2733",
         "chartTopMargin": "15",
@@ -165,7 +202,8 @@ scwin.drawTrendChart = function(dataList) {
 
 scwin.sbm_getStats_submitdone = function (e) {
     var response = (e && e.responseJSON) ? e.responseJSON : {};
-    var payload = response.body && response.body.dma_stats ? response.body.dma_stats : {};
+    var body = response.body ? response.body : response;
+    var payload = body.dma_stats ? body.dma_stats : {};
 
     dma_stats.setJSON(payload);
     txt_totalFiles.setLabel(String(payload.TOTAL_FILES || 0));
@@ -175,7 +213,8 @@ scwin.sbm_getStats_submitdone = function (e) {
 
 scwin.sbm_getDistribution_submitdone = function (e) {
     var response = (e && e.responseJSON) ? e.responseJSON : {};
-    var rows = response.body && response.body.dlt_distribution ? response.body.dlt_distribution : [];
+    var body = response.body ? response.body : response;
+    var rows = body.dlt_distribution ? body.dlt_distribution : [];
 
     dlt_distribution.setJSON(rows);
     scwin.drawDistributionChart(rows);
@@ -183,7 +222,8 @@ scwin.sbm_getDistribution_submitdone = function (e) {
 
 scwin.sbm_getStorageTrend_submitdone = function (e) {
     var response = (e && e.responseJSON) ? e.responseJSON : {};
-    var rows = response.body && response.body.dlt_trend ? response.body.dlt_trend : [];
+    var body = response.body ? response.body : response;
+    var rows = body.dlt_trend ? body.dlt_trend : [];
 
     dlt_trend.setJSON(rows);
     scwin.drawTrendChart(rows);
@@ -191,7 +231,8 @@ scwin.sbm_getStorageTrend_submitdone = function (e) {
 
 scwin.sbm_getRecentUploads_submitdone = function (e) {
     var response = (e && e.responseJSON) ? e.responseJSON : {};
-    var rows = response.body && response.body.dlt_recent ? response.body.dlt_recent : [];
+    var body = response.body ? response.body : response;
+    var rows = body.dlt_recent ? body.dlt_recent : [];
 
     scwin._renderRecentUploads(rows);
 };
