@@ -1,0 +1,88 @@
+{
+  "info": {
+    "name": "Digital Asset Manager - Dashboard APIs",
+    "_postman_id": "b5f4a5a3-3c9f-4f28-9cf6-4a2f5f6d0e01",
+    "description": "Dashboard endpoints with sample bodies",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ],
+  "item": [
+    {
+      "name": "Get Stats",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/dashboard/getStats",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "dashboard", "getStats"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fromDate\": \"2025-01-01\",\n  \"toDate\": \"2025-12-31\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Distribution",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/dashboard/getDistribution",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "dashboard", "getDistribution"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fromDate\": \"2025-01-01\",\n  \"toDate\": \"2025-12-31\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Storage Trend",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/dashboard/getStorageTrend",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "dashboard", "getStorageTrend"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fromMonth\": \"2025-01\",\n  \"toMonth\": \"2025-12\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Recent Uploads",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/dashboard/getRecentUploads",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "dashboard", "getRecentUploads"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"limit\": 10\n}"
+        }
+      }
+    }
+  ]
+}

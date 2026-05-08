@@ -34,7 +34,7 @@
 	</beans:bean>
 
 	<beans:bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-		<beans:property name="basePackage" value="com.inswave.training" />
+		<beans:property name="basePackage" value="com.inswave.training.dam.mapper" />
 		<beans:property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
 	</beans:bean>
 
