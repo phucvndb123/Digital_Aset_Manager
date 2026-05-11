@@ -17,29 +17,50 @@
         <w2:publicInfo method=""/>
         <script lazy="false" type="text/javascript"><![CDATA[
 scwin.onpageload = function () {
+    console.log("[DAM] onpageload fired");
     scwin._setActive(0);
 };
 
 scwin._setActive = function (idx) {
-    var ids = ["btn_navDashboard","btn_navFileBrowser","btn_navAssetDetails","btn_navVersionControl"];
-    var titles = ["Dashboard","File Browser","Asset Details","Version Control"];
+    console.log("[DAM] _setActive called, idx=" + idx);
+    var ids    = ["btn_navDashboard","btn_navFileBrowser","btn_navAssetDetails","btn_navVersionControl"];
+    var titles = ["Dashboard","File Browser","Asset Details Panel","Version Control"];
     for (var i = 0; i < ids.length; i++) {
         var comp = $p.getComponentById(ids[i]);
-        if(comp) comp.removeClass("dam-active");
+        if (comp) { comp.removeClass("dam-active"); }
     }
     var activeComp = $p.getComponentById(ids[idx]);
-    if(activeComp) activeComp.addClass("dam-active");
-    txt_pageTitle.setLabel(titles[idx]);
-    tab_main.setSelectedIndex(idx);
+    if (activeComp) { activeComp.addClass("dam-active"); }
+    try {
+        var titleComp = $p.getComponentById("txt_pageTitle");
+        if (titleComp) { titleComp.setLabel(titles[idx]); }
+    } catch (e) { console.warn("[DAM] setLabel error", e); }
+    scwin._switchTab(idx, 0);
 };
 
-scwin.btn_navDashboard_onclick      = function () { scwin._setActive(0); };
-scwin.btn_navFileBrowser_onclick    = function () { scwin._setActive(1); };
-scwin.btn_navAssetDetails_onclick   = function () { scwin._setActive(2); };
-scwin.btn_navVersionControl_onclick = function () { scwin._setActive(3); };
+scwin._switchTab = function (idx, attempt) {
+    var tab = $p.getComponentById("tab_main");
+    console.log("[DAM] _switchTab attempt=" + attempt + " tab=" + tab + " idx=" + idx);
+    if (tab) {
+        console.log("[DAM] tab methods:", typeof tab.setSelectedTabIndex, typeof tab.setSelectedTab);
+    }
+    if (tab && typeof tab.setSelectedTabIndex === "function") {
+        try { tab.setSelectedTabIndex(idx); console.log("[DAM] setSelectedTabIndex OK"); return; } catch (e) { console.warn("[DAM] setSelectedTabIndex error", e); }
+    }
+    if (attempt < 10) {
+        window.setTimeout(function () { scwin._switchTab(idx, attempt + 1); }, 150);
+    } else {
+        console.error("[DAM] tab_main not ready after 10 attempts");
+    }
+};
+
+scwin.btn_navDashboard_onclick      = function () { console.log("[DAM] click Dashboard");      scwin._setActive(0); };
+scwin.btn_navFileBrowser_onclick    = function () { console.log("[DAM] click FileBrowser");    scwin._setActive(1); };
+scwin.btn_navAssetDetails_onclick   = function () { console.log("[DAM] click AssetDetails");   scwin._setActive(2); };
+scwin.btn_navVersionControl_onclick = function () { console.log("[DAM] click VersionControl"); scwin._setActive(3); };
 
 scwin.btn_logout_onclick = function () {
-    if (confirm("Logout?")) location.href = "/";
+    if (confirm("Logout?")) { location.href = "/"; }
 };
 ]]></script>
     </head>
@@ -65,19 +86,19 @@ scwin.btn_logout_onclick = function () {
             <xf:group id="grp_body" class="dam-body">
                 <!-- Sidebar -->
                 <xf:group id="grp_sidebar" class="dam-sidebar">
-                    <xf:group id="btn_navDashboard" class="dam-nav-item dam-active" ev:onclick="scwin.btn_navDashboard_onclick">
+                    <xf:group id="btn_navDashboard" class="dam-nav-item dam-active" ev:onclick="scwin.btn_navDashboard_onclick" style="cursor:pointer;">
                         <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_dashboard.svg"></xf:image>
                         <w2:textbox class="dam-nav-text" label="Dashboard"></w2:textbox>
                     </xf:group>
-                    <xf:group id="btn_navFileBrowser" class="dam-nav-item" ev:onclick="scwin.btn_navFileBrowser_onclick">
+                    <xf:group id="btn_navFileBrowser" class="dam-nav-item" ev:onclick="scwin.btn_navFileBrowser_onclick" style="cursor:pointer;">
                         <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_folder.svg"></xf:image>
                         <w2:textbox class="dam-nav-text" label="File Browser"></w2:textbox>
                     </xf:group>
-                    <xf:group id="btn_navAssetDetails" class="dam-nav-item" ev:onclick="scwin.btn_navAssetDetails_onclick">
+                    <xf:group id="btn_navAssetDetails" class="dam-nav-item" ev:onclick="scwin.btn_navAssetDetails_onclick" style="cursor:pointer;">
                         <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_document.svg"></xf:image>
                         <w2:textbox class="dam-nav-text" label="Asset Details"></w2:textbox>
                     </xf:group>
-                    <xf:group id="btn_navVersionControl" class="dam-nav-item" ev:onclick="scwin.btn_navVersionControl_onclick">
+                    <xf:group id="btn_navVersionControl" class="dam-nav-item" ev:onclick="scwin.btn_navVersionControl_onclick" style="cursor:pointer;">
                         <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_clock.svg"></xf:image>
                         <w2:textbox class="dam-nav-text" label="Version Control"></w2:textbox>
                     </xf:group>
@@ -91,10 +112,10 @@ scwin.btn_logout_onclick = function () {
                         <w2:tabs id="tab_fileBrowser" label="File Browser"></w2:tabs>
                         <w2:tabs id="tab_assetDetails" label="Asset Details"></w2:tabs>
                         <w2:tabs id="tab_versionControl" label="Version Control"></w2:tabs>
-                        <w2:content id="cnt_dashboard" src="/cm/dam/main/dashboard.xml" scope="true"></w2:content>
-                        <w2:content id="cnt_fileBrowser" src="/cm/dam/main/file_browser.xml" scope="true"></w2:content>
-                        <w2:content id="cnt_assetDetails" src="/cm/dam/main/assetDetails.xml" scope="true"></w2:content>
-                        <w2:content id="cnt_versionControl" src="/cm/dam/main/versionControl.xml" scope="true"></w2:content>
+                        <w2:content id="cnt_dashboard" src="/cm/dam/main/dashboard.xml" frameMode="wframe" scope="true"></w2:content>
+                        <w2:content id="cnt_fileBrowser" src="/cm/dam/main/file_browser.xml" frameMode="wframe" scope="true"></w2:content>
+                        <w2:content id="cnt_assetDetails" src="/cm/dam/main/assetDetails.xml" frameMode="wframe" scope="true"></w2:content>
+                        <w2:content id="cnt_versionControl" src="/cm/dam/main/versionControl.xml" frameMode="wframe" scope="true"></w2:content>
                     </w2:tabControl>
                 </xf:group>
             </xf:group>

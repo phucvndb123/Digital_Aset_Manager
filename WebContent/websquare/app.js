@@ -33,7 +33,38 @@
 		promiseObj = WebSquare.startApplication(WebSquareExternal.w2xPath);
 	}
 
-	promiseObj.then(function(resolve, reject) {
-		com.win.setLangCode($p, com.win.getLanguage($p));
-	});
+        if (typeof WebSquareExternal !== "undefined" && WebSquareExternal && WebSquareExternal.w2xPath) {
+            w2xPath = WebSquareExternal.w2xPath;
+        }
+
+        if (!w2xPath && WebSquare && WebSquare.net && typeof WebSquare.net.getParameter === "function") {
+            w2xPath = WebSquare.net.getParameter("w2xPath") || "";
+        }
+
+        if (!w2xPath) {
+            try {
+                w2xPath = new URLSearchParams(location.search).get("w2xPath") || "";
+            } catch (err) {}
+        }
+
+        await Promise.all([
+            WebSquare._loadModuleDynamic("uiplugin.wframe"),
+            WebSquare._loadModuleDynamic("uiplugin.tabControl"),
+            WebSquare._loadModuleDynamic("uiplugin.textbox"),
+            WebSquare._loadModuleDynamic("uiplugin.trigger"),
+            WebSquare._loadModuleDynamic("uiplugin.group"),
+            WebSquare._loadModuleDynamic("uiplugin.image"),
+            WebSquare._loadModuleDynamic("uiplugin.gridView"),
+            WebSquare._loadModuleDynamic("uiplugin.treeview"),
+            WebSquare._loadModuleDynamic("uiplugin.input"),
+            WebSquare._loadModuleDynamic("uiplugin.selectbox")
+        ]);
+
+        if (w2xPath) {
+            return WebSquare.startApplication(w2xPath);
+        }
+        return WebSquare.startApplication();
+    };
+
+    start();
 })();
