@@ -332,7 +332,7 @@ setTimeout(function () {
                             bgColor="#ffffff"
                             bgAlpha="0"
                             enableSmartLabels="1"
-                            baseFontColor="#1f2733">
+                            baseFontColor="#1f2733" style="left:0px;top:9px;">
                         </w2:fusionchart>
                     </xf:group>
                 </xf:group>

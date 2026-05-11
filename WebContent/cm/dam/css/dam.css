@@ -135,6 +135,7 @@
    border-left: 0.25rem solid transparent;
    border-top: 1px solid transparent;
    border-bottom: 1px solid transparent;
+   position: relative;
 }
 
 .dam-nav-item:hover {
@@ -170,6 +171,16 @@
    pointer-events: none;
 }
 
+.dam-nav-hit {
+   position: absolute;
+   inset: 0;
+   background: transparent;
+   border: none;
+   width: 100%;
+   height: 100%;
+   display: block;
+ }
+
 .dam-content {
    flex: 1;
    width: auto;
@@ -199,20 +210,35 @@
    display: flex;
    flex-direction: column;
    overflow: hidden;
+   flex: 1;
 }
 
-.dam-tab-shell .w2tabcontrol_tabs,
-.dam-tab-shell .w2tabcontrol_control,
-.dam-tab-shell>ul {
+/* SP5 actual class for the tab header bar */
+.dam-tab-shell .w2tabcontrol_tabhost {
    display: none !important;
 }
 
-.dam-tab-shell .w2tabcontrol_contents,
-.dam-tab-shell .w2tabcontrol_content {
+.dam-tab-shell .w2tabcontrol_contents {
    width: 100%;
    height: 100%;
    overflow: hidden;
    border: none !important;
+   flex: 1;
+}
+
+/* SP5: each tab's content wrapper — no absolute, let WebSquare control display */
+.dam-tab-shell .w2tabcontrol_contents_wrapper {
+   width: 100%;
+   height: 100%;
+   overflow: hidden;
+   border: none !important;
+}
+
+/* The wframe must fill its wrapper */
+.dam-tab-shell .w2wframe {
+   width: 100% !important;
+   height: 100% !important;
+   display: block !important;
 }
 
 
@@ -232,22 +258,23 @@
    background: #f8f9fa !important;
 }
 
-/* Strip ALL WebSquare default borders globally for this dashboard and enforce 100% height */
+/* Strip ALL WebSquare default borders globally */
 .w2tabcontrol,
-.w2tabcontrol_control,
 .w2tabcontrol_contents,
-.w2tabcontrol_content {
+.w2tabcontrol_contents_wrapper {
    border: none !important;
    background: transparent !important;
 }
 
-.w2tabcontrol_contents,
-.w2tabcontrol_content {
+.w2tabcontrol_contents {
    height: 100% !important;
-   display: flex !important;
-   flex-direction: column !important;
-   flex: 1 !important;
 }
+
+/* SP5: individual tab wrapper — do NOT set display; WebSquare controls show/hide via inline style */
+.w2tabcontrol_contents_wrapper {
+   height: 100% !important;
+}
+
 
 /* The inner title can be hidden if the shell title is enough */
 .dam-title {
@@ -514,4 +541,478 @@
 
 .dam-recent-sep {
    display: none;
+}
+
+
+/* =========================================
+   3. Asset Details Page
+========================================= */
+.dam-asset-page {
+   width: 100% !important;
+   height: 100% !important;
+   box-sizing: border-box !important;
+   background: #f8f9fa !important;
+   padding: 0 !important;
+   overflow: hidden !important;
+   display: flex !important;
+   flex-direction: column !important;
+}
+
+.dam-asset-grid {
+   flex: 1 !important;
+   width: 100% !important;
+   display: grid !important;
+   grid-template-columns: minmax(0, 1fr) 360px !important;
+   gap: 1rem !important;
+   box-sizing: border-box !important;
+   min-height: 0 !important;
+}
+
+.dam-asset-left {
+   display: flex !important;
+   flex-direction: column !important;
+   gap: 1rem !important;
+   min-height: 0 !important;
+   height: 100% !important;
+}
+
+.dam-asset-right {
+   display: flex !important;
+   flex-direction: column !important;
+   min-height: 0 !important;
+   height: 100% !important;
+}
+
+.dam-asset-panel {
+   background: #ffffff !important;
+   border: 1px solid #e2e8f0 !important;
+   border-radius: 0.5rem !important;
+   box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+   box-sizing: border-box !important;
+   display: flex !important;
+   flex-direction: column !important;
+   min-height: 0 !important;
+}
+
+.dam-asset-panel:not(.dam-asset-detail) {
+   padding: 1rem 1.25rem !important;
+}
+
+.dam-asset-panel.dam-asset-detail {
+   padding: 0 !important;
+}
+
+.dam-asset-folder {
+   flex: 0 0 38% !important;
+   min-height: 220px !important;
+}
+
+.dam-asset-files {
+   flex: 1 1 auto !important;
+   min-height: 0 !important;
+}
+
+.dam-asset-detail {
+   flex: 1 !important;
+   overflow-y: auto !important;
+   overflow-x: hidden !important;
+   padding: 1.5rem !important;
+}
+
+/* Panel head with title + action icons */
+.dam-asset-panel-head {
+   display: flex !important;
+   align-items: center !important;
+   justify-content: space-between !important;
+   margin-bottom: 1rem !important;
+   flex-shrink: 0 !important;
+   padding-bottom: 0.75rem !important;
+}
+
+.dam-asset-folder .dam-asset-panel-head,
+.dam-asset-files .dam-asset-panel-head {
+   border-bottom: 1px solid #e5e7eb !important;
+}
+
+.dam-asset-panel-title {
+   font-size: 0.95rem !important;
+   font-weight: 700 !important;
+   color: #1f2733 !important;
+   margin: 0 !important;
+   padding: 0 !important;
+}
+
+.dam-asset-panel-actions {
+   display: flex !important;
+   gap: 0.25rem !important;
+   align-items: center !important;
+}
+
+.dam-icon-btn {
+   width: 1.75rem !important;
+   height: 1.75rem !important;
+   display: inline-flex !important;
+   align-items: center !important;
+   justify-content: center !important;
+   background: transparent !important;
+   border: 1px solid transparent !important;
+   border-radius: 0.25rem !important;
+   color: #64748b !important;
+   cursor: pointer !important;
+   font-size: 0.85rem !important;
+   font-weight: 500 !important;
+   line-height: 1 !important;
+   padding: 0 !important;
+   box-shadow: none !important;
+   text-shadow: none !important;
+}
+
+.dam-icon-btn:hover {
+   background: #f1f5f9 !important;
+   color: #1f2733 !important;
+}
+
+/* Folder tree */
+.dam-asset-folder-body {
+   flex: 1 !important;
+   min-height: 0 !important;
+   overflow: auto !important;
+   border: 1px solid #e5e7eb !important;
+   border-radius: 0.375rem !important;
+   padding: 0 !important;
+   background: #ffffff !important;
+}
+
+.dam-asset-tree {
+   width: 100% !important;
+   height: 100% !important;
+   border: none !important;
+   background: transparent !important;
+   font-size: 0.85rem !important;
+}
+
+/* Row styling - parent rows (folder level) */
+.dam-asset-tree .w2treeview_row_parent {
+   padding: 0.3rem 0 !important;
+   border-bottom: 1px solid #f1f5f9 !important;
+   cursor: pointer !important;
+}
+
+.dam-asset-tree .w2treeview_row_parent:hover {
+   background: #eef2ff !important;
+}
+
+/* Root item - Digital Assets (depth 0) */
+.dam-asset-tree .w2treeview_row_depth0 {
+   font-weight: 700 !important;
+}
+
+.dam-asset-tree .w2treeview_row_depth0 .w2treeview_label {
+   color: #0f172a !important;
+   font-weight: 700 !important;
+}
+
+/* Level 1 items - Marketing Documents, Video Assets, etc */
+.dam-asset-tree .w2treeview_row_depth1 .w2treeview_label {
+   color: #1f2733 !important;
+   font-weight: 600 !important;
+}
+
+/* Level 2+ items - children */
+.dam-asset-tree .w2treeview_row_depth2 .w2treeview_label,
+.dam-asset-tree .w2treeview_row_depth3 .w2treeview_label {
+   color: #475569 !important;
+   font-weight: 400 !important;
+}
+
+/* Icons - folder icons (blue) and document icons */
+.dam-asset-tree .w2treeview_icon_navi {
+   width: 1rem !important;
+   height: 1rem !important;
+   opacity: 0.75 !important;
+   transition: opacity 0.2s ease !important;
+}
+
+/* Document icon - already distinct color from folder icon */
+.dam-asset-tree .tree-pdf-node .w2treeview_icon_navi {
+   opacity: 0.8 !important;
+}
+
+.dam-asset-tree .w2treeview_row_parent:hover .w2treeview_icon_navi {
+   opacity: 1 !important;
+}
+
+.dam-asset-tree .tree-pdf-node:hover .w2treeview_icon_navi {
+   opacity: 1 !important;
+}
+
+/* Label text */
+.dam-asset-tree .w2treeview_label {
+   color: #1f2733 !important;
+   line-height: 1.4 !important;
+}
+
+.dam-asset-tree .w2treeview_select_node {
+   background: #dbeafe !important;
+   border-radius: 0.25rem !important;
+}
+
+/* File list */
+.dam-asset-files-body {
+   flex: 1 !important;
+   min-height: 0 !important;
+   display: flex !important;
+   flex-direction: column !important;
+   overflow: hidden !important;
+}
+
+.dam-asset-grid-view {
+   flex: 1 !important;
+   min-height: 0 !important;
+   border: 1px solid #e5e7eb !important;
+   border-radius: 0.375rem !important;
+   background: #ffffff !important;
+}
+
+.dam-asset-grid-view .w2grid_header {
+   background: #f8fafc !important;
+   border-bottom: 1px solid #e2e8f0 !important;
+   font-weight: 600 !important;
+   font-size: 0.8rem !important;
+   color: #1f2733 !important;
+}
+
+.dam-asset-grid-view .w2grid_row {
+   border-bottom: 1px solid #f1f5f9 !important;
+   height: 2.5rem !important;
+}
+
+.dam-asset-grid-view .w2grid_row:hover {
+   background: #f8fafc !important;
+}
+
+/* Colored file type badges */
+.dam-cell-icon {
+   font-weight: 600 !important;
+   font-size: 0.75rem !important;
+   letter-spacing: 0.05em !important;
+   min-width: 50px !important;
+   text-align: center !important;
+}
+
+/* PDF badge - red */
+.dam-asset-grid-view .w2grid_body .w2grid_cell:nth-child(2) {
+   padding: 0.25rem 0.5rem !important;
+}
+
+/* Pagination */
+.dam-asset-pagination {
+   display: flex !important;
+   align-items: center !important;
+   justify-content: flex-end !important;
+   padding: 0.75rem 0.5rem !important;
+   flex-shrink: 0 !important;
+   background: #f8fafc !important;
+   border-top: 1px solid #e5e7eb !important;
+   gap: 1rem !important;
+}
+
+.dam-pagi-label {
+   font-size: 0.75rem !important;
+   color: #64748b !important;
+   font-weight: 500 !important;
+   margin-right: auto !important;
+}
+
+.dam-pagi-controls {
+   display: flex !important;
+   gap: 0.25rem !important;
+   align-items: center !important;
+}
+
+.dam-pagi-btn {
+   min-width: 1.75rem !important;
+   height: 1.75rem !important;
+   padding: 0 0.5rem !important;
+   border: 1px solid #cbd5e1 !important;
+   background: #ffffff !important;
+   border-radius: 0.25rem !important;
+   font-size: 0.75rem !important;
+   color: #475569 !important;
+   cursor: pointer !important;
+   box-shadow: none !important;
+   text-shadow: none !important;
+   display: inline-flex !important;
+   align-items: center !important;
+   justify-content: center !important;
+   font-weight: 500 !important;
+   transition: all 0.15s ease !important;
+}
+
+.dam-pagi-btn:hover {
+   background: #f1f5f9 !important;
+   color: #0f172a !important;
+   border-color: #94a3b8 !important;
+}
+
+.dam-pagi-active {
+   background: #1f2733 !important;
+   color: #ffffff !important;
+   border-color: #1f2733 !important;
+   font-weight: 600 !important;
+}
+
+/* Asset Detail preview image */
+.dam-asset-preview {
+   width: 100% !important;
+   height: 180px !important;
+   border-radius: 0.5rem !important;
+   overflow: hidden !important;
+   margin-bottom: 1.25rem !important;
+   background: linear-gradient(135deg, #6b46c1 0%, #4f46e5 100%) !important;
+   flex-shrink: 0 !important;
+   box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.dam-asset-preview-img {
+   width: 100% !important;
+   height: 100% !important;
+   object-fit: cover !important;
+   display: block !important;
+}
+
+/* Form rows */
+.dam-form-row {
+   display: flex !important;
+   flex-direction: column !important;
+   gap: 0.4rem !important;
+   margin-bottom: 1rem !important;
+}
+
+.dam-form-label {
+   font-size: 0.8rem !important;
+   color: #475569 !important;
+   font-weight: 600 !important;
+   text-transform: uppercase !important;
+   letter-spacing: 0.025em !important;
+}
+
+.dam-form-input,
+.dam-form-input input,
+.dam-form-select select {
+   width: 100% !important;
+   height: 2.25rem !important;
+   border: 1px solid #cbd5e1 !important;
+   border-radius: 0.375rem !important;
+   padding: 0.5rem !important;
+   font-size: 0.85rem !important;
+   background: #ffffff !important;
+   color: #1f2733 !important;
+   box-sizing: border-box !important;
+   line-height: 1.5 !important;
+}
+
+.dam-form-input:focus,
+.dam-form-input input:focus,
+.dam-form-select select:focus {
+   outline: none !important;
+   border-color: #94a3b8 !important;
+   box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1) !important;
+}
+
+.dam-form-chips {
+   width: 100% !important;
+}
+
+.dam-form-chips .w2checkcombobox,
+.dam-form-chips select {
+   width: 100% !important;
+   min-height: 2.25rem !important;
+   border: 1px solid #cbd5e1 !important;
+   border-radius: 0.375rem !important;
+   padding: 0.35rem 0.5rem !important;
+   font-size: 0.85rem !important;
+}
+
+.dam-form-chips .w2checkcombobox {
+   background: #ffffff !important;
+}
+
+.dam-form-chips .w2checkcombobox * {
+   font-size: 0.85rem !important;
+}
+
+/* Action buttons row */
+.dam-form-actions {
+   display: flex !important;
+   gap: 0.5rem !important;
+   margin: 1rem 0 1.5rem 0 !important;
+}
+
+.dam-btn-outline,
+.dam-btn-primary {
+   flex: 1 !important;
+   height: 2.25rem !important;
+   border-radius: 0.375rem !important;
+   font-size: 0.8rem !important;
+   font-weight: 700 !important;
+   cursor: pointer !important;
+   display: inline-flex !important;
+   align-items: center !important;
+   justify-content: center !important;
+   gap: 0.4rem !important;
+   box-shadow: none !important;
+   text-shadow: none !important;
+   padding: 0 0.75rem !important;
+   border: 1px solid transparent !important;
+   transition: all 0.15s ease !important;
+}
+
+.dam-btn-outline {
+   background: #ffffff !important;
+   color: #1f2733 !important;
+   border-color: #cbd5e1 !important;
+}
+
+.dam-btn-outline:hover {
+   background: #f8fafc !important;
+   border-color: #94a3b8 !important;
+   color: #0f172a !important;
+}
+
+.dam-btn-primary {
+   background: #1f2733 !important;
+   color: #ffffff !important;
+   border-color: #1f2733 !important;
+}
+
+.dam-btn-primary:hover {
+   background: #0f172a !important;
+   border-color: #0f172a !important;
+}
+
+/* Metadata section */
+.dam-meta-section {
+   margin-top: 1.5rem !important;
+   padding-top: 1rem !important;
+   border-top: 1px solid #e5e7eb !important;
+}
+
+.dam-meta-title {
+   font-size: 0.85rem !important;
+   font-weight: 700 !important;
+   color: #1f2733 !important;
+   margin: 0 0 0.75rem 0 !important;
+   text-transform: uppercase !important;
+   letter-spacing: 0.05em !important;
+}
+
+/* File List grid cell styling */
+.dam-asset-grid-view .w2grid_cell {
+   font-size: 0.82rem !important;
+}
+
+/* Status cell — keep simple */
+.dam-cell-status {
+   font-weight: 500 !important;
 }
