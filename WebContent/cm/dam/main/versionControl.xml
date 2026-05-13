@@ -193,7 +193,7 @@ scwin.btn_versionEdit_onclick = function () { /* mock */ };
     </head>
     <body ev:onpageload="scwin.onpageload">
         <xf:group class="dam-page dam-asset-page">
-            <w2:textbox class="dam-page-title" label="Version Control"/>
+            
 
             <xf:group class="dam-asset-grid">
                 <xf:group class="dam-asset-left">
