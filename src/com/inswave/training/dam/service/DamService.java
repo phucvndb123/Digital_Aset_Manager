@@ -3,6 +3,7 @@ package com.inswave.training.dam.service;
 import java.util.List;
 
 import com.inswave.training.dam.vo.DamAssetVo;
+import com.inswave.training.dam.vo.DamAccessLogVo;
 import com.inswave.training.dam.vo.DamFolderVo;
 import com.inswave.training.dam.vo.DamVersionVo;
 
@@ -14,4 +15,8 @@ public interface DamService {
 	DamAssetVo getAssetById(Integer assetId);
 
 	List<DamVersionVo> getVersionsByAssetId(Integer assetId);
+
+	List<DamAccessLogVo> getAccessLogsByAssetId(Integer assetId);
+
+	int restoreVersion(Integer assetId, Integer verId, String userNm);
 }

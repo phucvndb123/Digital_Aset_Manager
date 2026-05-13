@@ -14,6 +14,7 @@
                 <w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
                     <w2:columnInfo>
                         <w2:column id="CHK" name="CHK" dataType="text" />
+                        <w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
                         <w2:column id="ICON" name="ICON" dataType="text" />
                         <w2:column id="FILE_NM" name="FILE_NM" dataType="text" />
                         <w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
@@ -39,7 +40,7 @@ scwin.onpageload = function () {
 scwin._initMockData = function () {
     var rows = [
         {
-            "CHK": "", "ICON": "PDF",
+            "CHK": "", "ASSET_ID": 2, "ICON": "PDF",
             "FILE_NM": "File Name I Image",
             "FILE_TYPE": "Documents",
             "FILE_SIZE": "23 KB",
@@ -51,7 +52,7 @@ scwin._initMockData = function () {
             "PREVIEW_URL": "/cm/dam/images/preview/document.svg"
         },
         {
-            "CHK": "", "ICON": "JPG",
+            "CHK": "", "ASSET_ID": 1, "ICON": "JPG",
             "FILE_NM": "Product Image.jpg",
             "FILE_TYPE": "JPG",
             "FILE_SIZE": "3.00 GB",
@@ -63,7 +64,7 @@ scwin._initMockData = function () {
             "PREVIEW_URL": "/cm/dam/images/preview/image.svg"
         },
         {
-            "CHK": "", "ICON": "MP4",
+            "CHK": "", "ASSET_ID": 6, "ICON": "MP4",
             "FILE_NM": "Video Assets",
             "FILE_TYPE": "MP4 Asset",
             "FILE_SIZE": "6.80 KB",
@@ -75,7 +76,7 @@ scwin._initMockData = function () {
             "PREVIEW_URL": "/cm/dam/images/preview/video.svg"
         },
         {
-            "CHK": "", "ICON": "MP4",
+            "CHK": "", "ASSET_ID": 10, "ICON": "MP4",
             "FILE_NM": "Internal Manuals",
             "FILE_TYPE": "MP4 Asset",
             "FILE_SIZE": "3.17 KB",
@@ -128,6 +129,32 @@ scwin._applyDetail = function (rowIndex) {
 
 scwin.btn_download_onclick = function () { /* mock */ };
 scwin.btn_edit_onclick     = function () { /* mock */ };
+
+scwin.btn_versionControl_onclick = function () {
+    // Mock: open popup with fixed assetId=1 until asset list is wired to real backend selection
+    var assetId = 1;
+    try {
+        if (dlAsset && typeof dlAsset.getRowJSON === "function") {
+            var idx = 0;
+            try {
+                var grd = $p.getComponentById("grdAsset");
+                if (grd && typeof grd.getSelectedIndex === "function") {
+                    idx = grd.getSelectedIndex();
+                }
+            } catch (e) {}
+            var row = dlAsset.getRowJSON(idx);
+            if (row && row.ASSET_ID) { assetId = row.ASSET_ID; }
+        }
+    } catch (e) {}
+
+    var data = { assetId: assetId };
+    var opts = { id: "pop_versionControl", popupName: "Version Control", width: 1100, height: 640, modal: true, resizable: true };
+    if (window.gcm && gcm.win && typeof gcm.win.openPopup === "function") {
+        gcm.win.openPopup($p, "/cm/dam/main/versionControlPopup.xml", opts, data);
+    } else {
+        $p.openPopup("/cm/dam/main/versionControlPopup.xml", { id: opts.id, width: opts.width + "px", height: opts.height + "px", modal: true, resizable: true, dataObject: { type: "json", name: "paramData", data: data } });
+    }
+};
 ]]></script>
     </head>
     <body ev:onpageload="scwin.onpageload">
@@ -294,6 +321,12 @@ scwin.btn_edit_onclick     = function () { /* mock */ };
                             </xf:trigger>
                             <xf:trigger id="btn_edit" class="dam-btn-primary" ev:onclick="scwin.btn_edit_onclick">
                                 <xf:label><![CDATA[Edit Metadata]]></xf:label>
+                            </xf:trigger>
+                        </xf:group>
+
+                        <xf:group class="dam-form-actions" style="margin-top:0;">
+                            <xf:trigger id="btn_versionControl" class="dam-btn-outline" ev:onclick="scwin.btn_versionControl_onclick">
+                                <xf:label><![CDATA[Version Control]]></xf:label>
                             </xf:trigger>
                         </xf:group>
 
