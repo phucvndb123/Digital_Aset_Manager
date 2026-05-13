@@ -82,16 +82,27 @@
                 if (n >= kb) { return (n / kb).toFixed(2) + " KB"; }
                 return n + " B";
             };
+            
+            scwin._setDetailField = function(compId, key, value) {
+                var val = value == null ? "" : String(value);
+                dmAssetDetail.set(key, val);
+                try {
+                    var comp = $p.getComponentById(compId);
+                    if (comp && typeof comp.setValue === "function") {
+                        comp.setValue(val);
+                    }
+                } catch (e) {}
+            };
 
             scwin._clearAssetDetail = function() {
-                dmAssetDetail.set("FILE_NM", "");
-                dmAssetDetail.set("DESCRIPTION", "");
-                dmAssetDetail.set("FILE_TYPE", "");
-                dmAssetDetail.set("TAGS", "");
-                dmAssetDetail.set("ASSET_DATA", "Draft");
-                dmAssetDetail.set("FILE_SIZE", "");
-                dmAssetDetail.set("OWNER_NM", "");
-                dmAssetDetail.set("UPLOAD_DT", "");
+                 scwin._setDetailField("inpFileNm", "FILE_NM", "");
+                scwin._setDetailField("taDescription", "DESCRIPTION", "");
+                scwin._setDetailField("inpFileType", "FILE_TYPE", "");
+                scwin._setDetailField("inpTags", "TAGS", "");
+                scwin._setDetailField("selAssetData", "ASSET_DATA", "Draft");
+                scwin._setDetailField("inpFileSize", "FILE_SIZE", "");
+                scwin._setDetailField("inpOwnerNm", "OWNER_NM", "");
+                scwin._setDetailField("inpUploadDt", "UPLOAD_DT", "");
             };
 
             scwin._realRowIndex = function(displayRow) {
@@ -109,12 +120,12 @@
                 if (!rowData) { return; }
                 var st = rowData.STATUS || "Draft";
                 if (st !== "Draft" && st !== "Published" && st !== "Archived") { st = "Draft"; }
-                dmAssetDetail.set("FILE_NM", rowData.FILE_NM || "");
-                dmAssetDetail.set("FILE_TYPE", rowData.FILE_TYPE || "");
-                dmAssetDetail.set("FILE_SIZE", rowData.FILE_SIZE || "");
-                dmAssetDetail.set("ASSET_DATA", st);
-                dmAssetDetail.set("OWNER_NM", rowData.OWNER_NM || "");
-                dmAssetDetail.set("UPLOAD_DT", rowData.UPLOAD_DT || "");
+                scwin._setDetailField("inpFileNm", "FILE_NM", rowData.FILE_NM || "");
+                scwin._setDetailField("inpFileType", "FILE_TYPE", rowData.FILE_TYPE || "");
+                scwin._setDetailField("inpFileSize", "FILE_SIZE", rowData.FILE_SIZE || "");
+                scwin._setDetailField("selAssetData", "ASSET_DATA", st);
+                scwin._setDetailField("inpOwnerNm", "OWNER_NM", rowData.OWNER_NM || "");
+                scwin._setDetailField("inpUploadDt", "UPLOAD_DT", rowData.UPLOAD_DT || "");
             };
 
             scwin._selectRowAndShowDetail = function(displayRowIndex) {
@@ -216,23 +227,46 @@
                 scwin.loadAssets(folderId);
             };
 
-            /* WebSquare SP5: onrowindexchange(row, oldRow) — NOT (grid, old, new) */
+            scwin._normalizeRowIndex = function(rowLike) {
+                var row = rowLike;
+                if (row && typeof row === "object") {
+                    if (typeof row.rowIndex === "number") { row = row.rowIndex; }
+                    else if (typeof row.newRowIndex === "number") { row = row.newRowIndex; }
+                    else if (typeof row.index === "number") { row = row.index; }
+                }
+                row = parseInt(row, 10);
+                if (isNaN(row) || row < 0) { return -1; }
+                return row;
+            };
             scwin.grdAsset_onrowindexchange = function(row, oldRow) {
-                if (row == null || row < 0) { return; }
-                scwin._selectRowAndShowDetail(row);
+                 var newRow = scwin._normalizeRowIndex(row);
+                if (newRow < 0 && arguments.length >= 3) {
+                    newRow = scwin._normalizeRowIndex(arguments[2]);
+                }
+                if (newRow < 0) { return; }
+                scwin._selectRowAndShowDetail(newRow);
             };
 
             /* Khi focus ô đổi hàng (chuột / phím), đồng bộ panel phải */
             scwin.grdAsset_oncellindexchange = function(row, col, oldRow, oldCol) {
-                if (row == null || row < 0) { return; }
-                if (row === oldRow) { return; }
-                scwin._selectRowAndShowDetail(row);
+                 var newRow = scwin._normalizeRowIndex(row);
+                var prevRow = scwin._normalizeRowIndex(oldRow);
+                if (newRow < 0 && arguments.length >= 3) {
+                    prevRow = scwin._normalizeRowIndex(arguments[1]);
+                    newRow = scwin._normalizeRowIndex(arguments[2]);
+                }
+                if (newRow < 0 || newRow === prevRow) { return; }
+                scwin._selectRowAndShowDetail(newRow);
             };
 
             scwin.grdAsset_oncellclick = function(row, col, colId) {
-                if (row == null || row < 0) { return; }
+                var newRow = scwin._normalizeRowIndex(row);
+                if (newRow < 0 && arguments.length >= 2) {
+                    newRow = scwin._normalizeRowIndex(arguments[1]);
+                }
+                if (newRow < 0) { return; }
                 if (colId && String(colId).indexOf("hd") === 0) { return; }
-                scwin._selectRowAndShowDetail(row);
+                 scwin._selectRowAndShowDetail(newRow);
             };
 
             scwin.loadAssetDetail = function(assetId, fallbackRow) {
@@ -240,8 +274,8 @@
                     var base = fallbackRow || {};
                     if (!response || !response.asset) {
                         scwin._applyDetailFromGridRow(base);
-                        dmAssetDetail.set("DESCRIPTION", "");
-                        dmAssetDetail.set("TAGS", "");
+                          scwin._setDetailField("taDescription", "DESCRIPTION", "");
+                        scwin._setDetailField("inpTags", "TAGS", "");
                         return;
                     }
                     var asset = response.asset;
@@ -249,20 +283,20 @@
                     if (status !== "Draft" && status !== "Published" && status !== "Archived") {
                         status = "Draft";
                     }
-                    dmAssetDetail.set("FILE_NM", asset.fileNm || base.FILE_NM || "");
-                    dmAssetDetail.set("DESCRIPTION", asset.description || "");
-                    dmAssetDetail.set("FILE_TYPE", asset.fileType || base.FILE_TYPE || "");
-                    dmAssetDetail.set("TAGS", asset.tags || "");
-                    dmAssetDetail.set("ASSET_DATA", status);
+                    scwin._setDetailField("inpFileNm", "FILE_NM", asset.fileNm || base.FILE_NM || "");
+                    scwin._setDetailField("taDescription", "DESCRIPTION", asset.description || "");
+                    scwin._setDetailField("inpFileType", "FILE_TYPE", asset.fileType || base.FILE_TYPE || "");
+                    scwin._setDetailField("inpTags", "TAGS", asset.tags || "");
+                    scwin._setDetailField("selAssetData", "ASSET_DATA", status);
                     var sz = "";
                     if (asset.fileSize != null && typeof asset.fileSize === "number") {
                         sz = scwin._formatFileSize(asset.fileSize);
                     } else {
                         sz = base.FILE_SIZE || "";
                     }
-                    dmAssetDetail.set("FILE_SIZE", sz);
-                    dmAssetDetail.set("OWNER_NM", asset.ownerNm || base.OWNER_NM || "");
-                    dmAssetDetail.set("UPLOAD_DT", asset.uploadDt || base.UPLOAD_DT || "");
+                    scwin._setDetailField("inpFileSize", "FILE_SIZE", sz);
+                    scwin._setDetailField("inpOwnerNm", "OWNER_NM", asset.ownerNm || base.OWNER_NM || "");
+                    scwin._setDetailField("inpUploadDt", "UPLOAD_DT", asset.uploadDt || base.UPLOAD_DT || "");
                 });
             };
 
@@ -417,39 +451,23 @@
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Name" />
-							<xf:input ref="data:dmAssetDetail/FILE_NM" class="dam-form-input" style="width:100%;" />
+							<xf:input ref="data:dmAssetDetail/FILE_NM" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Description" />
-							<xf:textarea ref="data:dmAssetDetail/DESCRIPTION" class="dam-form-input" style="width:100%;height:120px;" />
+							<xf:input ref="data:dmAssetDetail/DESCRIPTION" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Asset Type" />
-							<xf:input ref="data:dmAssetDetail/FILE_TYPE" class="dam-form-input" style="width:100%;" />
+							<xf:input ref="data:dmAssetDetail/FILE_TYPE" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Tags" />
-							<xf:input ref="data:dmAssetDetail/TAGS" class="dam-form-input" style="width:100%;" />
+							<xf:input ref="data:dmAssetDetail/TAGS" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Asset Data" />
-							<xf:select1 ref="data:dmAssetDetail/ASSET_DATA" appearance="minimal" class="dam-form-select" renderType="select"
-								style="width:100%;">
-								<xf:choices>
-									<xf:item>
-										<xf:label>Draft</xf:label>
-										<xf:value>Draft</xf:value>
-									</xf:item>
-									<xf:item>
-										<xf:label>Published</xf:label>
-										<xf:value>Published</xf:value>
-									</xf:item>
-									<xf:item>
-										<xf:label>Archived</xf:label>
-										<xf:value>Archived</xf:value>
-									</xf:item>
-								</xf:choices>
-							</xf:select1>
+							<xf:input ref="data:dmAssetDetail/ASSET_DATA" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="File Size" />
