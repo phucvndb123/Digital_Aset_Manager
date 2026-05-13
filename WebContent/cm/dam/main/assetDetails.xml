@@ -21,6 +21,7 @@
                 <w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
                     <w2:columnInfo>
                         <w2:column id="CHK" name="CHK" dataType="text" />
+                        <w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
                         <w2:column id="ICON" name="ICON" dataType="text" />
                         <w2:column id="FILE_NM" name="FILE_NM" dataType="text" />
                         <w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
@@ -597,6 +598,12 @@ scwin.btn_edit_onclick = function () {
                             </xf:trigger>
                             <xf:trigger id="btn_edit" class="dam-btn-primary" ev:onclick="scwin.btn_edit_onclick">
                                 <xf:label><![CDATA[Edit Metadata]]></xf:label>
+                            </xf:trigger>
+                        </xf:group>
+
+                        <xf:group class="dam-form-actions" style="margin-top:0;">
+                            <xf:trigger id="btn_versionControl" class="dam-btn-outline" ev:onclick="scwin.btn_versionControl_onclick">
+                                <xf:label><![CDATA[Version Control]]></xf:label>
                             </xf:trigger>
                         </xf:group>
 

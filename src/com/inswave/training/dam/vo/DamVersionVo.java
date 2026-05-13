@@ -4,6 +4,7 @@ public class DamVersionVo {
 	private Integer verId;
 	private Integer assetId;
 	private String verNo;
+	private String fileNm;
 	private String fileUrl;
 	private String previewUrl;
 	private String changeLog;
@@ -32,6 +33,14 @@ public class DamVersionVo {
 
 	public void setVerNo(String verNo) {
 		this.verNo = verNo;
+	}
+
+	public String getFileNm() {
+		return fileNm;
+	}
+
+	public void setFileNm(String fileNm) {
+		this.fileNm = fileNm;
 	}
 
 	public String getFileUrl() {

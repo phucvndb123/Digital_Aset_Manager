@@ -29,6 +29,7 @@
 		<id property="verId" column="VER_ID" />
 		<result property="assetId" column="ASSET_ID" />
 		<result property="verNo" column="VER_NO" />
+		<result property="fileNm" column="FILE_NM" />
 		<result property="fileUrl" column="FILE_URL" />
 		<result property="previewUrl" column="PREVIEW_URL" />
 		<result property="changeLog" column="CHANGE_LOG" />
@@ -36,6 +37,14 @@
 		<result property="uploadDt" column="UPLOAD_DT" />
 	</resultMap>
 
+	<resultMap id="accessLogMap" type="com.inswave.training.dam.vo.DamAccessLogVo">
+		<id property="logId" column="LOG_ID" />
+		<result property="assetId" column="ASSET_ID" />
+		<result property="userNm" column="USER_NM" />
+		<result property="actionTp" column="ACTION_TP" />
+		<result property="actionDt" column="ACTION_DT" />
+		<result property="remark" column="REMARK" />
+	</resultMap>
 	<select id="selectFolderTree" resultMap="folderMap">
 		SELECT FOLDER_ID, FOLDER_NM, PARENT_FOLDER_ID, PATH_DEPTH
 		FROM DAM_FOLDER
@@ -60,11 +69,33 @@
 	</select>
 
 	<select id="selectVersionsByAssetId" parameterType="int" resultMap="versionMap">
-		SELECT VER_ID, ASSET_ID, VER_NO, FILE_URL, PREVIEW_URL, CHANGE_LOG, OWNER_NM,
-		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
-		FROM DAM_VERSION
+		SELECT
+			V.VER_ID,
+			V.ASSET_ID,
+			V.VER_NO,
+			A.FILE_NM,
+			V.FILE_URL,
+			V.PREVIEW_URL,
+			V.CHANGE_LOG,
+			V.OWNER_NM,
+			DATE_FORMAT(V.UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
+		FROM DAM_VERSION V
+		JOIN DAM_ASSET A ON A.ASSET_ID = V.ASSET_ID
+		WHERE V.ASSET_ID = #{assetId}
+		ORDER BY V.VER_ID DESC
+	</select>
+
+	<select id="selectAccessLogsByAssetId" parameterType="int" resultMap="accessLogMap">
+		SELECT
+			LOG_ID,
+			ASSET_ID,
+			USER_NM,
+			ACTION_TP,
+			DATE_FORMAT(ACTION_DT, '%Y-%m-%d %H:%i:%s') AS ACTION_DT,
+			REMARK
+		FROM DAM_ACCESS_LOG
 		WHERE ASSET_ID = #{assetId}
-		ORDER BY VER_ID DESC
+		ORDER BY LOG_ID DESC
 	</select>
 
 	<update id="updateAsset">

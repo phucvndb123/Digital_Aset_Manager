@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 import com.inswave.training.dam.vo.DamAssetVo;
+import com.inswave.training.dam.vo.DamAccessLogVo;
 import com.inswave.training.dam.vo.DamFolderVo;
 import com.inswave.training.dam.vo.DamVersionVo;
 
