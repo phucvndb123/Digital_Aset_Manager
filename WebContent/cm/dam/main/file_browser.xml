@@ -451,35 +451,35 @@
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Name" />
-							<xf:input ref="data:dmAssetDetail/FILE_NM" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpFileNm" ref="data:dmAssetDetail/FILE_NM" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Description" />
-							<xf:input ref="data:dmAssetDetail/DESCRIPTION" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="taDescription" ref="data:dmAssetDetail/DESCRIPTION" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Asset Type" />
-							<xf:input ref="data:dmAssetDetail/FILE_TYPE" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpFileType" ref="data:dmAssetDetail/FILE_TYPE" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Tags" />
-							<xf:input ref="data:dmAssetDetail/TAGS" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpTags" ref="data:dmAssetDetail/TAGS" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Asset Data" />
-							<xf:input ref="data:dmAssetDetail/ASSET_DATA" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="selAssetData" ref="data:dmAssetDetail/ASSET_DATA" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="File Size" />
-							<xf:input ref="data:dmAssetDetail/FILE_SIZE" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpFileSize" ref="data:dmAssetDetail/FILE_SIZE" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Owner" />
-							<xf:input ref="data:dmAssetDetail/OWNER_NM" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpOwnerNm" ref="data:dmAssetDetail/OWNER_NM" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Uploaded" />
-							<xf:input ref="data:dmAssetDetail/UPLOAD_DT" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpUploadDt" ref="data:dmAssetDetail/UPLOAD_DT" readOnly="true" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 					</xf:group>
 				</xf:group>
