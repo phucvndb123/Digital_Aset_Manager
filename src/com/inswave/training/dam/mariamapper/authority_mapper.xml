@@ -14,8 +14,14 @@
 		<result property="fileNm" column="FILE_NM" />
 		<result property="folderId" column="FOLDER_ID" />
 		<result property="fileType" column="FILE_TYPE" />
+		<result property="fileExt" column="FILE_EXT" />
 		<result property="fileSize" column="FILE_SIZE" />
 		<result property="ownerNm" column="OWNER_NM" />
+		<result property="status" column="STATUS" />
+		<result property="tags" column="TAGS" />
+		<result property="description" column="DESCRIPTION" />
+		<result property="previewUrl" column="PREVIEW_URL" />
+		<result property="resolution" column="RESOLUTION" />
 		<result property="uploadDt" column="UPLOAD_DT" />
 	</resultMap>
 
@@ -23,10 +29,22 @@
 		<id property="verId" column="VER_ID" />
 		<result property="assetId" column="ASSET_ID" />
 		<result property="verNo" column="VER_NO" />
+		<result property="fileNm" column="FILE_NM" />
 		<result property="fileUrl" column="FILE_URL" />
+		<result property="previewUrl" column="PREVIEW_URL" />
 		<result property="changeLog" column="CHANGE_LOG" />
+		<result property="ownerNm" column="OWNER_NM" />
+		<result property="uploadDt" column="UPLOAD_DT" />
 	</resultMap>
 
+	<resultMap id="accessLogMap" type="com.inswave.training.dam.vo.DamAccessLogVo">
+		<id property="logId" column="LOG_ID" />
+		<result property="assetId" column="ASSET_ID" />
+		<result property="userNm" column="USER_NM" />
+		<result property="actionTp" column="ACTION_TP" />
+		<result property="actionDt" column="ACTION_DT" />
+		<result property="remark" column="REMARK" />
+	</resultMap>
 	<select id="selectFolderTree" resultMap="folderMap">
 		SELECT FOLDER_ID, FOLDER_NM, PARENT_FOLDER_ID, PATH_DEPTH
 		FROM DAM_FOLDER
@@ -34,7 +52,8 @@
 	</select>
 
 	<select id="selectAssetsByFolderId" parameterType="int" resultMap="assetMap">
-		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_SIZE, OWNER_NM,
+		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE, OWNER_NM,
+		STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
 		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_ASSET
 		WHERE FOLDER_ID = #{folderId}
@@ -42,17 +61,46 @@
 	</select>
 
 	<select id="selectAssetById" parameterType="int" resultMap="assetMap">
-		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_SIZE, OWNER_NM,
+		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE, OWNER_NM,
+		STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
 		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_ASSET
 		WHERE ASSET_ID = #{assetId}
 	</select>
 
 	<select id="selectVersionsByAssetId" parameterType="int" resultMap="versionMap">
-		SELECT VER_ID, ASSET_ID, VER_NO, FILE_URL, CHANGE_LOG
-		FROM DAM_VERSION
-		WHERE ASSET_ID = #{assetId}
-		ORDER BY VER_ID DESC
+		SELECT
+			V.VER_ID,
+			V.ASSET_ID,
+			V.VER_NO,
+			A.FILE_NM,
+			V.FILE_URL,
+			V.PREVIEW_URL,
+			V.CHANGE_LOG,
+			V.OWNER_NM,
+			DATE_FORMAT(V.UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
+		FROM DAM_VERSION V
+		JOIN DAM_ASSET A ON A.ASSET_ID = V.ASSET_ID
+		WHERE V.ASSET_ID = #{assetId}
+		ORDER BY V.VER_ID DESC
 	</select>
+
+	<select id="selectAccessLogsByAssetId" parameterType="int" resultMap="accessLogMap">
+		SELECT
+			LOG_ID,
+			ASSET_ID,
+			USER_NM,
+			ACTION_TP,
+			DATE_FORMAT(ACTION_DT, '%Y-%m-%d %H:%i:%s') AS ACTION_DT,
+			REMARK
+		FROM DAM_ACCESS_LOG
+		WHERE ASSET_ID = #{assetId}
+		ORDER BY LOG_ID DESC
+	</select>
+
+	<insert id="insertAccessLog">
+		INSERT INTO DAM_ACCESS_LOG (ASSET_ID, USER_NM, ACTION_TP, REMARK)
+		VALUES (#{assetId}, #{userNm}, #{actionTp}, #{remark})
+	</insert>
 
 </mapper>

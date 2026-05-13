@@ -4,8 +4,12 @@ public class DamVersionVo {
 	private Integer verId;
 	private Integer assetId;
 	private String verNo;
+	private String fileNm;
 	private String fileUrl;
+	private String previewUrl;
 	private String changeLog;
+	private String ownerNm;
+	private String uploadDt;
 
 	public Integer getVerId() {
 		return verId;
@@ -31,6 +35,14 @@ public class DamVersionVo {
 		this.verNo = verNo;
 	}
 
+	public String getFileNm() {
+		return fileNm;
+	}
+
+	public void setFileNm(String fileNm) {
+		this.fileNm = fileNm;
+	}
+
 	public String getFileUrl() {
 		return fileUrl;
 	}
@@ -39,11 +51,35 @@ public class DamVersionVo {
 		this.fileUrl = fileUrl;
 	}
 
+	public String getPreviewUrl() {
+		return previewUrl;
+	}
+
+	public void setPreviewUrl(String previewUrl) {
+		this.previewUrl = previewUrl;
+	}
+
 	public String getChangeLog() {
 		return changeLog;
 	}
 
 	public void setChangeLog(String changeLog) {
 		this.changeLog = changeLog;
+	}
+
+	public String getOwnerNm() {
+		return ownerNm;
+	}
+
+	public void setOwnerNm(String ownerNm) {
+		this.ownerNm = ownerNm;
+	}
+
+	public String getUploadDt() {
+		return uploadDt;
+	}
+
+	public void setUploadDt(String uploadDt) {
+		this.uploadDt = uploadDt;
 	}
 }

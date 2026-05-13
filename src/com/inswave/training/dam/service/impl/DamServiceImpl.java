@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.inswave.training.dam.mapper.DamMapper;
 import com.inswave.training.dam.service.DamService;
 import com.inswave.training.dam.vo.DamAssetVo;
+import com.inswave.training.dam.vo.DamAccessLogVo;
 import com.inswave.training.dam.vo.DamFolderVo;
 import com.inswave.training.dam.vo.DamVersionVo;
 
@@ -35,5 +36,16 @@ public class DamServiceImpl implements DamService {
 	@Override
 	public List<DamVersionVo> getVersionsByAssetId(Integer assetId) {
 		return damMapper.selectVersionsByAssetId(assetId);
+	}
+
+	@Override
+	public List<DamAccessLogVo> getAccessLogsByAssetId(Integer assetId) {
+		return damMapper.selectAccessLogsByAssetId(assetId);
+	}
+
+	@Override
+	public int restoreVersion(Integer assetId, Integer verId, String userNm) {
+		String remark = "RESTORE verId=" + verId;
+		return damMapper.insertAccessLog(assetId, userNm, "RESTORE", remark);
 	}
 }

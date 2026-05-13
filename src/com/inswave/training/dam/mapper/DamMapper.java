@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 import com.inswave.training.dam.vo.DamAssetVo;
+import com.inswave.training.dam.vo.DamAccessLogVo;
 import com.inswave.training.dam.vo.DamFolderVo;
 import com.inswave.training.dam.vo.DamVersionVo;
 
@@ -16,4 +17,9 @@ public interface DamMapper {
 	DamAssetVo selectAssetById(@Param("assetId") Integer assetId);
 
 	List<DamVersionVo> selectVersionsByAssetId(@Param("assetId") Integer assetId);
+
+	List<DamAccessLogVo> selectAccessLogsByAssetId(@Param("assetId") Integer assetId);
+
+	int insertAccessLog(@Param("assetId") Integer assetId, @Param("userNm") String userNm, @Param("actionTp") String actionTp,
+			@Param("remark") String remark);
 }

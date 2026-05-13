@@ -27,6 +27,7 @@
    align-items: center;
    border-bottom: 1px solid #2b2f36;
    box-sizing: border-box;
+   flex-shrink: 0;
 }
 
 .dam-header-left {
@@ -104,7 +105,8 @@
 
 .dam-body {
    width: 100%;
-   height: 94vh;
+   flex: 1;
+   min-height: 0;
    display: flex;
    flex-direction: row;
 }
@@ -118,6 +120,7 @@
    flex-direction: column;
    padding-top: 1rem;
    box-sizing: border-box;
+   flex-shrink: 0;
    flex-shrink: 0;
 }
 
@@ -166,6 +169,41 @@
    opacity: 1 !important;
 }
 
+/* Hamburger button */
+.dam-hamburger {
+   cursor: pointer;
+   transition: opacity 0.2s ease;
+}
+
+.dam-hamburger:hover {
+   opacity: 0.75;
+}
+
+/* ===== Sidebar Collapsed State ===== */
+.dam-sidebar-collapsed .dam-sidebar {
+   width: 60px !important;
+   min-width: 60px !important;
+   transition: width 0.2s ease, min-width 0.2s ease;
+}
+
+.dam-sidebar-collapsed .dam-nav-item {
+   padding-left: 0 !important;
+   justify-content: center !important;
+}
+
+.dam-sidebar-collapsed .dam-nav-text {
+   display: none !important;
+}
+
+.dam-sidebar-collapsed .dam-nav-icon {
+   margin-right: 0 !important;
+}
+
+/* Smooth transition for expanded state too */
+.dam-sidebar {
+   transition: width 0.2s ease, min-width 0.2s ease;
+}
+
 .dam-nav-text {
    line-height: 1.5;
    pointer-events: none;
@@ -183,7 +221,8 @@
 
 .dam-content {
    flex: 1;
-   width: auto;
+   width: 100%;
+   min-width: 0;
    height: 100%;
    background: #f4f6f8;
    display: flex;
@@ -191,7 +230,8 @@
    padding: 1.5%;
    box-sizing: border-box;
    gap: 1%;
-   overflow: hidden;
+   overflow-y: auto;
+   overflow-x: hidden;
 }
 
 .dam-page-title {
@@ -206,10 +246,9 @@
 /* Hide TabControl tabs to act as a shell */
 .dam-tab-shell {
    width: 100%;
-   height: 100%;
+   min-height: 100%;
    display: flex;
    flex-direction: column;
-   overflow: hidden;
    flex: 1;
 }
 
@@ -220,8 +259,7 @@
 
 .dam-tab-shell .w2tabcontrol_contents {
    width: 100%;
-   height: 100%;
-   overflow: hidden;
+   min-height: 100%;
    border: none !important;
    flex: 1;
 }
@@ -229,16 +267,14 @@
 /* SP5: each tab's content wrapper — no absolute, let WebSquare control display */
 .dam-tab-shell .w2tabcontrol_contents_wrapper {
    width: 100%;
-   height: 100%;
-   overflow: hidden;
+   min-height: 100%;
    border: none !important;
 }
 
-/* The wframe must fill its wrapper */
+/* The wframe must fill its wrapper — do NOT set display, WebSquare toggles it per active tab */
 .dam-tab-shell .w2wframe {
    width: 100% !important;
-   height: 100% !important;
-   display: block !important;
+   min-height: 100% !important;
 }
 
 
@@ -249,12 +285,10 @@
 ========================================= */
 .dam-page {
    width: 100%;
-   height: 100%;
+   min-height: 100%;
    box-sizing: border-box;
    display: flex;
    flex-direction: column;
-   overflow-y: auto !important;
-   overflow-x: hidden !important;
    background: #f8f9fa !important;
 }
 
@@ -267,12 +301,12 @@
 }
 
 .w2tabcontrol_contents {
-   height: 100% !important;
+   min-height: 100% !important;
 }
 
 /* SP5: individual tab wrapper — do NOT set display; WebSquare controls show/hide via inline style */
 .w2tabcontrol_contents_wrapper {
-   height: 100% !important;
+   min-height: 100% !important;
 }
 
 
@@ -286,7 +320,7 @@
    width: 100% !important;
    display: grid !important;
    grid-template-columns: 1fr 1fr 1fr !important;
-   grid-template-rows: minmax(320px, 1fr) minmax(320px, 1fr) !important;
+   grid-auto-rows: minmax(320px, auto) !important;
    gap: 1.5rem !important;
    box-sizing: border-box !important;
 }
@@ -549,38 +583,52 @@
 ========================================= */
 .dam-asset-page {
    width: 100% !important;
-   height: 100% !important;
+   min-height: 100% !important;
    box-sizing: border-box !important;
    background: #f8f9fa !important;
    padding: 0 !important;
-   overflow: hidden !important;
    display: flex !important;
    flex-direction: column !important;
 }
 
 .dam-asset-grid {
-   flex: 1 !important;
    width: 100% !important;
    display: grid !important;
    grid-template-columns: minmax(0, 1fr) 360px !important;
    gap: 1rem !important;
    box-sizing: border-box !important;
+   min-height: 100% !important;
+   align-items: start !important;
+}
+
+/* File Browser tab: fill tab/wframe width and stretch file list vertically */
+.dam-file-browser-page.dam-asset-page > .dam-asset-grid {
+   flex: 1 !important;
    min-height: 0 !important;
+   align-items: stretch !important;
+}
+
+.dam-file-browser-page .dam-asset-left {
+   min-height: 0 !important;
+   height: 100% !important;
+}
+
+.dam-file-browser-page .dam-asset-files {
+   flex: 1 !important;
+   min-height: 280px !important;
 }
 
 .dam-asset-left {
    display: flex !important;
    flex-direction: column !important;
    gap: 1rem !important;
-   min-height: 0 !important;
-   height: 100% !important;
+   min-width: 0 !important;
 }
 
 .dam-asset-right {
    display: flex !important;
    flex-direction: column !important;
-   min-height: 0 !important;
-   height: 100% !important;
+   min-width: 0 !important;
 }
 
 .dam-asset-panel {
@@ -603,20 +651,20 @@
 }
 
 .dam-asset-folder {
-   flex: 0 0 38% !important;
-   min-height: 220px !important;
+   height: 380px !important;
+   flex-shrink: 0 !important;
 }
 
 .dam-asset-files {
-   flex: 1 1 auto !important;
-   min-height: 0 !important;
+   min-height: 400px !important;
+   flex-shrink: 0 !important;
 }
 
 .dam-asset-detail {
    flex: 1 !important;
    overflow-y: auto !important;
    overflow-x: hidden !important;
-   padding: 1.5rem !important;
+   padding: 1.75rem !important;
 }
 
 /* Panel head with title + action icons */
@@ -665,6 +713,7 @@
    padding: 0 !important;
    box-shadow: none !important;
    text-shadow: none !important;
+   letter-spacing: -0.3em !important;
 }
 
 .dam-icon-btn:hover {
@@ -688,14 +737,30 @@
    height: 100% !important;
    border: none !important;
    background: transparent !important;
-   font-size: 0.85rem !important;
+   font-size: 0.95rem !important;
+   outline: none !important;
+}
+
+/* Remove focus outline (the annoying black border) */
+.dam-asset-tree,
+.dam-asset-tree *,
+.dam-asset-tree:focus,
+.dam-asset-tree *:focus,
+.dam-asset-tree .w2treeview_row_parent,
+.dam-asset-tree .w2treeview_row_parent:focus,
+.dam-asset-tree .w2treeview_select_node,
+.dam-asset-tree .w2treeview_select_node:focus {
+   outline: none !important;
+   outline-offset: 0 !important;
+   box-shadow: none !important;
 }
 
 /* Row styling - parent rows (folder level) */
 .dam-asset-tree .w2treeview_row_parent {
-   padding: 0.3rem 0 !important;
+   padding: 0.4rem 0 !important;
    border-bottom: 1px solid #f1f5f9 !important;
    cursor: pointer !important;
+   outline: none !important;
 }
 
 .dam-asset-tree .w2treeview_row_parent:hover {
@@ -725,25 +790,18 @@
    font-weight: 400 !important;
 }
 
-/* Icons - folder icons (blue) and document icons */
+/* Folder icons */
 .dam-asset-tree .w2treeview_icon_navi {
-   width: 1rem !important;
-   height: 1rem !important;
-   opacity: 0.75 !important;
-   transition: opacity 0.2s ease !important;
+   width: 1.2rem !important;
+   height: 1.2rem !important;
+   opacity: 1 !important;
 }
 
-/* Document icon - already distinct color from folder icon */
+/* PDF document icon - red tint */
 .dam-asset-tree .tree-pdf-node .w2treeview_icon_navi {
-   opacity: 0.8 !important;
-}
-
-.dam-asset-tree .w2treeview_row_parent:hover .w2treeview_icon_navi {
    opacity: 1 !important;
-}
-
-.dam-asset-tree .tree-pdf-node:hover .w2treeview_icon_navi {
-   opacity: 1 !important;
+   filter: brightness(0.9) saturate(2) hue-rotate(330deg) !important;
+   -webkit-filter: brightness(0.9) saturate(2) hue-rotate(330deg) !important;
 }
 
 /* Label text */
@@ -782,6 +840,7 @@
    color: #1f2733 !important;
 }
 
+
 .dam-asset-grid-view .w2grid_row {
    border-bottom: 1px solid #f1f5f9 !important;
    height: 2.5rem !important;
@@ -793,14 +852,44 @@
 
 /* Colored file type badges */
 .dam-cell-icon {
-   font-weight: 600 !important;
-   font-size: 0.75rem !important;
-   letter-spacing: 0.05em !important;
-   min-width: 50px !important;
+   font-weight: 700 !important;
+   font-size: 0.65rem !important;
+   letter-spacing: 0.02em !important;
    text-align: center !important;
+   padding: 0 !important;
+   vertical-align: middle !important;
 }
 
-/* PDF badge - red */
+.dam-cell-icon .w2grid_label,
+.dam-cell-icon span {
+   display: inline-block !important;
+   padding: 2px 6px !important;
+   border-radius: 3px !important;
+   color: #ffffff !important;
+   min-width: 32px !important;
+   line-height: 1.4 !important;
+   box-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
+}
+
+/* File type badge colors */
+.dam-file-badge-PDF .w2grid_label,
+.dam-file-badge-PDF span { background: #dc2626 !important; }
+
+.dam-file-badge-JPG .w2grid_label,
+.dam-file-badge-JPG span { background: #16a34a !important; }
+
+.dam-file-badge-PNG .w2grid_label,
+.dam-file-badge-PNG span { background: #2563eb !important; }
+
+.dam-file-badge-MP4 .w2grid_label,
+.dam-file-badge-MP4 span { background: #ea580c !important; }
+
+.dam-file-badge-DOC .w2grid_label,
+.dam-file-badge-DOC span { background: #2563eb !important; }
+
+.dam-file-badge-GIF .w2grid_label,
+.dam-file-badge-GIF span { background: #9333ea !important; }
+
 .dam-asset-grid-view .w2grid_body .w2grid_cell:nth-child(2) {
    padding: 0.25rem 0.5rem !important;
 }
@@ -809,7 +898,8 @@
 .dam-asset-pagination {
    display: flex !important;
    align-items: center !important;
-   justify-content: flex-end !important;
+   justify-content: center !important;
+   position: relative !important;
    padding: 0.75rem 0.5rem !important;
    flex-shrink: 0 !important;
    background: #f8fafc !important;
@@ -821,7 +911,10 @@
    font-size: 0.75rem !important;
    color: #64748b !important;
    font-weight: 500 !important;
-   margin-right: auto !important;
+   position: absolute !important;
+   left: 1rem !important;
+   top: 50% !important;
+   transform: translateY(-50%) !important;
 }
 
 .dam-pagi-controls {
@@ -868,7 +961,7 @@
    height: 180px !important;
    border-radius: 0.5rem !important;
    overflow: hidden !important;
-   margin-bottom: 1.25rem !important;
+   margin-bottom: 1.6rem !important;
    background: linear-gradient(135deg, #6b46c1 0%, #4f46e5 100%) !important;
    flex-shrink: 0 !important;
    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
@@ -885,8 +978,8 @@
 .dam-form-row {
    display: flex !important;
    flex-direction: column !important;
-   gap: 0.4rem !important;
-   margin-bottom: 1rem !important;
+   gap: 0.5rem !important;
+   margin-bottom: 1.25rem !important;
 }
 
 .dam-form-label {
@@ -946,7 +1039,7 @@
 .dam-form-actions {
    display: flex !important;
    gap: 0.5rem !important;
-   margin: 1rem 0 1.5rem 0 !important;
+   margin: 1.35rem 0 1.9rem 0 !important;
 }
 
 .dam-btn-outline,
@@ -993,8 +1086,8 @@
 
 /* Metadata section */
 .dam-meta-section {
-   margin-top: 1.5rem !important;
-   padding-top: 1rem !important;
+   margin-top: 1.9rem !important;
+   padding-top: 1.25rem !important;
    border-top: 1px solid #e5e7eb !important;
 }
 
@@ -1015,4 +1108,198 @@
 /* Status cell — keep simple */
 .dam-cell-status {
    font-weight: 500 !important;
+}
+
+/* File Browser — upload version popup (reference UI) */
+.dam-fb-popup-shell {
+   min-height: 100%;
+   box-sizing: border-box;
+   background: #e2e8f0;
+   padding: 0.75rem 0.5rem 1rem;
+}
+
+.dam-fb-upload-modal {
+   width: 100%;
+   max-width: 520px;
+   margin: 0.75rem auto;
+   min-height: auto;
+   box-sizing: border-box;
+   display: flex;
+   flex-direction: column;
+   background: #fff;
+   font-family: 'Inter', 'Malgun Gothic', sans-serif;
+   border-radius: 0.5rem;
+   overflow: hidden;
+   box-shadow: 0 16px 48px rgba(15, 23, 42, 0.14);
+}
+
+.dam-fb-upload-modal-header {
+   flex-shrink: 0;
+   background: #2563eb;
+   color: #fff;
+   padding: 0.85rem 1.25rem;
+   border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.dam-fb-upload-modal-title {
+   font-size: 1rem !important;
+   font-weight: 700 !important;
+   color: #fff !important;
+   margin: 0 !important;
+   line-height: 1.35 !important;
+}
+
+.dam-fb-upload-modal-body {
+   flex: 1;
+   min-height: 0;
+   overflow-y: auto;
+   background: #fff;
+   padding: 1.25rem 1.5rem 1rem;
+   border-left: none;
+   border-right: none;
+}
+
+.dam-fb-upload-row {
+   display: flex;
+   align-items: flex-start;
+   gap: 0.75rem;
+   margin-bottom: 0.75rem;
+}
+
+.dam-fb-upload-label {
+   flex: 0 0 148px;
+   max-width: 148px;
+   font-size: 0.8125rem !important;
+   font-weight: 600 !important;
+   color: #475569 !important;
+   line-height: 2rem !important;
+   text-align: right !important;
+   padding-top: 0.15rem;
+}
+
+.dam-fb-upload-row > *:last-child {
+   flex: 1;
+   min-width: 0;
+}
+
+.dam-fb-upload-field {
+   display: flex;
+   flex-direction: row;
+   align-items: center;
+   gap: 0.5rem;
+   flex: 1;
+   min-width: 0;
+}
+
+.dam-fb-upload-file-row {
+   display: flex;
+   flex-direction: row;
+   align-items: center;
+   gap: 0.5rem;
+   flex: 1;
+   min-width: 0;
+}
+
+.dam-fb-upload-doc-icon {
+   width: 28px;
+   height: 28px;
+   flex-shrink: 0;
+   object-fit: contain;
+}
+
+.dam-fb-popup-input,
+.dam-fb-popup-textarea,
+.dam-fb-popup-select select {
+   border-radius: 0.25rem !important;
+   border: 1px solid #cbd5e1 !important;
+   font-size: 0.8125rem !important;
+}
+
+.dam-fb-upload-row-notes .dam-fb-popup-textarea {
+   min-height: 140px !important;
+   resize: vertical !important;
+}
+
+.dam-fb-upload-preview-block .dam-fb-upload-label {
+   padding-top: 0.35rem;
+}
+
+.dam-fb-upload-field .dam-fb-btn-primary,
+.dam-fb-upload-file-row .dam-fb-btn-primary {
+   flex-shrink: 0;
+   background: #2563eb !important;
+   color: #fff !important;
+   border: 1px solid #1d4ed8 !important;
+   border-radius: 0.25rem !important;
+   height: 2rem !important;
+   padding: 0 0.85rem !important;
+   font-weight: 600 !important;
+   font-size: 0.8125rem !important;
+   cursor: pointer !important;
+}
+
+.dam-fb-input-mono {
+   font-weight: 700 !important;
+   letter-spacing: 0.04em !important;
+}
+
+.dam-fb-upload-preview-wrap {
+   flex: 1;
+   min-height: 140px;
+   border: 1px solid #e2e8f0;
+   border-radius: 0.375rem;
+   background: #f8fafc;
+   padding: 0.5rem;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.dam-fb-upload-preview-img {
+   max-width: 100%;
+   max-height: 160px;
+   object-fit: contain;
+   border-radius: 0.25rem;
+}
+
+.dam-fb-upload-modal-footer {
+   flex-shrink: 0;
+   display: flex;
+   justify-content: flex-end;
+   gap: 0.5rem;
+   padding: 0.85rem 1.25rem;
+   background: #f1f5f9;
+   border: 1px solid #e2e8f0;
+   border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.dam-fb-btn-secondary {
+   display: inline-flex !important;
+   align-items: center !important;
+   justify-content: center !important;
+   min-width: 5rem !important;
+   height: 2.25rem !important;
+   padding: 0 1rem !important;
+   background: #e2e8f0 !important;
+   color: #1e293b !important;
+   border: 1px solid #cbd5e1 !important;
+   border-radius: 0.25rem !important;
+   font-weight: 600 !important;
+   font-size: 0.875rem !important;
+   cursor: pointer !important;
+}
+
+.dam-fb-upload-modal-footer .dam-fb-btn-primary {
+   background: #2563eb !important;
+   color: #fff !important;
+   border: 1px solid #1d4ed8 !important;
+   border-radius: 0.25rem !important;
+   min-width: 5.5rem !important;
+   height: 2.25rem !important;
+   font-weight: 600 !important;
+   cursor: pointer !important;
+}
+
+.dam-fb-upload-modal-footer .dam-fb-btn-primary:hover {
+   background: #1d4ed8 !important;
 }
