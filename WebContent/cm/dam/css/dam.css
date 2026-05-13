@@ -27,6 +27,7 @@
    align-items: center;
    border-bottom: 1px solid #2b2f36;
    box-sizing: border-box;
+   flex-shrink: 0;
 }
 
 .dam-header-left {
@@ -104,7 +105,8 @@
 
 .dam-body {
    width: 100%;
-   height: 94vh;
+   flex: 1;
+   min-height: 0;
    display: flex;
    flex-direction: row;
 }
@@ -118,6 +120,7 @@
    flex-direction: column;
    padding-top: 1rem;
    box-sizing: border-box;
+   flex-shrink: 0;
    flex-shrink: 0;
 }
 
@@ -166,6 +169,41 @@
    opacity: 1 !important;
 }
 
+/* Hamburger button */
+.dam-hamburger {
+   cursor: pointer;
+   transition: opacity 0.2s ease;
+}
+
+.dam-hamburger:hover {
+   opacity: 0.75;
+}
+
+/* ===== Sidebar Collapsed State ===== */
+.dam-sidebar-collapsed .dam-sidebar {
+   width: 60px !important;
+   min-width: 60px !important;
+   transition: width 0.2s ease, min-width 0.2s ease;
+}
+
+.dam-sidebar-collapsed .dam-nav-item {
+   padding-left: 0 !important;
+   justify-content: center !important;
+}
+
+.dam-sidebar-collapsed .dam-nav-text {
+   display: none !important;
+}
+
+.dam-sidebar-collapsed .dam-nav-icon {
+   margin-right: 0 !important;
+}
+
+/* Smooth transition for expanded state too */
+.dam-sidebar {
+   transition: width 0.2s ease, min-width 0.2s ease;
+}
+
 .dam-nav-text {
    line-height: 1.5;
    pointer-events: none;
@@ -185,13 +223,15 @@
    flex: 1;
    width: auto;
    height: 100%;
+   min-width: 0;
    background: #f4f6f8;
    display: flex;
    flex-direction: column;
    padding: 1.5%;
    box-sizing: border-box;
    gap: 1%;
-   overflow: hidden;
+   overflow-y: auto;
+   overflow-x: hidden;
 }
 
 .dam-page-title {
@@ -206,10 +246,9 @@
 /* Hide TabControl tabs to act as a shell */
 .dam-tab-shell {
    width: 100%;
-   height: 100%;
+   min-height: 100%;
    display: flex;
    flex-direction: column;
-   overflow: hidden;
    flex: 1;
 }
 
@@ -220,8 +259,7 @@
 
 .dam-tab-shell .w2tabcontrol_contents {
    width: 100%;
-   height: 100%;
-   overflow: hidden;
+   min-height: 100%;
    border: none !important;
    flex: 1;
 }
@@ -229,16 +267,14 @@
 /* SP5: each tab's content wrapper — no absolute, let WebSquare control display */
 .dam-tab-shell .w2tabcontrol_contents_wrapper {
    width: 100%;
-   height: 100%;
-   overflow: hidden;
+   min-height: 100%;
    border: none !important;
 }
 
-/* The wframe must fill its wrapper */
+/* The wframe must fill its wrapper — do NOT set display, WebSquare toggles it per active tab */
 .dam-tab-shell .w2wframe {
    width: 100% !important;
-   height: 100% !important;
-   display: block !important;
+   min-height: 100% !important;
 }
 
 
@@ -249,12 +285,10 @@
 ========================================= */
 .dam-page {
    width: 100%;
-   height: 100%;
+   min-height: 100%;
    box-sizing: border-box;
    display: flex;
    flex-direction: column;
-   overflow-y: auto !important;
-   overflow-x: hidden !important;
    background: #f8f9fa !important;
 }
 
@@ -267,12 +301,12 @@
 }
 
 .w2tabcontrol_contents {
-   height: 100% !important;
+   min-height: 100% !important;
 }
 
 /* SP5: individual tab wrapper — do NOT set display; WebSquare controls show/hide via inline style */
 .w2tabcontrol_contents_wrapper {
-   height: 100% !important;
+   min-height: 100% !important;
 }
 
 
@@ -286,7 +320,7 @@
    width: 100% !important;
    display: grid !important;
    grid-template-columns: 1fr 1fr 1fr !important;
-   grid-template-rows: minmax(320px, 1fr) minmax(320px, 1fr) !important;
+   grid-auto-rows: minmax(320px, auto) !important;
    gap: 1.5rem !important;
    box-sizing: border-box !important;
 }
@@ -549,38 +583,35 @@
 ========================================= */
 .dam-asset-page {
    width: 100% !important;
-   height: 100% !important;
+   min-height: 100% !important;
    box-sizing: border-box !important;
    background: #f8f9fa !important;
    padding: 0 !important;
-   overflow: hidden !important;
    display: flex !important;
    flex-direction: column !important;
 }
 
 .dam-asset-grid {
-   flex: 1 !important;
    width: 100% !important;
    display: grid !important;
    grid-template-columns: minmax(0, 1fr) 360px !important;
    gap: 1rem !important;
    box-sizing: border-box !important;
-   min-height: 0 !important;
+   min-height: 100% !important;
+   align-items: start !important;
 }
 
 .dam-asset-left {
    display: flex !important;
    flex-direction: column !important;
    gap: 1rem !important;
-   min-height: 0 !important;
-   height: 100% !important;
+   min-width: 0 !important;
 }
 
 .dam-asset-right {
    display: flex !important;
    flex-direction: column !important;
-   min-height: 0 !important;
-   height: 100% !important;
+   min-width: 0 !important;
 }
 
 .dam-asset-panel {
@@ -603,13 +634,13 @@
 }
 
 .dam-asset-folder {
-   flex: 0 0 38% !important;
-   min-height: 220px !important;
+   height: 380px !important;
+   flex-shrink: 0 !important;
 }
 
 .dam-asset-files {
-   flex: 1 1 auto !important;
-   min-height: 0 !important;
+   min-height: 400px !important;
+   flex-shrink: 0 !important;
 }
 
 .dam-asset-detail {
@@ -665,6 +696,7 @@
    padding: 0 !important;
    box-shadow: none !important;
    text-shadow: none !important;
+   letter-spacing: -0.3em !important;
 }
 
 .dam-icon-btn:hover {
@@ -688,14 +720,30 @@
    height: 100% !important;
    border: none !important;
    background: transparent !important;
-   font-size: 0.85rem !important;
+   font-size: 0.95rem !important;
+   outline: none !important;
+}
+
+/* Remove focus outline (the annoying black border) */
+.dam-asset-tree,
+.dam-asset-tree *,
+.dam-asset-tree:focus,
+.dam-asset-tree *:focus,
+.dam-asset-tree .w2treeview_row_parent,
+.dam-asset-tree .w2treeview_row_parent:focus,
+.dam-asset-tree .w2treeview_select_node,
+.dam-asset-tree .w2treeview_select_node:focus {
+   outline: none !important;
+   outline-offset: 0 !important;
+   box-shadow: none !important;
 }
 
 /* Row styling - parent rows (folder level) */
 .dam-asset-tree .w2treeview_row_parent {
-   padding: 0.3rem 0 !important;
+   padding: 0.4rem 0 !important;
    border-bottom: 1px solid #f1f5f9 !important;
    cursor: pointer !important;
+   outline: none !important;
 }
 
 .dam-asset-tree .w2treeview_row_parent:hover {
@@ -725,25 +773,18 @@
    font-weight: 400 !important;
 }
 
-/* Icons - folder icons (blue) and document icons */
+/* Folder icons */
 .dam-asset-tree .w2treeview_icon_navi {
-   width: 1rem !important;
-   height: 1rem !important;
-   opacity: 0.75 !important;
-   transition: opacity 0.2s ease !important;
+   width: 1.2rem !important;
+   height: 1.2rem !important;
+   opacity: 1 !important;
 }
 
-/* Document icon - already distinct color from folder icon */
+/* PDF document icon - red tint */
 .dam-asset-tree .tree-pdf-node .w2treeview_icon_navi {
-   opacity: 0.8 !important;
-}
-
-.dam-asset-tree .w2treeview_row_parent:hover .w2treeview_icon_navi {
    opacity: 1 !important;
-}
-
-.dam-asset-tree .tree-pdf-node:hover .w2treeview_icon_navi {
-   opacity: 1 !important;
+   filter: brightness(0.9) saturate(2) hue-rotate(330deg) !important;
+   -webkit-filter: brightness(0.9) saturate(2) hue-rotate(330deg) !important;
 }
 
 /* Label text */
@@ -782,6 +823,7 @@
    color: #1f2733 !important;
 }
 
+
 .dam-asset-grid-view .w2grid_row {
    border-bottom: 1px solid #f1f5f9 !important;
    height: 2.5rem !important;
@@ -793,14 +835,44 @@
 
 /* Colored file type badges */
 .dam-cell-icon {
-   font-weight: 600 !important;
-   font-size: 0.75rem !important;
-   letter-spacing: 0.05em !important;
-   min-width: 50px !important;
+   font-weight: 700 !important;
+   font-size: 0.65rem !important;
+   letter-spacing: 0.02em !important;
    text-align: center !important;
+   padding: 0 !important;
+   vertical-align: middle !important;
 }
 
-/* PDF badge - red */
+.dam-cell-icon .w2grid_label,
+.dam-cell-icon span {
+   display: inline-block !important;
+   padding: 2px 6px !important;
+   border-radius: 3px !important;
+   color: #ffffff !important;
+   min-width: 32px !important;
+   line-height: 1.4 !important;
+   box-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
+}
+
+/* File type badge colors */
+.dam-file-badge-PDF .w2grid_label,
+.dam-file-badge-PDF span { background: #dc2626 !important; }
+
+.dam-file-badge-JPG .w2grid_label,
+.dam-file-badge-JPG span { background: #16a34a !important; }
+
+.dam-file-badge-PNG .w2grid_label,
+.dam-file-badge-PNG span { background: #2563eb !important; }
+
+.dam-file-badge-MP4 .w2grid_label,
+.dam-file-badge-MP4 span { background: #ea580c !important; }
+
+.dam-file-badge-DOC .w2grid_label,
+.dam-file-badge-DOC span { background: #2563eb !important; }
+
+.dam-file-badge-GIF .w2grid_label,
+.dam-file-badge-GIF span { background: #9333ea !important; }
+
 .dam-asset-grid-view .w2grid_body .w2grid_cell:nth-child(2) {
    padding: 0.25rem 0.5rem !important;
 }
@@ -809,7 +881,8 @@
 .dam-asset-pagination {
    display: flex !important;
    align-items: center !important;
-   justify-content: flex-end !important;
+   justify-content: center !important;
+   position: relative !important;
    padding: 0.75rem 0.5rem !important;
    flex-shrink: 0 !important;
    background: #f8fafc !important;
@@ -821,7 +894,10 @@
    font-size: 0.75rem !important;
    color: #64748b !important;
    font-weight: 500 !important;
-   margin-right: auto !important;
+   position: absolute !important;
+   left: 1rem !important;
+   top: 50% !important;
+   transform: translateY(-50%) !important;
 }
 
 .dam-pagi-controls {
