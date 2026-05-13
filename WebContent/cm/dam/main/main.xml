@@ -15,65 +15,93 @@
         </xf:model>
         <w2:layoutInfo/>
         <w2:publicInfo method=""/>
-        <script lazy="false" type="text/javascript"><![CDATA[
-scwin.onpageload = function () {
-    console.log("[DAM] onpageload fired");
-    scwin._setActive(0);
-};
+        <script lazy="false" type="text/javascript"><![CDATA[// ===== DEBUG MARKERS START =====
+(function () {
+    var runId = "DAMDBG-" + Date.now();
+    window.__DAM_RUN_ID = runId;
 
-scwin._setActive = function (idx) {
-    console.log("[DAM] _setActive called, idx=" + idx);
-    var ids    = ["btn_navDashboard","btn_navFileBrowser","btn_navAssetDetails","btn_navVersionControl"];
-    var titles = ["Dashboard","File Browser","Asset Details Panel","Version Control"];
-    for (var i = 0; i < ids.length; i++) {
-        var comp = $p.getComponentById(ids[i]);
-        if (comp) { comp.removeClass("dam-active"); }
-    }
-    var activeComp = $p.getComponentById(ids[idx]);
-    if (activeComp) { activeComp.addClass("dam-active"); }
-    try {
-        var titleComp = $p.getComponentById("txt_pageTitle");
-        if (titleComp) { titleComp.setLabel(titles[idx]); }
-    } catch (e) { console.warn("[DAM] setLabel error", e); }
-    scwin._switchTab(idx, 0);
-};
+    console.log("[DAM][M0] script-evaluated", runId, "href=", location.href);
 
-scwin._switchTab = function (idx, attempt) {
-    var tab = $p.getComponentById("tab_main");
-    console.log("[DAM] _switchTab attempt=" + attempt + " tab=" + tab + " idx=" + idx);
-    if (tab) {
-        console.log("[DAM] tab methods:", typeof tab.setSelectedTabIndex, typeof tab.setSelectedTab);
-    }
-    if (tab && typeof tab.setSelectedTabIndex === "function") {
-        try { tab.setSelectedTabIndex(idx); console.log("[DAM] setSelectedTabIndex OK"); return; } catch (e) { console.warn("[DAM] setSelectedTabIndex error", e); }
-    }
-    if (attempt < 10) {
-        window.setTimeout(function () { scwin._switchTab(idx, attempt + 1); }, 150);
-    } else {
-        console.error("[DAM] tab_main not ready after 10 attempts");
-    }
-};
+    scwin.onpageload = function () {
+        console.log("[DAM][M1] onpageload-fired", runId);
 
-scwin.btn_navDashboard_onclick      = function () { console.log("[DAM] click Dashboard");      scwin._setActive(0); };
-scwin.btn_navFileBrowser_onclick    = function () { console.log("[DAM] click FileBrowser");    scwin._setActive(1); };
-scwin.btn_navAssetDetails_onclick   = function () { console.log("[DAM] click AssetDetails");   scwin._setActive(2); };
-scwin.btn_navVersionControl_onclick = function () { console.log("[DAM] click VersionControl"); scwin._setActive(3); };
-
-scwin.btn_logout_onclick = function () {
-    if (confirm("Logout?")) { location.href = "/"; }
-};
-
-scwin.img_hamburger_onclick = function () {
-    var shell = $p.getComponentById("grp_appShell");
-    if (shell) {
-        if (shell.hasClass("dam-sidebar-collapsed")) {
-            shell.removeClass("dam-sidebar-collapsed");
-        } else {
-            shell.addClass("dam-sidebar-collapsed");
+        try {
+            var tab = $p.getComponentById("tab_main");
+            console.log("[DAM][M2] tab_main-exists?", !!tab, tab ? ("id=" + tab.id) : "null");
+        } catch (e) {
+            console.error("[DAM][E2] get tab_main failed", e);
         }
-    }
-};
-]]></script>
+
+        scwin._setActive(0);
+    };
+
+    scwin._setActive = function (idx) {
+        console.log("[DAM][M3] _setActive called idx=", idx);
+
+        var ids = ["btn_navDashboard", "btn_navFileBrowser", "btn_navAssetDetails", "btn_navVersionControl"];
+        for (var i = 0; i < ids.length; i++) {
+            var comp = $p.getComponentById(ids[i]);
+            console.log("[DAM][M3.1] nav-comp", ids[i], !!comp);
+            if (comp) comp.removeClass("dam-active");
+        }
+
+        var activeComp = $p.getComponentById(ids[idx]);
+        if (activeComp) activeComp.addClass("dam-active");
+
+        var titleComp = $p.getComponentById("txt_pageTitle");
+        console.log("[DAM][M3.2] title-comp?", !!titleComp);
+        if (titleComp) titleComp.setLabel(["Dashboard","File Browser","Asset Details","Version Control"][idx]);
+
+        scwin._switchTab(idx, 0);
+    };
+
+    scwin._switchTab = function (idx, attempt) {
+        var tab = $p.getComponentById("tab_main");
+        console.log("[DAM][M4] _switchTab attempt=", attempt, "tab?", !!tab);
+
+        if (tab) {
+            console.log(
+                "[DAM][M4.1] methods:",
+                "setSelectedTabIndex=", typeof tab.setSelectedTabIndex,
+                "setSelectedTab=", typeof tab.setSelectedTab
+            );
+        }
+
+        try {
+            if (tab && typeof tab.setSelectedTabIndex === "function") {
+                tab.setSelectedTabIndex(idx);
+                console.log("[DAM][M5] setSelectedTabIndex OK idx=", idx);
+                return;
+            }
+            if (tab && typeof tab.setSelectedTab === "function") {
+                tab.setSelectedTab(idx);
+                console.log("[DAM][M5] setSelectedTab OK idx=", idx);
+                return;
+            }
+        } catch (e) {
+            console.error("[DAM][E5] switchTab failed", e);
+        }
+
+        if (attempt < 15) {
+            setTimeout(function () { scwin._switchTab(idx, attempt + 1); }, 120);
+        } else {
+            console.error("[DAM][E6] tab_main not ready after retries");
+        }
+    };
+
+    scwin.btn_navDashboard_onclick = function () {
+        console.log("[DAM][M6] click Dashboard");
+        scwin._setActive(0);
+    };
+
+    scwin.btn_navFileBrowser_onclick = function () {
+        console.log("[DAM][M6] click FileBrowser BEFORE redirect");
+        scwin._setActive(1);
+
+        // Nếu test redirect thì giữ dòng này:
+        // location.href = "websquare/websquare.html?w2xPath=/cm/dam/main/file_browser.xml";
+    };
+})();]]></script>
     </head>
     <body ev:onpageload="scwin.onpageload">
         <xf:group id="grp_appShell" class="dam-shell">
