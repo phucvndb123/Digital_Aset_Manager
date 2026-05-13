@@ -271,11 +271,10 @@
    border: none !important;
 }
 
-/* The wframe must fill its wrapper */
+/* The wframe must fill its wrapper — do NOT set display, WebSquare toggles it per active tab */
 .dam-tab-shell .w2wframe {
    width: 100% !important;
    min-height: 100% !important;
-   display: block !important;
 }
 
 
