@@ -39,13 +39,7 @@ public class DamServiceImpl implements DamService {
 	}
 
 	@Override
-	public List<DamAccessLogVo> getAccessLogsByAssetId(Integer assetId) {
-		return damMapper.selectAccessLogsByAssetId(assetId);
-	}
-
-	@Override
-	public int restoreVersion(Integer assetId, Integer verId, String userNm) {
-		String remark = "RESTORE verId=" + verId;
-		return damMapper.insertAccessLog(assetId, userNm, "RESTORE", remark);
+	public int updateAsset(DamAssetVo vo) {
+		return damMapper.updateAsset(vo);
 	}
 }

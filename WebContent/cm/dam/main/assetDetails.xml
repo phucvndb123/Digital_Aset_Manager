@@ -11,6 +11,13 @@
         <w2:MSA/>
         <xf:model>
             <w2:dataCollection baseNode="map">
+                <w2:dataList id="dlFolder" baseNode="list" repeatNode="map">
+                    <w2:columnInfo>
+                        <w2:column id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+                        <w2:column id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+                        <w2:column id="DEPTH" name="DEPTH" dataType="text" />
+                    </w2:columnInfo>
+                </w2:dataList>
                 <w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
                     <w2:columnInfo>
                         <w2:column id="CHK" name="CHK" dataType="text" />
@@ -25,6 +32,7 @@
                         <w2:column id="RESOLUTION" name="RESOLUTION" dataType="text" />
                         <w2:column id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
                         <w2:column id="PREVIEW_URL" name="PREVIEW_URL" dataType="text" />
+                        <w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
                     </w2:columnInfo>
                 </w2:dataList>
             </w2:dataCollection>
@@ -34,76 +42,120 @@
         <w2:publicInfo method=""/>
         <script lazy="false" type="text/javascript"><![CDATA[
 scwin.onpageload = function () {
-    window.setTimeout(function () { scwin._initMockData(); }, 50);
+    window.setTimeout(function () { scwin._loadData(); }, 50);
+    window.setTimeout(function () {
+        try { var el  = document.getElementById('inp_assetTags'); if (el)  el.classList.add('dam-select-locked'); } catch(e) {}
+        try { var el2 = document.getElementById('inp_status');    if (el2) el2.classList.add('dam-select-locked'); } catch(e) {}
+    }, 200);
 };
 
-scwin._initMockData = function () {
-    var rows = [
-        {
-            "CHK": "", "ASSET_ID": 2, "ICON": "PDF",
-            "FILE_NM": "File Name I Image",
-            "FILE_TYPE": "Documents",
-            "FILE_SIZE": "23 KB",
-            "STATUS": "Draft",
-            "TAGS": "",
-            "CREATOR": "Creator",
-            "RESOLUTION": "-",
-            "UPLOAD_DT": "18/13/2023",
-            "PREVIEW_URL": "/cm/dam/images/preview/document.svg"
-        },
-        {
-            "CHK": "", "ASSET_ID": 1, "ICON": "JPG",
-            "FILE_NM": "Product Image.jpg",
-            "FILE_TYPE": "JPG",
-            "FILE_SIZE": "3.00 GB",
-            "STATUS": "Published",
-            "TAGS": "CheckComboBox,tags",
-            "CREATOR": "Creator",
-            "RESOLUTION": "1950 x 650",
-            "UPLOAD_DT": "18/13/2023",
-            "PREVIEW_URL": "/cm/dam/images/preview/image.svg"
-        },
-        {
-            "CHK": "", "ASSET_ID": 6, "ICON": "MP4",
-            "FILE_NM": "Video Assets",
-            "FILE_TYPE": "MP4 Asset",
-            "FILE_SIZE": "6.80 KB",
-            "STATUS": "Published",
-            "TAGS": "",
-            "CREATOR": "Creator",
-            "RESOLUTION": "-",
-            "UPLOAD_DT": "18/13/2023",
-            "PREVIEW_URL": "/cm/dam/images/preview/video.svg"
-        },
-        {
-            "CHK": "", "ASSET_ID": 10, "ICON": "MP4",
-            "FILE_NM": "Internal Manuals",
-            "FILE_TYPE": "MP4 Asset",
-            "FILE_SIZE": "3.17 KB",
-            "STATUS": "Published",
-            "TAGS": "",
-            "CREATOR": "Creator",
-            "RESOLUTION": "-",
-            "UPLOAD_DT": "18/13/2023",
-            "PREVIEW_URL": "/cm/dam/images/preview/video.svg"
-        }
-    ];
+scwin._currentFolderId = 1;
 
-    try { dlAsset.setJSON(rows); } catch (e) { console.warn("[Asset] setJSON failed", e); }
-
-    try {
-        var tv = $p.getComponentById("trvFolder");
-        if (tv && typeof tv.expandAll === "function") { tv.expandAll(); }
-    } catch (e) { console.warn("[Asset] expandAll failed", e); }
-
-    scwin._applyDetail(1);
-    window.setTimeout(function () { scwin._refreshGridStyling(); }, 100);
-    window.setTimeout(function () { scwin._refreshGridStyling(); }, 500);
-    window.setTimeout(function () { scwin._refreshGridStyling(); }, 1500);
+scwin._loadData = function () {
+    scwin._loadFolders();
 };
 
-scwin.grdAsset_onrowindexchange = function (gridObj, oldRowIndex, newRowIndex) {
-    scwin._applyDetail(newRowIndex);
+scwin._buildFolderRows = function (folders) {
+    var childrenMap = {};
+    var allIds = {};
+    for (var i = 0; i < folders.length; i++) { allIds[folders[i].folderId] = true; }
+    for (var i = 0; i < folders.length; i++) {
+        var pid = folders[i].parentFolderId || 0;
+        if (!childrenMap[pid]) { childrenMap[pid] = []; }
+        childrenMap[pid].push(folders[i]);
+    }
+    var roots = [];
+    for (var i = 0; i < folders.length; i++) {
+        var f = folders[i];
+        if (!f.parentFolderId || !allIds[f.parentFolderId]) { roots.push(f); }
+    }
+    var result = [];
+    var visit = function (node, depth) {
+        result.push({ FOLDER_ID: String(node.folderId), FOLDER_NM: node.folderNm || '', DEPTH: String(depth) });
+        var children = childrenMap[node.folderId] || [];
+        for (var j = 0; j < children.length; j++) { visit(children[j], depth + 1); }
+    };
+    for (var i = 0; i < roots.length; i++) { visit(roots[i], 1); }
+    return result;
+};
+
+scwin._loadFolders = function () {
+    fetch('/api/dam/folders')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data || !data.length) { return; }
+            var rows = scwin._buildFolderRows(data);
+            try {
+                dlFolder.setJSON(rows);
+                window.setTimeout(function () {
+                    try { trvFolder.expandAll(); } catch (e) {}
+                }, 100);
+            } catch (e) { console.warn('[Asset] dlFolder.setJSON error', e); }
+        })
+        .catch(function (e) { console.warn('[Asset] folders error', e); });
+};
+
+scwin._formatFileSize = function (bytes) {
+    var n = Number(bytes);
+    if (!bytes || isNaN(n) || n === 0) { return '-'; }
+    if (n >= 1073741824) { return (n / 1073741824).toFixed(2) + ' GB'; }
+    if (n >= 1048576)    { return (n / 1048576).toFixed(2) + ' MB'; }
+    if (n >= 1024)       { return (n / 1024).toFixed(1) + ' KB'; }
+    return n + ' B';
+};
+
+scwin._loadAssets = function (folderId) {
+    fetch('/api/dam/assets?folderId=' + (folderId || 1))
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var rows = [];
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+                var icon = ((d.fileExt || d.fileType || '')).toUpperCase().replace('.', '');
+                rows.push({
+                    CHK: '',
+                    ASSET_ID: String(d.assetId || ''),
+                    ICON: icon,
+                    FILE_NM: d.fileNm || '',
+                    FILE_TYPE: d.fileType || '',
+                    FILE_SIZE: scwin._formatFileSize(d.fileSize),
+                    STATUS: d.status || '',
+                    TAGS: d.tags || '',
+                    CREATOR: d.ownerNm || '',
+                    RESOLUTION: d.resolution || '-',
+                    UPLOAD_DT: d.uploadDt || '',
+                    PREVIEW_URL: d.previewUrl || '/cm/dam/images/preview/document.svg'
+                });
+            }
+            try { dlAsset.setJSON(rows); } catch (e) { console.warn('[Asset] setJSON failed', e); }
+            scwin._clearDetail();
+            if (rows.length > 0) {
+                window.setTimeout(function () { scwin._styleIconBadges(); }, 100);
+                window.setTimeout(function () { scwin._styleIconBadges(); }, 500);
+            }
+            window.setTimeout(function () { scwin._attachSortOnMousedown(); }, 150);
+        })
+        .catch(function (e) { console.warn('[Asset] assets error', e); });
+};
+
+scwin.trvFolder_onclick = function (treeObj) {
+    var nodeValue = trvFolder.getSelectedValue();
+    console.log('[Asset] tree onclick selectedValue=' + nodeValue);
+    if (!nodeValue) { return; }
+    var fid = parseInt(nodeValue, 10);
+    if (isNaN(fid) || fid <= 0) { return; }
+    if (fid === scwin._currentFolderId) { return; }
+    scwin._currentFolderId = fid;
+    scwin._loadAssets(fid);
+};
+
+scwin.grdAsset_onclick = function () {
+    window.setTimeout(function () {
+        try {
+            var idx = grdAsset.getFocusedRowIndex();
+            if (idx >= 0) { scwin._applyDetail(idx); }
+        } catch (e) {}
+    }, 30);
 };
 
 scwin._BADGE_COLORS = {
@@ -140,64 +192,260 @@ scwin._styleIconBadges = function () {
     } catch (e) { /* ignore */ }
 };
 
-scwin._refreshGridStyling = function () {
+scwin.grdAsset_ondrawendrow = function () {
     scwin._styleIconBadges();
 };
 
-scwin.grdAsset_ondrawendrow = function () {
-    scwin._refreshGridStyling();
+scwin.grdAsset_onsort = function () {
+    window.setTimeout(function () { scwin._styleIconBadges(); }, 50);
+    window.setTimeout(function () { scwin._styleIconBadges(); }, 300);
 };
 
-scwin._setVal = function (id, val) {
-    try {
-        var c = $p.getComponentById(id);
-        if (c && typeof c.setValue === "function") { c.setValue(val); }
-    } catch (e) {}
+scwin._sortState = {};
+
+/* mousedown capture — fires before focus-transfer, so works on first click */
+scwin._attachSortOnMousedown = function () {
+    if (document._damSortAttached) { return; }
+    document._damSortAttached = true;
+
+    /* inject initial ⇅ into sortable header cells */
+    var sortableIdxMap = { 2: true, 3: true, 4: true, 5: true };
+    var tryInitIcons = function () {
+        var sels = [
+            ".dam-asset-grid-view .w2grid_header .w2grid_cell",
+            ".dam-asset-grid-view .w2grid_header td",
+            ".dam-asset-grid-view .w2grid_header th",
+            ".dam-asset-grid-view thead td",
+            ".dam-asset-grid-view thead th"
+        ];
+        var hcells = null;
+        for (var s = 0; s < sels.length; s++) {
+            var found = document.querySelectorAll(sels[s]);
+            if (found && found.length > 0) { hcells = found; break; }
+        }
+        if (!hcells || !hcells.length) { return; }
+        for (var i = 0; i < hcells.length; i++) {
+            if (!sortableIdxMap[i]) { continue; }
+            if (!hcells[i].querySelector(".dam-sort-indicator")) {
+                var sp = document.createElement("span");
+                sp.className = "dam-sort-indicator";
+                sp.textContent = " ⇅";
+                sp.style.cssText = "font-size:0.7rem;color:#94a3b8;pointer-events:none;";
+                hcells[i].appendChild(sp);
+            }
+        }
+    };
+    tryInitIcons();
+    window.setTimeout(tryInitIcons, 300);
+
+    document.addEventListener("mousedown", function (e) {
+        var target = e.target;
+        if (!target || !target.closest) { return; }
+        if (!target.closest(".dam-asset-grid-view")) { return; }
+        var headerCell =
+            target.closest(".w2grid_header .w2grid_cell") ||
+            target.closest(".w2grid_header td") ||
+            target.closest(".w2grid_header th") ||
+            target.closest("thead td") ||
+            target.closest("thead th");
+        if (!headerCell) { return; }
+        var siblings = headerCell.parentElement ? headerCell.parentElement.children : [];
+        var idx = -1;
+        for (var i = 0; i < siblings.length; i++) {
+            if (siblings[i] === headerCell) { idx = i; break; }
+        }
+        var sortableMap = { 2: "FILE_NM", 3: "FILE_TYPE", 4: "FILE_SIZE", 5: "STATUS" };
+        var colId = sortableMap[idx];
+        if (!colId) { return; }
+        var cur = scwin._sortState[colId] || "none";
+        var next = cur === "asc" ? "desc" : "asc";
+        scwin._sortState = {};
+        scwin._sortState[colId] = next;
+        /* build rows array from DataList row-by-row (getJSON may not return array) */
+        try {
+            var count = dlAsset.getRowCount ? dlAsset.getRowCount() : 0;
+            var rows = [];
+            for (var r = 0; r < count; r++) { rows.push(dlAsset.getRowJSON(r)); }
+            if (rows.length) {
+                rows.sort(function (a, b) {
+                    var va = String(a[colId] || "");
+                    var vb = String(b[colId] || "");
+                    return next === "asc"
+                        ? va.localeCompare(vb, undefined, { numeric: true })
+                        : vb.localeCompare(va, undefined, { numeric: true });
+                });
+                dlAsset.setJSON(rows);
+                scwin._applyDetail(0);
+                window.setTimeout(function () { scwin._styleIconBadges(); }, 50);
+            }
+        } catch (ex) { console.warn("[Asset] sort error", ex); }
+        /* update header indicators */
+        var old = document.querySelectorAll(".dam-asset-grid-view .dam-sort-indicator");
+        for (var j = 0; j < old.length; j++) { old[j].textContent = " ⇅"; old[j].style.color = "#94a3b8"; }
+        var activeInd = headerCell.querySelector(".dam-sort-indicator");
+        if (activeInd) {
+            activeInd.textContent = next === "asc" ? " ▲" : " ▼";
+            activeInd.style.color = "#334155";
+        }
+    }, true);
 };
+
+scwin._clearDetail = function () {
+    scwin._lastDetailRow = -1;
+    scwin._editMode = false;
+    try {
+        var pEl = document.querySelector('.dam-asset-preview');
+        if (pEl) { pEl.style.backgroundImage = ''; }
+    } catch (e) {}
+    try { inp_fileName.setValue(''); }   catch (e) {}
+    try { inp_assetTags.setValue(''); } catch (e) {}
+    try { inp_status.setValue(''); }    catch (e) {}
+    try { inp_creator.setValue(''); }    catch (e) {}
+    try { inp_resolution.setValue(''); } catch (e) {}
+    try { inp_uploaded.setValue(''); }   catch (e) {}
+    scwin._setEditFields(false);
+};
+
+scwin._lastDetailRow = -1;
 
 scwin._applyDetail = function (rowIndex) {
+    if (rowIndex === scwin._lastDetailRow) { return; }
+    if (scwin._editMode) { scwin._editMode = false; }
+    scwin._lastDetailRow = rowIndex;
     var row = dlAsset.getRowJSON(rowIndex);
     if (!row) { return; }
+
+    /* preview via background-image */
     try {
-        var img = $p.getComponentById("img_preview");
-        if (img && typeof img.setSrc === "function") {
-            img.setSrc(row.PREVIEW_URL || "/cm/dam/images/preview/document.svg");
-        }
+        var url = row.PREVIEW_URL || "/cm/dam/images/preview/document.svg";
+        var pEl = document.querySelector(".dam-asset-preview");
+        if (pEl) { pEl.style.backgroundImage = "url('" + url + "')"; }
     } catch (e) {}
-    scwin._setVal("inp_fileName", row.FILE_NM || "");
-    scwin._setVal("sel_assetType", row.TAGS || "");
-    scwin._setVal("sel_status", row.STATUS || "");
-    scwin._setVal("inp_creator", row.CREATOR || "");
-    scwin._setVal("inp_resolution", row.RESOLUTION || "");
-    scwin._setVal("inp_uploaded", row.UPLOAD_DT || "");
+
+    /* direct component access (with(scopeObj) scope) */
+    try { inp_fileName.setValue(row.FILE_NM || ""); }          catch(e) {}
+    try { var tagsVal = (row.TAGS || '').split(',')[0].trim(); inp_assetTags.setValue(tagsVal); } catch(e) {}
+    try { inp_creator.setValue(row.CREATOR || ""); }        catch(e) {}
+    try { inp_resolution.setValue(row.RESOLUTION || "-"); } catch(e) {}
+    try { inp_uploaded.setValue(row.UPLOAD_DT || ""); }     catch(e) {}
+    try { inp_status.setValue(row.STATUS || ""); }          catch(e) {}
+
+    /* re-lock selects after setValue — WebSquare may re-render and strip classes */
+    scwin._setEditFields(false);
 };
 
-scwin.btn_download_onclick = function () { /* mock */ };
-scwin.btn_edit_onclick     = function () { /* mock */ };
+scwin.btn_download_onclick = function () {
+    var idx = scwin._lastDetailRow;
+    if (idx < 0) { return; }
+    var row = dlAsset.getRowJSON(idx);
+    if (!row) { return; }
+    var lines = [
+        'Digital Asset Manager - File Info',
+        '==================================',
+        'File Name   : ' + (row.FILE_NM    || '-'),
+        'File Type   : ' + (row.FILE_TYPE  || '-'),
+        'File Size   : ' + (row.FILE_SIZE  || '-'),
+        'Status      : ' + (row.STATUS     || '-'),
+        'Tags        : ' + (row.TAGS       || '-'),
+        'Creator     : ' + (row.CREATOR    || '-'),
+        'Resolution  : ' + (row.RESOLUTION || '-'),
+        'Upload Date : ' + (row.UPLOAD_DT  || '-'),
+        '',
+        'Generated   : ' + new Date().toLocaleString()
+    ];
+    var blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href     = url;
+    a.download = (row.FILE_NM || 'asset').replace(/[\\/:*?"<>|]/g, '_') + '_info.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
 
-scwin.btn_versionControl_onclick = function () {
-    // Mock: open popup with fixed assetId=1 until asset list is wired to real backend selection
-    var assetId = 1;
+scwin._editMode = false;
+
+scwin._setEditFields = function (editable) {
+    /* inp_fileName: w2:input works fine with setReadOnly */
+    try { inp_fileName.setReadOnly(!editable); } catch(e) {}
     try {
-        if (dlAsset && typeof dlAsset.getRowJSON === "function") {
-            var idx = 0;
-            try {
-                var grd = $p.getComponentById("grdAsset");
-                if (grd && typeof grd.getSelectedIndex === "function") {
-                    idx = grd.getSelectedIndex();
-                }
-            } catch (e) {}
-            var row = dlAsset.getRowJSON(idx);
-            if (row && row.ASSET_ID) { assetId = row.ASSET_ID; }
+        var fnWrap = document.getElementById('inp_fileName');
+        if (fnWrap) {
+            var fnInps = fnWrap.querySelectorAll('input,textarea');
+            for (var k = 0; k < fnInps.length; k++) {
+                fnInps[k].style.outline    = editable ? '2px solid #6366f1' : '';
+                fnInps[k].style.background = editable ? '#fff' : '';
+            }
         }
-    } catch (e) {}
+    } catch(e) {}
+    /* inp_assetTags, inp_status: renderType="select" — ID is on the <select> itself, style el directly */
+    var selectIds = ['inp_assetTags', 'inp_status'];
+    for (var i = 0; i < selectIds.length; i++) {
+        try {
+            var el = document.getElementById(selectIds[i]);
+            if (el) {
+                if (editable) {
+                    el.classList.remove('dam-select-locked');
+                    el.style.outline = '2px solid #6366f1';
+                    el.style.background = '#fff';
+                } else {
+                    el.classList.add('dam-select-locked');
+                    el.style.outline = '';
+                    el.style.background = '';
+                }
+            }
+        } catch(e) {}
+    }
+    try { btn_edit.setLabel(editable ? 'Save Changes' : 'Edit Metadata'); } catch(e) {}
+    try {
+        var btnEl = document.getElementById('btn_edit');
+        if (btnEl) {
+            var walker = document.createTreeWalker(btnEl, 4, null, false);
+            var tNode = walker.nextNode();
+            if (tNode) { tNode.nodeValue = editable ? 'Save Changes' : 'Edit Metadata'; }
+        }
+    } catch(e) {}
+};
 
-    var data = { assetId: assetId };
-    var opts = { id: "pop_versionControl", popupName: "Version Control", width: 1100, height: 640, modal: true, resizable: true };
-    if (window.gcm && gcm.win && typeof gcm.win.openPopup === "function") {
-        gcm.win.openPopup($p, "/cm/dam/main/versionControlPopup.xml", opts, data);
+scwin._saveMetadata = function (idx) {
+    try {
+        var count = dlAsset.getRowCount ? dlAsset.getRowCount() : 0;
+        var rows = [];
+        for (var r = 0; r < count; r++) { rows.push(dlAsset.getRowJSON(r)); }
+        var fileNm = inp_fileName.getValue();
+        var tags   = inp_assetTags.getValue() || '';
+        var status = inp_status.getValue();
+        rows[idx].FILE_NM = fileNm;
+        rows[idx].TAGS    = tags;
+        rows[idx].STATUS  = status;
+        dlAsset.setJSON(rows);
+        var assetId = rows[idx].ASSET_ID;
+        if (assetId) {
+            fetch('/api/dam/assets/' + assetId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileNm: fileNm, tags: tags, status: status })
+            }).then(function (r) { return r.json(); })
+              .then(function (data) { console.log('[Asset] metadata persisted', data); })
+              .catch(function (e) { console.warn('[Asset] saveMetadata API error', e); });
+        }
+        console.log('[Asset] metadata saved for row', idx);
+    } catch(e) { console.warn('[Asset] saveMetadata error', e); }
+};
+
+scwin.btn_edit_onclick = function () {
+    if (scwin._lastDetailRow < 0) { return; }
+    if (!scwin._editMode) {
+        scwin._editMode = true;
+        scwin._setEditFields(true);
     } else {
-        $p.openPopup("/cm/dam/main/versionControlPopup.xml", { id: opts.id, width: opts.width + "px", height: opts.height + "px", modal: true, resizable: true, dataObject: { type: "json", name: "paramData", data: data } });
+        var idx = scwin._lastDetailRow;
+        scwin._saveMetadata(idx);
+        scwin._editMode = false;
+        scwin._lastDetailRow = -1;
+        scwin._setEditFields(false);
+        scwin._applyDetail(idx);
     }
 };
 ]]></script>
@@ -224,48 +472,20 @@ scwin.btn_versionControl_onclick = function () {
                             </xf:group>
                         </xf:group>
                         <xf:group class="dam-asset-folder-body">
-                            <w2:treeview id="trvFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed" tooltipGroupClass="false">
-                                <w2:node>
-                                    <w2:label><![CDATA[Digital Assets]]></w2:label>
-                                    <w2:value><![CDATA[1]]></w2:value>
-                                    <w2:folder><![CDATA[true]]></w2:folder>
-                                    <w2:node>
-                                        <w2:label><![CDATA[Marketing Documents]]></w2:label>
-                                        <w2:value><![CDATA[2]]></w2:value>
-                                        <w2:folder><![CDATA[true]]></w2:folder>
-                                        <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                        <w2:node>
-                                            <w2:label><![CDATA[Campaign Banners]]></w2:label>
-                                            <w2:value><![CDATA[3]]></w2:value>
-                                            <w2:folder><![CDATA[true]]></w2:folder>
-                                            <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                        </w2:node>
-                                        <w2:node class="tree-pdf-node">
-                                            <w2:label><![CDATA[PDF Brochures]]></w2:label>
-                                            <w2:value><![CDATA[4]]></w2:value>
-                                            <w2:folder><![CDATA[false]]></w2:folder>
-                                            <w2:iconImage><![CDATA[/cm/images/base/ico_docu.png]]></w2:iconImage>
-                                        </w2:node>
-                                        <w2:node>
-                                            <w2:label><![CDATA[Social Media Assets]]></w2:label>
-                                            <w2:value><![CDATA[5]]></w2:value>
-                                            <w2:folder><![CDATA[true]]></w2:folder>
-                                            <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                        </w2:node>
-                                    </w2:node>
-                                    <w2:node>
-                                        <w2:label><![CDATA[Video Assets]]></w2:label>
-                                        <w2:value><![CDATA[6]]></w2:value>
-                                        <w2:folder><![CDATA[true]]></w2:folder>
-                                        <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                    </w2:node>
-                                    <w2:node>
-                                        <w2:label><![CDATA[Internal Manuals]]></w2:label>
-                                        <w2:value><![CDATA[7]]></w2:value>
-                                        <w2:folder><![CDATA[true]]></w2:folder>
-                                        <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                    </w2:node>
-                                </w2:node>
+                            <w2:treeview id="trvFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed" tooltipGroupClass="false" ev:onclick="scwin.trvFolder_onclick">
+                                <w2:itemset nodeset="data:dlFolder">
+                                    <w2:label ref="FOLDER_NM"></w2:label>
+                                    <w2:value ref="FOLDER_ID"></w2:value>
+                                    <w2:depth ref="DEPTH"></w2:depth>
+                                    <w2:folder ref=""></w2:folder>
+                                    <w2:checkbox ref=""></w2:checkbox>
+                                    <w2:checkboxDisabled ref=""></w2:checkboxDisabled>
+                                    <w2:image ref=""></w2:image>
+                                    <w2:iconImage ref=""></w2:iconImage>
+                                    <w2:selectedImage ref=""></w2:selectedImage>
+                                    <w2:expandedImage ref=""></w2:expandedImage>
+                                    <w2:leafImage ref=""></w2:leafImage>
+                                </w2:itemset>
                             </w2:treeview>
                         </xf:group>
                     </xf:group>
@@ -285,17 +505,17 @@ scwin.btn_versionControl_onclick = function () {
                         </xf:group>
                         <xf:group class="dam-asset-files-body">
                             <w2:gridView id="grdAsset" class="dam-asset-grid-view" dataList="data:dlAsset" autoFit="allColumn" focusMode="row"
-                                style="width:100%;height:calc(100% - 38px);" useSort="true"
-                                ev:onrowindexchange="scwin.grdAsset_onrowindexchange"
+                                style="width:100%;height:calc(100% - 38px);"
+                                ev:onclick="scwin.grdAsset_onclick"
                                 ev:ondrawendrow="scwin.grdAsset_ondrawendrow">
                                 <w2:header>
                                     <w2:row>
                                         <w2:column id="hdChk" inputType="checkbox" width="40" value="" />
                                         <w2:column id="hdIcon" inputType="text" width="70" value="Icon" />
-                                        <w2:column id="hdFileNm" inputType="text" width="240" value="Name" sortable="true" />
-                                        <w2:column id="hdType" inputType="text" width="140" value="Type" sortable="true" />
-                                        <w2:column id="hdSize" inputType="text" width="100" value="Size" sortable="true" />
-                                        <w2:column id="hdStatus" inputType="text" width="120" value="Status" sortable="true" />
+                                        <w2:column id="hdFileNm" inputType="text" width="240" value="Name" />
+                                        <w2:column id="hdType" inputType="text" width="140" value="Type" />
+                                        <w2:column id="hdSize" inputType="text" width="100" value="Size" />
+                                        <w2:column id="hdStatus" inputType="text" width="120" value="Status" />
                                     </w2:row>
                                 </w2:header>
                                 <w2:gBody>
@@ -342,21 +562,33 @@ scwin.btn_versionControl_onclick = function () {
 
                         <xf:group class="dam-form-row">
                             <w2:textbox class="dam-form-label" label="Asset Type" />
-                            <xf:select id="sel_assetType" appearance="checkcombobox" class="dam-form-chips" renderType="component" style="width:100%;">
+                            <xf:select1 id="inp_assetTags" class="dam-form-input" appearance="minimal" renderType="select">
                                 <xf:choices>
-                                    <xf:item><xf:label>CheckComboBox</xf:label><xf:value>CheckComboBox</xf:value></xf:item>
-                                    <xf:item><xf:label>tags</xf:label><xf:value>tags</xf:value></xf:item>
-                                    <xf:item><xf:label>asset</xf:label><xf:value>asset</xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[]]></xf:label><xf:value><![CDATA[]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Marketing]]></xf:label><xf:value><![CDATA[Marketing]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Legacy]]></xf:label><xf:value><![CDATA[Legacy]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Branding]]></xf:label><xf:value><![CDATA[Branding]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Social Media]]></xf:label><xf:value><![CDATA[SocialMedia]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Campaign]]></xf:label><xf:value><![CDATA[Campaign]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Print]]></xf:label><xf:value><![CDATA[Print]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Digital]]></xf:label><xf:value><![CDATA[Digital]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Video]]></xf:label><xf:value><![CDATA[Video]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Photo]]></xf:label><xf:value><![CDATA[Photo]]></xf:value></xf:item>
                                 </xf:choices>
-                            </xf:select>
+                            </xf:select1>
                         </xf:group>
 
                         <xf:group class="dam-form-row">
                             <w2:textbox class="dam-form-label" label="Status" />
-                            <xf:select1 id="sel_status" appearance="minimal" class="dam-form-select" renderType="select" style="width:100%;">
-                                <xf:item><xf:label>Published</xf:label><xf:value>Published</xf:value></xf:item>
-                                <xf:item><xf:label>Draft</xf:label><xf:value>Draft</xf:value></xf:item>
-                                <xf:item><xf:label>Archived</xf:label><xf:value>Archived</xf:value></xf:item>
+                            <xf:select1 id="inp_status" class="dam-form-input dam-status-input" appearance="minimal" renderType="select">
+                                <xf:choices>
+                                    <xf:item><xf:label><![CDATA[]]></xf:label><xf:value><![CDATA[]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Draft]]></xf:label><xf:value><![CDATA[Draft]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Published]]></xf:label><xf:value><![CDATA[Published]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Archived]]></xf:label><xf:value><![CDATA[Archived]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Review]]></xf:label><xf:value><![CDATA[Review]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Inactive]]></xf:label><xf:value><![CDATA[Inactive]]></xf:value></xf:item>
+                                </xf:choices>
                             </xf:select1>
                         </xf:group>
 

@@ -9,11 +9,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.inswave.training.dam.service.DamService;
+import com.inswave.training.dam.vo.DamAssetVo;
 
 @Controller
 @RequestMapping("/api/dam")
@@ -43,22 +46,14 @@ public class DamController {
 		return ResponseEntity.ok(result);
 	}
 
-	@GetMapping("/assets/{assetId}/access-logs")
+	@PutMapping("/assets/{assetId}")
 	@ResponseBody
-	public ResponseEntity<?> getAccessLogs(@PathVariable("assetId") Integer assetId) {
-		return ResponseEntity.ok(damService.getAccessLogsByAssetId(assetId));
-	}
-
-	@PostMapping("/assets/{assetId}/restore")
-	@ResponseBody
-	public ResponseEntity<?> restore(@PathVariable("assetId") Integer assetId, @RequestParam("verId") Integer verId,
-			@RequestParam(value = "userNm", required = false) String userNm) {
-		if (userNm == null || userNm.trim().isEmpty()) {
-			userNm = "SYSTEM";
-		}
-		int affected = damService.restoreVersion(assetId, verId, userNm);
+	public ResponseEntity<?> updateAsset(@PathVariable("assetId") Integer assetId,
+			@RequestBody DamAssetVo vo) {
+		vo.setAssetId(assetId);
+		int updated = damService.updateAsset(vo);
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("ok", affected > 0);
+		result.put("updated", updated);
 		return ResponseEntity.ok(result);
 	}
 }
