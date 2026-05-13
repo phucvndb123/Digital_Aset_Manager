@@ -594,7 +594,7 @@
 .dam-asset-grid {
    width: 100% !important;
    display: grid !important;
-   grid-template-columns: minmax(0, 1fr) 360px !important;
+   grid-template-columns: minmax(0, 6fr) minmax(0, 4fr) !important;
    gap: 1rem !important;
    box-sizing: border-box !important;
    min-height: 100% !important;
@@ -630,24 +630,23 @@
 }
 
 .dam-asset-panel.dam-asset-detail {
-   padding: 0 !important;
+   padding: 1.5rem 1.5rem 2rem !important;
 }
 
 .dam-asset-folder {
-   height: 380px !important;
+   height: 320px !important;
    flex-shrink: 0 !important;
 }
 
 .dam-asset-files {
-   min-height: 400px !important;
-   flex-shrink: 0 !important;
+   flex: 1 !important;
+   min-height: 360px !important;
 }
 
 .dam-asset-detail {
    flex: 1 !important;
    overflow-y: auto !important;
    overflow-x: hidden !important;
-   padding: 1.75rem !important;
 }
 
 /* Panel head with title + action icons */
@@ -740,7 +739,7 @@
 
 /* Row styling - parent rows (folder level) */
 .dam-asset-tree .w2treeview_row_parent {
-   padding: 0.4rem 0 !important;
+   padding: 0.5rem 0 !important;
    border-bottom: 1px solid #f1f5f9 !important;
    cursor: pointer !important;
    outline: none !important;
@@ -775,8 +774,8 @@
 
 /* Folder icons */
 .dam-asset-tree .w2treeview_icon_navi {
-   width: 1.2rem !important;
-   height: 1.2rem !important;
+   width: 1.5rem !important;
+   height: 1.5rem !important;
    opacity: 1 !important;
 }
 
@@ -790,7 +789,8 @@
 /* Label text */
 .dam-asset-tree .w2treeview_label {
    color: #1f2733 !important;
-   line-height: 1.4 !important;
+   font-size: 0.93rem !important;
+   line-height: 1.5 !important;
 }
 
 .dam-asset-tree .w2treeview_select_node {
@@ -827,9 +827,30 @@
 .dam-asset-grid-view .w2grid_row {
    border-bottom: 1px solid #f1f5f9 !important;
    height: 2.5rem !important;
+   background: #ffffff !important;
 }
 
 .dam-asset-grid-view .w2grid_row:hover {
+   background: #f8fafc !important;
+}
+
+/* Override WebSquare blue sort/focus row highlight */
+.dam-asset-grid-view .w2grid_row_focused,
+.dam-asset-grid-view .w2grid_row_selected,
+.dam-asset-grid-view tr.w2grid_row_focused,
+.dam-asset-grid-view tr.w2grid_row_selected {
+   background: #eff6ff !important;
+}
+
+/* Sort arrow in header - keep minimal */
+.dam-asset-grid-view .w2grid_header .w2grid_sort_asc,
+.dam-asset-grid-view .w2grid_header .w2grid_sort_desc {
+   color: #1f2733 !important;
+   font-size: 0.75rem !important;
+}
+
+/* Header cell sorted state - no ugly background change */
+.dam-asset-grid-view .w2grid_header .w2grid_cell {
    background: #f8fafc !important;
 }
 
@@ -941,36 +962,39 @@
 /* Asset Detail preview image */
 .dam-asset-preview {
    width: 100% !important;
-   height: 180px !important;
-   border-radius: 0.5rem !important;
+   height: 170px !important;
+   border-radius: 0.625rem !important;
    overflow: hidden !important;
-   margin-bottom: 1.6rem !important;
-   background: linear-gradient(135deg, #6b46c1 0%, #4f46e5 100%) !important;
+   margin-bottom: 1.4rem !important;
+   background-color: #e8edf3 !important;
+   background-size: cover !important;
+   background-repeat: no-repeat !important;
+   background-position: center !important;
    flex-shrink: 0 !important;
-   box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+   display: flex !important;
+   align-items: center !important;
+   justify-content: center !important;
 }
 
-.dam-asset-preview-img {
-   width: 100% !important;
-   height: 100% !important;
-   object-fit: cover !important;
-   display: block !important;
+/* Hide the xf:image child — preview handled via background-image */
+.dam-asset-preview .dam-asset-preview-img,
+.dam-asset-preview img {
+   display: none !important;
 }
 
 /* Form rows */
 .dam-form-row {
    display: flex !important;
    flex-direction: column !important;
-   gap: 0.5rem !important;
-   margin-bottom: 1.25rem !important;
+   gap: 0.35rem !important;
+   margin-bottom: 1rem !important;
 }
 
 .dam-form-label {
-   font-size: 0.8rem !important;
-   color: #475569 !important;
-   font-weight: 600 !important;
-   text-transform: uppercase !important;
-   letter-spacing: 0.025em !important;
+   font-size: 0.78rem !important;
+   color: #64748b !important;
+   font-weight: 500 !important;
+   letter-spacing: 0 !important;
 }
 
 .dam-form-input,
@@ -1069,18 +1093,49 @@
 
 /* Metadata section */
 .dam-meta-section {
-   margin-top: 1.9rem !important;
+   margin-top: 1.5rem !important;
    padding-top: 1.25rem !important;
    border-top: 1px solid #e5e7eb !important;
 }
 
 .dam-meta-title {
-   font-size: 0.85rem !important;
+   font-size: 0.88rem !important;
    font-weight: 700 !important;
    color: #1f2733 !important;
    margin: 0 0 0.75rem 0 !important;
-   text-transform: uppercase !important;
-   letter-spacing: 0.05em !important;
+   letter-spacing: 0 !important;
+}
+
+/* Metadata rows: label on left, value on right */
+.dam-meta-section .dam-form-row {
+   flex-direction: row !important;
+   align-items: center !important;
+   gap: 0 !important;
+   margin-bottom: 0 !important;
+   padding: 0.55rem 0 !important;
+   border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.dam-meta-section .dam-form-label {
+   flex: 0 0 42% !important;
+   color: #64748b !important;
+   font-weight: 400 !important;
+   font-size: 0.82rem !important;
+}
+
+/* Read-only metadata values: plain text, no input box */
+.dam-meta-section .dam-form-input,
+.dam-meta-section .dam-form-input input {
+   border: none !important;
+   background: transparent !important;
+   padding: 0 !important;
+   height: auto !important;
+   font-size: 0.82rem !important;
+   font-weight: 500 !important;
+   color: #1f2733 !important;
+   box-shadow: none !important;
+   flex: 1 !important;
+   width: auto !important;
 }
 
 /* File List grid cell styling */
@@ -1091,4 +1146,38 @@
 /* Status cell — keep simple */
 .dam-cell-status {
    font-weight: 500 !important;
+}
+
+/* ============================================================
+   xf:select1 renderType="select" — ID is on the <select> element
+   directly (no wrapper). .dam-form-input already gives correct
+   border/height/padding; just constrain width and add locked state.
+   ============================================================ */
+#inp_assetTags,
+#inp_status {
+   display: block !important;
+   width: 100% !important;
+   max-width: 100% !important;
+   min-width: 0 !important;
+   box-sizing: border-box !important;
+   -webkit-appearance: auto !important;
+   appearance: auto !important;
+   cursor: pointer !important;
+}
+
+#inp_assetTags:focus,
+#inp_status:focus {
+   outline: none !important;
+   border-color: #94a3b8 !important;
+   box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1) !important;
+}
+
+/* Locked (read-only) state — CSS-only, no WebSquare readOnly API */
+#inp_assetTags.dam-select-locked,
+#inp_status.dam-select-locked {
+   pointer-events: none !important;
+   background: #f8fafc !important;
+   color: #475569 !important;
+   border-color: #e2e8f0 !important;
+   cursor: default !important;
 }

@@ -67,4 +67,12 @@
 		ORDER BY VER_ID DESC
 	</select>
 
+	<update id="updateAsset">
+		UPDATE DAM_ASSET
+		SET FILE_NM = #{vo.fileNm},
+		    TAGS    = #{vo.tags},
+		    STATUS  = #{vo.status}
+		WHERE ASSET_ID = #{vo.assetId}
+	</update>
+
 </mapper>

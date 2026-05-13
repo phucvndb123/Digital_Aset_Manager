@@ -36,4 +36,9 @@ public class DamServiceImpl implements DamService {
 	public List<DamVersionVo> getVersionsByAssetId(Integer assetId) {
 		return damMapper.selectVersionsByAssetId(assetId);
 	}
+
+	@Override
+	public int updateAsset(DamAssetVo vo) {
+		return damMapper.updateAsset(vo);
+	}
 }

@@ -14,4 +14,6 @@ public interface DamService {
 	DamAssetVo getAssetById(Integer assetId);
 
 	List<DamVersionVo> getVersionsByAssetId(Integer assetId);
+
+	int updateAsset(DamAssetVo vo);
 }
