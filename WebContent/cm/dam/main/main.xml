@@ -62,6 +62,17 @@ scwin.btn_navVersionControl_onclick = function () { console.log("[DAM] click Ver
 scwin.btn_logout_onclick = function () {
     if (confirm("Logout?")) { location.href = "/"; }
 };
+
+scwin.img_hamburger_onclick = function () {
+    var shell = $p.getComponentById("grp_appShell");
+    if (shell) {
+        if (shell.hasClass("dam-sidebar-collapsed")) {
+            shell.removeClass("dam-sidebar-collapsed");
+        } else {
+            shell.addClass("dam-sidebar-collapsed");
+        }
+    }
+};
 ]]></script>
     </head>
     <body ev:onpageload="scwin.onpageload">
@@ -71,7 +82,7 @@ scwin.btn_logout_onclick = function () {
                 <xf:group class="dam-header-left">
                     <xf:image id="img_logo" class="dam-logo" src="/cm/dam/images/logo.svg"></xf:image>
                     <w2:textbox id="txt_appTitle" class="dam-app-title" label="Digital Asset Manager"></w2:textbox>
-                    <xf:image id="img_hamburger" class="dam-hamburger" src="/cm/dam/images/hamburger.svg"></xf:image>
+                    <xf:image id="img_hamburger" class="dam-hamburger" src="/cm/dam/images/hamburger.svg" style="cursor:pointer;" ev:onclick="scwin.img_hamburger_onclick"></xf:image>
                 </xf:group>
                 <xf:group class="dam-header-right">
                     <xf:image id="img_bell" class="dam-bell" src="/cm/dam/images/bell.svg"></xf:image>
@@ -86,19 +97,19 @@ scwin.btn_logout_onclick = function () {
             <xf:group id="grp_body" class="dam-body">
                 <!-- Sidebar -->
                 <xf:group id="grp_sidebar" class="dam-sidebar">
-                    <xf:group id="btn_navDashboard" class="dam-nav-item dam-active" ev:onclick="scwin.btn_navDashboard_onclick" style="cursor:pointer;">
+                    <xf:group id="btn_navDashboard" class="dam-nav-item dam-active" ev:onclick="scwin.btn_navDashboard_onclick" style="cursor:pointer;" title="Dashboard">
                         <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_dashboard.svg"></xf:image>
                         <w2:textbox class="dam-nav-text" label="Dashboard"></w2:textbox>
                     </xf:group>
-                    <xf:group id="btn_navFileBrowser" class="dam-nav-item" ev:onclick="scwin.btn_navFileBrowser_onclick" style="cursor:pointer;">
+                    <xf:group id="btn_navFileBrowser" class="dam-nav-item" ev:onclick="scwin.btn_navFileBrowser_onclick" style="cursor:pointer;" title="File Browser">
                         <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_folder.svg"></xf:image>
                         <w2:textbox class="dam-nav-text" label="File Browser"></w2:textbox>
                     </xf:group>
-                    <xf:group id="btn_navAssetDetails" class="dam-nav-item" ev:onclick="scwin.btn_navAssetDetails_onclick" style="cursor:pointer;">
+                    <xf:group id="btn_navAssetDetails" class="dam-nav-item" ev:onclick="scwin.btn_navAssetDetails_onclick" style="cursor:pointer;" title="Asset Details">
                         <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_document.svg"></xf:image>
                         <w2:textbox class="dam-nav-text" label="Asset Details"></w2:textbox>
                     </xf:group>
-                    <xf:group id="btn_navVersionControl" class="dam-nav-item" ev:onclick="scwin.btn_navVersionControl_onclick" style="cursor:pointer;">
+                    <xf:group id="btn_navVersionControl" class="dam-nav-item" ev:onclick="scwin.btn_navVersionControl_onclick" style="cursor:pointer;" title="Version Control">
                         <xf:image class="dam-nav-icon" src="/cm/dam/images/ic_clock.svg"></xf:image>
                         <w2:textbox class="dam-nav-text" label="Version Control"></w2:textbox>
                     </xf:group>

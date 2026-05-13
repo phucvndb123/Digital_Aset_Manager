@@ -96,10 +96,55 @@ scwin._initMockData = function () {
     } catch (e) { console.warn("[Asset] expandAll failed", e); }
 
     scwin._applyDetail(1);
+    window.setTimeout(function () { scwin._refreshGridStyling(); }, 100);
+    window.setTimeout(function () { scwin._refreshGridStyling(); }, 500);
+    window.setTimeout(function () { scwin._refreshGridStyling(); }, 1500);
 };
 
 scwin.grdAsset_onrowindexchange = function (gridObj, oldRowIndex, newRowIndex) {
     scwin._applyDetail(newRowIndex);
+};
+
+scwin._BADGE_COLORS = {
+    "PDF": "#dc2626",
+    "JPG": "#16a34a",
+    "JPEG": "#16a34a",
+    "PNG": "#2563eb",
+    "MP4": "#ea580c",
+    "DOC": "#2563eb",
+    "DOCX": "#2563eb",
+    "GIF": "#9333ea"
+};
+
+scwin._styleIconBadges = function () {
+    try {
+        var colors = scwin._BADGE_COLORS;
+        var cells = document.querySelectorAll(".dam-asset-grid-view .dam-cell-icon");
+        for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            var txt = (cell.textContent || "").trim().toUpperCase();
+            var bg = colors[txt];
+            if (!bg) { continue; }
+            cell.style.cssText = "padding:4px 0 !important;text-align:center !important;font-weight:normal !important;";
+            var badge = cell.querySelector(".dam-badge-injected");
+            if (!badge) {
+                badge = document.createElement("span");
+                badge.className = "dam-badge-injected";
+                cell.innerHTML = "";
+                cell.appendChild(badge);
+            }
+            badge.textContent = txt;
+            badge.style.cssText = "display:inline-block !important;padding:3px 8px !important;background:" + bg + " !important;color:#fff !important;border-radius:3px !important;font-weight:700 !important;font-size:0.7rem !important;letter-spacing:0.02em !important;line-height:1.4 !important;min-width:30px !important;text-align:center !important;box-shadow:0 1px 2px rgba(0,0,0,0.15) !important;";
+        }
+    } catch (e) { /* ignore */ }
+};
+
+scwin._refreshGridStyling = function () {
+    scwin._styleIconBadges();
+};
+
+scwin.grdAsset_ondrawendrow = function () {
+    scwin._refreshGridStyling();
 };
 
 scwin._setVal = function (id, val) {
@@ -157,7 +202,6 @@ scwin.btn_edit_onclick     = function () { /* mock */ };
                                     <w2:label><![CDATA[Digital Assets]]></w2:label>
                                     <w2:value><![CDATA[1]]></w2:value>
                                     <w2:folder><![CDATA[true]]></w2:folder>
-                                    <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
                                     <w2:node>
                                         <w2:label><![CDATA[Marketing Documents]]></w2:label>
                                         <w2:value><![CDATA[2]]></w2:value>
@@ -214,16 +258,17 @@ scwin.btn_edit_onclick     = function () { /* mock */ };
                         </xf:group>
                         <xf:group class="dam-asset-files-body">
                             <w2:gridView id="grdAsset" class="dam-asset-grid-view" dataList="data:dlAsset" autoFit="allColumn" focusMode="row"
-                                style="width:100%;height:calc(100% - 38px);"
-                                ev:onrowindexchange="scwin.grdAsset_onrowindexchange">
+                                style="width:100%;height:calc(100% - 38px);" useSort="true"
+                                ev:onrowindexchange="scwin.grdAsset_onrowindexchange"
+                                ev:ondrawendrow="scwin.grdAsset_ondrawendrow">
                                 <w2:header>
                                     <w2:row>
                                         <w2:column id="hdChk" inputType="checkbox" width="40" value="" />
                                         <w2:column id="hdIcon" inputType="text" width="70" value="Icon" />
-                                        <w2:column id="hdFileNm" inputType="text" width="240" value="Name" />
-                                        <w2:column id="hdType" inputType="text" width="140" value="Type" />
-                                        <w2:column id="hdSize" inputType="text" width="100" value="Size" />
-                                        <w2:column id="hdStatus" inputType="text" width="120" value="Status" />
+                                        <w2:column id="hdFileNm" inputType="text" width="240" value="Name" sortable="true" />
+                                        <w2:column id="hdType" inputType="text" width="140" value="Type" sortable="true" />
+                                        <w2:column id="hdSize" inputType="text" width="100" value="Size" sortable="true" />
+                                        <w2:column id="hdStatus" inputType="text" width="120" value="Status" sortable="true" />
                                     </w2:row>
                                 </w2:header>
                                 <w2:gBody>
