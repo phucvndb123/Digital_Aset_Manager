@@ -18,8 +18,5 @@ public interface DamMapper {
 
 	List<DamVersionVo> selectVersionsByAssetId(@Param("assetId") Integer assetId);
 
-	List<DamAccessLogVo> selectAccessLogsByAssetId(@Param("assetId") Integer assetId);
-
-	int insertAccessLog(@Param("assetId") Integer assetId, @Param("userNm") String userNm, @Param("actionTp") String actionTp,
-			@Param("remark") String remark);
+	int updateAsset(@Param("vo") DamAssetVo vo);
 }

@@ -98,9 +98,12 @@
 		ORDER BY LOG_ID DESC
 	</select>
 
-	<insert id="insertAccessLog">
-		INSERT INTO DAM_ACCESS_LOG (ASSET_ID, USER_NM, ACTION_TP, REMARK)
-		VALUES (#{assetId}, #{userNm}, #{actionTp}, #{remark})
-	</insert>
+	<update id="updateAsset">
+		UPDATE DAM_ASSET
+		SET FILE_NM = #{vo.fileNm},
+		    TAGS    = #{vo.tags},
+		    STATUS  = #{vo.status}
+		WHERE ASSET_ID = #{vo.assetId}
+	</update>
 
 </mapper>

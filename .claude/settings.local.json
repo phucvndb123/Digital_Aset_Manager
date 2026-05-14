@@ -1,14 +1,14 @@
 {
   "permissions": {
+    "defaultMode": "acceptEdits",
     "allow": [
-      "PowerShell(& \"C:\\\\WEBSQUARE_DEV_PACK_SP5\\\\bin\\\\w-pack\\\\standalone_wpack-win.exe\" --baseDir \"C:\\\\WEBSQUARE_DEV_PACK_SP5\\\\workspace\\\\Digital_Aset_Manager\\\\WebContent\" --src \"C:\\\\WEBSQUARE_DEV_PACK_SP5\\\\workspace\\\\Digital_Aset_Manager\\\\WebContent\" --dest \"C:\\\\WEBSQUARE_DEV_PACK_SP5\\\\workspace\\\\Digital_Aset_Manager\\\\WebContent\\\\_wpack_\" --js \"0\" --css \"0\")",
-      "Bash(\"c:\\\\WEBSQUARE_DEV_PACK_SP5\\\\bin\\\\w-pack\\\\standalone_wpack-win.exe\" --baseDir \"c:\\\\WEBSQUARE_DEV_PACK_SP5\\\\workspace\\\\Digital_Aset_Manager\\\\WebContent\" --src \"cm/dam/main\" --dest \"c:\\\\WEBSQUARE_DEV_PACK_SP5\\\\workspace\\\\Digital_Aset_Manager\\\\WebContent\\\\_wpack_\\\\cm\\\\dam\\\\main\" --js \"0\" --css \"0\")",
-      "Bash(\"c:\\\\WEBSQUARE_DEV_PACK_SP5\\\\bin\\\\w-pack\\\\standalone_wpack-win.exe\" --baseDir . --src \"cm/dam/main\" --dest \"_wpack_/cm/dam/main\" --js \"0\" --css \"0\")",
-      "Bash(cd /d \"c:\\\\WEBSQUARE_DEV_PACK_SP5\\\\workspace\\\\Digital_Aset_Manager\\\\WebContent\")",
-      "Bash(\"c:\\\\WEBSQUARE_DEV_PACK_SP5\\\\bin\\\\w-pack\\\\standalone_wpack-win.exe\" --src \"cm\\\\dam\\\\main\" --dest \"_wpack_\\\\cm\\\\dam\\\\main\" --js 0 --css 0)",
-      "PowerShell(& 'C:/WEBSQUARE_DEV_PACK_SP5/bin/w-pack/standalone_wpack-win.exe' --baseDir 'C:/WEBSQUARE_DEV_PACK_SP5/workspace/Digital_Aset_Manager/WebContent' --src 'C:/WEBSQUARE_DEV_PACK_SP5/workspace/Digital_Aset_Manager/WebContent/cm/dam/main' --dest 'C:/WEBSQUARE_DEV_PACK_SP5/workspace/Digital_Aset_Manager/WebContent/_wpack_/cm/dam/main' --js '0' --css '0')",
-      "Bash(stat -c '%y %s %n' c:/WEBSQUARE_DEV_PACK_SP5/workspace/Digital_Aset_Manager/WebContent/_wpack_/cm/dam/main/file_browser.js 2>&1)",
-      "Read(//c/WEBSQUARE_DEV_PACK_SP5/workspace/Digital_Aset_Manager/**)"
+      "Bash(*)",
+      "PowerShell(*)",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep"
     ]
   }
 }

@@ -16,7 +16,5 @@ public interface DamService {
 
 	List<DamVersionVo> getVersionsByAssetId(Integer assetId);
 
-	List<DamAccessLogVo> getAccessLogsByAssetId(Integer assetId);
-
-	int restoreVersion(Integer assetId, Integer verId, String userNm);
+	int updateAsset(DamAssetVo vo);
 }
