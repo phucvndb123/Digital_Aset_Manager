@@ -9,14 +9,13 @@
 		<w2:MSA />
 		<xf:model>
 			<w2:dataCollection baseNode="map">
-				<w2:dataMap id="dmFolder" baseNode="map">
-					<w2:keyInfo>
-						<w2:key id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
-						<w2:key id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
-						<w2:key id="PARENT_FOLDER_ID" name="PARENT_FOLDER_ID" dataType="text" />
-						<w2:key id="PATH_DEPTH" name="PATH_DEPTH" dataType="text" />
-					</w2:keyInfo>
-				</w2:dataMap>
+				<w2:dataList id="dlFolder" baseNode="list" repeatNode="map">
+					<w2:columnInfo>
+						<w2:column id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+						<w2:column id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+						<w2:column id="DEPTH" name="DEPTH" dataType="text" />
+					</w2:columnInfo>
+				</w2:dataList>
 				<w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
 					<w2:columnInfo>
 						<w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
@@ -39,6 +38,17 @@
 						<w2:key id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
 						<w2:key id="OWNER_NM" name="OWNER_NM" dataType="text" />
 						<w2:key id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
+					</w2:keyInfo>
+				</w2:dataMap>
+				<w2:dataMap id="dmPopup" baseNode="map">
+					<w2:keyInfo>
+						<w2:key id="ASSET_ID" name="ASSET_ID" dataType="text" />
+						<w2:key id="FILE_NM" name="FILE_NM" dataType="text" />
+						<w2:key id="NEW_VER_NO" name="NEW_VER_NO" dataType="text" />
+						<w2:key id="UPLOAD_FILE_NM" name="UPLOAD_FILE_NM" dataType="text" />
+						<w2:key id="CONTRIBUTORS" name="CONTRIBUTORS" dataType="text" />
+						<w2:key id="CHANGE_NOTES" name="CHANGE_NOTES" dataType="text" />
+						<w2:key id="PREVIEW_URL" name="PREVIEW_URL" dataType="text" />
 					</w2:keyInfo>
 				</w2:dataMap>
 			</w2:dataCollection>
@@ -103,6 +113,30 @@
                 scwin._setDetailField("inpFileSize", "FILE_SIZE", "");
                 scwin._setDetailField("inpOwnerNm", "OWNER_NM", "");
                 scwin._setDetailField("inpUploadDt", "UPLOAD_DT", "");
+            };
+            
+            scwin._buildFolderRows = function(folders) {
+                var childrenMap = {};
+                var allIds = {};
+                for (var i = 0; i < folders.length; i++) { allIds[folders[i].folderId] = true; }
+                for (var j = 0; j < folders.length; j++) {
+                    var pid = folders[j].parentFolderId || 0;
+                    if (!childrenMap[pid]) { childrenMap[pid] = []; }
+                    childrenMap[pid].push(folders[j]);
+                }
+                var roots = [];
+                for (var k = 0; k < folders.length; k++) {
+                    var f = folders[k];
+                    if (!f.parentFolderId || !allIds[f.parentFolderId]) { roots.push(f); }
+                }
+                var result = [];
+                var visit = function(node, depth) {
+                    result.push({ FOLDER_ID: String(node.folderId), FOLDER_NM: node.folderNm || '', DEPTH: String(depth) });
+                    var children = childrenMap[node.folderId] || [];
+                    for (var c = 0; c < children.length; c++) { visit(children[c], depth + 1); }
+                };
+                for (var r = 0; r < roots.length; r++) { visit(roots[r], 1); }
+                return result;
             };
 
             scwin._realRowIndex = function(displayRow) {
@@ -316,20 +350,72 @@
 
             scwin.openAssetPopup = function(assetId) {
                 if (!assetId) { return; }
-                var data = { assetId: assetId };
-                var opts = { id: "pop_fileBrowserAsset", popupName: "Upload New Version", width: 580, height: 660, modal: true, resizable: true, type: "wframePopup" };
-                if (window.gcm && gcm.win && typeof gcm.win.openPopup === "function") {
-                    gcm.win.openPopup($p, "/cm/dam/main/fileBrowserAssetPopup.xml", opts, data);
-                } else if (typeof $p.openPopup === "function") {
-                    $p.openPopup("/cm/dam/main/fileBrowserAssetPopup.xml", {
-                        id: opts.id,
-                        width: opts.width + "px",
-                        height: opts.height + "px",
-                        modal: true,
-                        resizable: true,
-                        dataObject: { type: "json", name: "paramData", data: data }
+                 scwin._openInlineUploadPopup({ assetId: assetId });
+            };
+
+            scwin._applyPopupPreview = function(url) {
+                var u = url || "/cm/dam/images/preview/document.svg";
+                try {
+                    var img = $p.getComponentById("img_fb_popup_preview");
+                    if (img && typeof img.setSrc === "function") { img.setSrc(u); }
+                } catch (e) {}
+            };
+
+            scwin._suggestNextVerNo = function(latestVer) {
+                var v = (latestVer || "").trim();
+                if (!v) { return "v1.0"; }
+                var m = v.match(/^(v?)(\d+)\.(\d+)$/i);
+                if (m) {
+                    return (m[1] === "V" ? "V" : "v") + parseInt(m[2], 10) + "." + (parseInt(m[3], 10) + 1);
+                }
+                return v + ".1";
+            };
+
+            scwin._openInlineUploadPopup = function(param) {
+                var assetId = param && (param.assetId != null ? param.assetId : param.ASSET_ID);
+                dmPopup.set("ASSET_ID", assetId ? String(assetId) : "");
+                dmPopup.set("FILE_NM", "");
+                dmPopup.set("NEW_VER_NO", "v1.0");
+                dmPopup.set("UPLOAD_FILE_NM", "");
+                dmPopup.set("CONTRIBUTORS", "Carol");
+                dmPopup.set("CHANGE_NOTES", "");
+                dmPopup.set("PREVIEW_URL", "/cm/dam/images/preview/document.svg");
+                scwin._applyPopupPreview(dmPopup.get("PREVIEW_URL"));
+                $p.getComponentById("txt_fb_popup_title").setLabel("Upload New Version");
+
+                if (assetId) {
+                    scwin.callApi("/api/dam/assets/" + encodeURIComponent(assetId), function(res) {
+                        if (!res || !res.asset) { return; }
+                        var a = res.asset;
+                        var latest = (res.versions || [])[0] || null;
+                        var latestVer = latest ? latest.verNo : "";
+                        var preview = (latest && latest.previewUrl) ? latest.previewUrl : (a.previewUrl || "/cm/dam/images/preview/document.svg");
+                        dmPopup.set("ASSET_ID", String(a.assetId != null ? a.assetId : ""));
+                        dmPopup.set("FILE_NM", a.fileNm || "");
+                        dmPopup.set("NEW_VER_NO", scwin._suggestNextVerNo(latestVer));
+                        dmPopup.set("CONTRIBUTORS", a.ownerNm || "Carol");
+                        dmPopup.set("CHANGE_NOTES", (latest && latest.changeLog) ? latest.changeLog : "");
+                        dmPopup.set("PREVIEW_URL", preview);
+                        $p.getComponentById("txt_fb_popup_title").setLabel("Upload New Version: " + (a.fileNm || ""));
+                        scwin._applyPopupPreview(preview);
                     });
                 }
+                var bg = document.getElementById("fbPopupBackdrop");
+                if (bg) { bg.style.display = "block"; }
+            };
+
+            scwin.btn_fb_browse_onclick = function() {
+                dmPopup.set("UPLOAD_FILE_NM", dmPopup.get("FILE_NM") || "");
+            };
+
+            scwin.btn_fb_cancel_onclick = function() {
+                var bg = document.getElementById("fbPopupBackdrop");
+                if (bg) { bg.style.display = "none"; }
+            };
+
+            scwin.btn_fb_submit_onclick = function() {
+                alert("Demo: chưa có API lưu phiên bản. Gửi sẽ gồm VER_NO=" + (dmPopup.get("NEW_VER_NO") || "") + ", Contributors=" + (dmPopup.get("CONTRIBUTORS") || "") + ".");
+                scwin.btn_fb_cancel_onclick();
             };
         ]]></script>
 	</head>
@@ -484,6 +570,21 @@
 					</xf:group>
 				</xf:group>
 			</xf:group>
+			<div id="fbPopupBackdrop" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;padding:24px;box-sizing:border-box;overflow:auto;">
+				<xf:group class="dam-fb-upload-modal" style="max-width:580px;margin:24px auto;">
+					<xf:group class="dam-fb-upload-modal-header">
+						<w2:textbox id="txt_fb_popup_title" class="dam-fb-upload-modal-title" label="Upload New Version" tagname="h2" />
+					</xf:group>
+					<xf:group class="dam-fb-upload-modal-body">
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="New Version Number" /><xf:input ref="data:dmPopup/NEW_VER_NO" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Upload File" /><xf:group class="dam-fb-upload-file-row"><xf:input ref="data:dmPopup/UPLOAD_FILE_NM" readOnly="true" class="dam-fb-popup-input" style="flex:1;min-width:0;" /><xf:trigger class="dam-fb-btn-primary dam-fb-btn-browse" ev:onclick="scwin.btn_fb_browse_onclick"><xf:label>Browse</xf:label></xf:trigger><xf:image class="dam-fb-upload-doc-icon" src="/cm/images/base/ico_docu.png" title="File" /></xf:group></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Contributors" /><xf:select1 ref="data:dmPopup/CONTRIBUTORS" appearance="minimal" class="dam-fb-popup-select" renderType="select" style="width:100%;"><xf:choices><xf:item><xf:label>Carol</xf:label><xf:value>Carol</xf:value></xf:item><xf:item><xf:label>David</xf:label><xf:value>David</xf:value></xf:item><xf:item><xf:label>Alice</xf:label><xf:value>Alice</xf:value></xf:item><xf:item><xf:label>Bob</xf:label><xf:value>Bob</xf:value></xf:item><xf:item><xf:label>SYSTEM</xf:label><xf:value>SYSTEM</xf:value></xf:item></xf:choices></xf:select1></xf:group>
+						<xf:group class="dam-fb-upload-row dam-fb-upload-row-notes"><w2:textbox class="dam-fb-upload-label" label="Change Notes" /><xf:textarea ref="data:dmPopup/CHANGE_NOTES" class="dam-fb-popup-textarea" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row dam-fb-upload-preview-block"><w2:textbox class="dam-fb-upload-label" label="Preview" /><xf:group class="dam-fb-upload-preview-wrap"><xf:image id="img_fb_popup_preview" class="dam-fb-upload-preview-img" src="/cm/dam/images/preview/document.svg" /></xf:group></xf:group>
+					</xf:group>
+					<xf:group class="dam-fb-upload-modal-footer"><xf:trigger class="dam-fb-btn-secondary" ev:onclick="scwin.btn_fb_cancel_onclick"><xf:label>Cancel</xf:label></xf:trigger><xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_fb_submit_onclick"><xf:label>Submit</xf:label></xf:trigger></xf:group>
+				</xf:group>
+			</div>
 		</xf:group>
 	</body>
 </html>
