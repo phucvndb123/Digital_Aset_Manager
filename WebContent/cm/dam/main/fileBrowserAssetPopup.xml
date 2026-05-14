@@ -1,36 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
 <?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
-<html xmlns="http://www.w3.org/1999/xhtml"
-    xmlns:ev="http://www.w3.org/2001/xml-events"
-    xmlns:w2="http://www.inswave.com/websquare"
-    xmlns:xf="http://www.w3.org/2002/xforms">
-    <head>
-        <w2:type>COMPONENT</w2:type>
-        <w2:buildDate/>
-        <w2:MSA/>
-        <xf:model>
-            <w2:dataCollection baseNode="map">
-                <w2:dataMap id="dmPopup" baseNode="map">
-                    <w2:keyInfo>
-                        <w2:key id="ASSET_ID" name="ASSET_ID" dataType="text"/>
-                        <w2:key id="FILE_NM" name="FILE_NM" dataType="text"/>
-                        <w2:key id="NEW_VER_NO" name="NEW_VER_NO" dataType="text"/>
-                        <w2:key id="UPLOAD_FILE_NM" name="UPLOAD_FILE_NM" dataType="text"/>
-                        <w2:key id="CONTRIBUTORS" name="CONTRIBUTORS" dataType="text"/>
-                        <w2:key id="CHANGE_NOTES" name="CHANGE_NOTES" dataType="text"/>
-                        <w2:key id="PREVIEW_URL" name="PREVIEW_URL" dataType="text"/>
-                    </w2:keyInfo>
-                </w2:dataMap>
-            </w2:dataCollection>
-        </xf:model>
-        <script lazy="false" type="text/javascript"><![CDATA[
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:w2="http://www.inswave.com/websquare"
+	xmlns:xf="http://www.w3.org/2002/xforms">
+	<head>
+		<w2:type>COMPONENT</w2:type>
+		<w2:buildDate/>
+		<w2:MSA/>
+		<xf:model>
+			<w2:dataCollection baseNode="map">
+				<w2:dataMap id="dmPopup" baseNode="map">
+					<w2:keyInfo>
+						<w2:key id="ASSET_ID" name="ASSET_ID" dataType="text" />
+						<w2:key id="FILE_NM" name="FILE_NM" dataType="text" />
+						<w2:key id="NEW_VER_NO" name="NEW_VER_NO" dataType="text" />
+						<w2:key id="UPLOAD_FILE_NM" name="UPLOAD_FILE_NM" dataType="text" />
+						<w2:key id="CONTRIBUTORS" name="CONTRIBUTORS" dataType="text" />
+						<w2:key id="CHANGE_NOTES" name="CHANGE_NOTES" dataType="text" />
+						<w2:key id="PREVIEW_URL" name="PREVIEW_URL" dataType="text" />
+					</w2:keyInfo>
+				</w2:dataMap>
+			</w2:dataCollection>
+			<w2:workflowCollection>
+			</w2:workflowCollection>
+		</xf:model>
+		<w2:layoutInfo/>
+		<w2:publicInfo method=""/>
+		<script lazy="false" type="text/javascript"><![CDATA[
 scwin.onpageload = function () {
     scwin._load();
 };
 
 scwin._getParam = function () {
-    try { return $p.getParameter("paramData") || {}; } catch (e) { return {}; }
+    try {
+        var p = $p.getParameter("paramData");
+        if (p && typeof p === "object") { return p; }
+    } catch (e1) {}
+    try {
+        var p2 = $p.getParameter("data");
+        if (p2 && typeof p2 === "object") { return p2; }
+    } catch (e2) {}
+    try {
+        if (window.dialogArguments && typeof window.dialogArguments === "object") { return window.dialogArguments; }
+    } catch (e3) {}
+    return {};
+};
+
+scwin._applyPreview = function (url) {
+    var u = url || "/cm/dam/images/preview/document.svg";
+    try {
+        var img = $p.getComponentById("img_fb_popup_preview");
+        if (img && typeof img.setSrc === "function") { img.setSrc(u); }
+    } catch (e) {}
 };
 
 scwin._callApi = function (method, url, callback) {
@@ -66,8 +87,20 @@ scwin._suggestNextVerNo = function (latestVer) {
 
 scwin._load = function () {
     var p = scwin._getParam();
-    var assetId = p.assetId;
-    if (!assetId) { return; }
+    var assetId = p.assetId != null ? p.assetId : p.ASSET_ID;
+    dmPopup.set("NEW_VER_NO", "v1.0");
+    dmPopup.set("CONTRIBUTORS", "Carol");
+    dmPopup.set("CHANGE_NOTES", "");
+    dmPopup.set("PREVIEW_URL", "/cm/dam/images/preview/document.svg");
+    scwin._applyPreview(dmPopup.get("PREVIEW_URL"));
+
+    if (!assetId) {
+        try {
+            var t0 = $p.getComponentById("txt_fb_popup_title");
+            if (t0 && typeof t0.setLabel === "function") { t0.setLabel("Upload New Version"); }
+        } catch (e0) {}
+        return;
+    }
 
     scwin._callApi("GET", "/api/dam/assets/" + encodeURIComponent(assetId), function (res) {
         if (!res || !res.asset) { return; }
@@ -95,12 +128,7 @@ scwin._load = function () {
             }
         } catch (e) {}
 
-        try {
-            var img = $p.getComponentById("img_fb_popup_preview");
-            if (img && typeof img.setSrc === "function") {
-                img.setSrc(dmPopup.get("PREVIEW_URL"));
-            }
-        } catch (e) {}
+        scwin._applyPreview(preview);
     });
 };
 
@@ -119,60 +147,76 @@ scwin.btn_fb_submit_onclick = function () {
     scwin.btn_fb_cancel_onclick();
 };
 ]]></script>
-    </head>
-    <body ev:onpageload="scwin.onpageload">
-        <xf:group class="dam-fb-popup-shell">
-        <xf:group class="dam-fb-upload-modal">
-            <xf:group class="dam-fb-upload-modal-header">
-                <w2:textbox id="txt_fb_popup_title" class="dam-fb-upload-modal-title" label="Upload New Version" tagname="h2"/>
-            </xf:group>
-            <xf:group class="dam-fb-upload-modal-body">
-                <xf:group class="dam-fb-upload-row">
-                    <w2:textbox class="dam-fb-upload-label" label="New Version Number"/>
-                    <xf:input ref="data:dmPopup/NEW_VER_NO" class="dam-fb-popup-input" style="width:100%;"/>
-                </xf:group>
-                <xf:group class="dam-fb-upload-row">
-                    <w2:textbox class="dam-fb-upload-label" label="Upload File"/>
-                    <xf:group class="dam-fb-upload-file-row">
-                        <xf:input ref="data:dmPopup/UPLOAD_FILE_NM" readOnly="true" class="dam-fb-popup-input" style="flex:1;min-width:0;"/>
-                        <xf:trigger class="dam-fb-btn-primary dam-fb-btn-browse" ev:onclick="scwin.btn_fb_browse_onclick">
-                            <xf:label><![CDATA[Browse]]></xf:label>
-                        </xf:trigger>
-                        <xf:image class="dam-fb-upload-doc-icon" src="/cm/images/base/ico_docu.png" title="File"/>
-                    </xf:group>
-                </xf:group>
-                <xf:group class="dam-fb-upload-row">
-                    <w2:textbox class="dam-fb-upload-label" label="Contributors"/>
-                    <xf:select1 ref="data:dmPopup/CONTRIBUTORS" appearance="minimal" class="dam-fb-popup-select" renderType="select" style="width:100%;">
-                        <xf:choices>
-                            <xf:item><xf:label>Carol</xf:label><xf:value>Carol</xf:value></xf:item>
-                            <xf:item><xf:label>David</xf:label><xf:value>David</xf:value></xf:item>
-                            <xf:item><xf:label>Alice</xf:label><xf:value>Alice</xf:value></xf:item>
-                            <xf:item><xf:label>Bob</xf:label><xf:value>Bob</xf:value></xf:item>
-                            <xf:item><xf:label>SYSTEM</xf:label><xf:value>SYSTEM</xf:value></xf:item>
-                        </xf:choices>
-                    </xf:select1>
-                </xf:group>
-                <xf:group class="dam-fb-upload-row dam-fb-upload-row-notes">
-                    <w2:textbox class="dam-fb-upload-label" label="Change Notes"/>
-                    <xf:textarea ref="data:dmPopup/CHANGE_NOTES" class="dam-fb-popup-textarea" style="width:100%;"/>
-                </xf:group>
-                <xf:group class="dam-fb-upload-row dam-fb-upload-preview-block">
-                    <w2:textbox class="dam-fb-upload-label" label="Preview"/>
-                    <xf:group class="dam-fb-upload-preview-wrap">
-                        <xf:image id="img_fb_popup_preview" class="dam-fb-upload-preview-img" src="/cm/dam/images/preview/document.svg"/>
-                    </xf:group>
-                </xf:group>
-            </xf:group>
-            <xf:group class="dam-fb-upload-modal-footer">
-                <xf:trigger class="dam-fb-btn-secondary" ev:onclick="scwin.btn_fb_cancel_onclick">
-                    <xf:label><![CDATA[Cancel]]></xf:label>
-                </xf:trigger>
-                <xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_fb_submit_onclick">
-                    <xf:label><![CDATA[Submit]]></xf:label>
-                </xf:trigger>
-            </xf:group>
-        </xf:group>
-        </xf:group>
-    </body>
+	</head>
+	<body ev:onpageload="scwin.onpageload" style="min-height:100vh;height:100%;margin:0;padding:0;box-sizing:border-box;background:#e2e8f0;">
+		<xf:group class="dam-fb-popup-shell" style="min-height:100vh;box-sizing:border-box;">
+			<xf:group class="dam-fb-upload-modal">
+				<xf:group class="dam-fb-upload-modal-header">
+					<w2:textbox id="txt_fb_popup_title" class="dam-fb-upload-modal-title" label="Upload New Version" tagname="h2" />
+				</xf:group>
+				<xf:group class="dam-fb-upload-modal-body">
+					<xf:group class="dam-fb-upload-row">
+						<w2:textbox class="dam-fb-upload-label" label="New Version Number" />
+						<xf:input ref="data:dmPopup/NEW_VER_NO" class="dam-fb-popup-input" style="width:100%;" />
+					</xf:group>
+					<xf:group class="dam-fb-upload-row">
+						<w2:textbox class="dam-fb-upload-label" label="Upload File" />
+						<xf:group class="dam-fb-upload-file-row">
+							<xf:input ref="data:dmPopup/UPLOAD_FILE_NM" readOnly="true" class="dam-fb-popup-input" style="flex:1;min-width:0;" />
+							<xf:trigger class="dam-fb-btn-primary dam-fb-btn-browse" ev:onclick="scwin.btn_fb_browse_onclick">
+								<xf:label><![CDATA[Browse]]></xf:label>
+							</xf:trigger>
+							<xf:image class="dam-fb-upload-doc-icon" src="/cm/images/base/ico_docu.png" title="File" />
+						</xf:group>
+					</xf:group>
+					<xf:group class="dam-fb-upload-row">
+						<w2:textbox class="dam-fb-upload-label" label="Contributors" />
+						<xf:select1 ref="data:dmPopup/CONTRIBUTORS" appearance="minimal" class="dam-fb-popup-select" renderType="select"
+							style="width:100%;">
+							<xf:choices>
+								<xf:item>
+									<xf:label>Carol</xf:label>
+									<xf:value>Carol</xf:value>
+								</xf:item>
+								<xf:item>
+									<xf:label>David</xf:label>
+									<xf:value>David</xf:value>
+								</xf:item>
+								<xf:item>
+									<xf:label>Alice</xf:label>
+									<xf:value>Alice</xf:value>
+								</xf:item>
+								<xf:item>
+									<xf:label>Bob</xf:label>
+									<xf:value>Bob</xf:value>
+								</xf:item>
+								<xf:item>
+									<xf:label>SYSTEM</xf:label>
+									<xf:value>SYSTEM</xf:value>
+								</xf:item>
+							</xf:choices>
+						</xf:select1>
+					</xf:group>
+					<xf:group class="dam-fb-upload-row dam-fb-upload-row-notes">
+						<w2:textbox class="dam-fb-upload-label" label="Change Notes" />
+						<xf:textarea ref="data:dmPopup/CHANGE_NOTES" class="dam-fb-popup-textarea" style="width:100%;" />
+					</xf:group>
+					<xf:group class="dam-fb-upload-row dam-fb-upload-preview-block">
+						<w2:textbox class="dam-fb-upload-label" label="Preview" />
+						<xf:group class="dam-fb-upload-preview-wrap">
+							<xf:image id="img_fb_popup_preview" class="dam-fb-upload-preview-img" src="/cm/dam/images/preview/document.svg" />
+						</xf:group>
+					</xf:group>
+				</xf:group>
+				<xf:group class="dam-fb-upload-modal-footer">
+					<xf:trigger class="dam-fb-btn-secondary" ev:onclick="scwin.btn_fb_cancel_onclick">
+						<xf:label><![CDATA[Cancel]]></xf:label>
+					</xf:trigger>
+					<xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_fb_submit_onclick">
+						<xf:label><![CDATA[Submit]]></xf:label>
+					</xf:trigger>
+				</xf:group>
+			</xf:group>
+		</xf:group>
+	</body>
 </html>
