@@ -601,12 +601,6 @@ scwin.btn_edit_onclick = function () {
                             </xf:trigger>
                         </xf:group>
 
-                        <xf:group class="dam-form-actions" style="margin-top:0;">
-                            <xf:trigger id="btn_versionControl" class="dam-btn-outline" ev:onclick="scwin.btn_versionControl_onclick">
-                                <xf:label><![CDATA[Version Control]]></xf:label>
-                            </xf:trigger>
-                        </xf:group>
-
                         <xf:group class="dam-meta-section">
                             <w2:textbox class="dam-meta-title" label="Metadata" tagname="h4" />
 
