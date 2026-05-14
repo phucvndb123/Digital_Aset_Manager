@@ -77,7 +77,7 @@ INSERT INTO DAM_ASSET (
   (17, 'Icon_Set_v2.svg',             15, 'Images',    'svg',      92000, 'Henry',
        'Published', 'Branding,Digital,Marketing',
        'Brand icon library v2 — 48 icons in SVG format.',
-       '/cm/dam/images/preview/image.svg',    '512 x 512',
+       '/cm/dam/images/preview/sample6.jpg',  '512 x 512',
        '2026-03-01 11:00:00'),
 
   -- 18) Q1 launch brief
@@ -91,7 +91,7 @@ INSERT INTO DAM_ASSET (
   (19, 'Dashboard_Mockup_v1.psd',     16, 'Images',    'psd',   68000000, 'Judy',
        'Draft',     'Digital,Branding,Print',
        'Hi-fi mockup of the new analytics dashboard.',
-       '/cm/dam/images/preview/image.svg',    '1440 x 900',
+       '/cm/dam/images/preview/sample7.jpg',  '1440 x 900',
        '2026-04-18 15:45:00'),
 
   -- 20) Conference recap video (large)
@@ -119,7 +119,7 @@ INSERT INTO DAM_ASSET (
   (23, 'Product_Image_v2.jpg',         9, 'Images',    'jpg',   5200000, 'Carol',
        'Published', 'Marketing,Campaign,Photo',
        'Refreshed hero product shot for Q2 catalogue.',
-       '/cm/dam/images/preview/product.svg',  '2000 x 2000',
+       '/cm/dam/images/preview/sample8.jpg',  '2000 x 2000',
        '2026-04-05 13:30:00'),
 
   -- 24) Compliance checklist (under review)
@@ -147,7 +147,7 @@ INSERT INTO DAM_ASSET (
   (27, 'Team_Event_Photo.jpg',        18, 'Images',    'jpg',   7800000, 'Judy',
        'Published', 'Photo,Branding,SocialMedia',
        'Group photo from company anniversary event.',
-       '/cm/dam/images/preview/image.svg',    '4032 x 3024',
+       '/cm/dam/images/preview/sample9.jpg',  '4032 x 3024',
        '2026-04-22 18:30:00'),
 
   -- 28) Today — draft jingle
@@ -168,7 +168,7 @@ INSERT INTO DAM_ASSET (
   (30, 'Homepage_Hero_v2.jpg',         3, 'Images',    'jpg',   5700000, 'Alice',
        'Published', 'Campaign,Marketing,Photo',
        'Refreshed homepage hero image for May 2026 redesign.',
-       '/cm/dam/images/preview/image.svg',    '2560 x 1440',
+       '/cm/dam/images/preview/sample10.jpg', '2560 x 1440',
        '2026-05-13 09:20:00');
 
 
