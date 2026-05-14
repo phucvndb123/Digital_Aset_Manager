@@ -17,4 +17,6 @@ public interface DamService {
 	List<DamVersionVo> getVersionsByAssetId(Integer assetId);
 
 	int updateAsset(DamAssetVo vo);
+	
+	int updateVersion(DamVersionVo vo);
 }

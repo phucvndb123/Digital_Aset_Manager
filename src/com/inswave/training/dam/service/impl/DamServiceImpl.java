@@ -42,4 +42,8 @@ public class DamServiceImpl implements DamService {
 	public int updateAsset(DamAssetVo vo) {
 		return damMapper.updateAsset(vo);
 	}
+	@Override
+	public int updateVersion(DamVersionVo vo) {
+		return damMapper.updateVersion(vo);
+	}
 }

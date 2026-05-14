@@ -9,14 +9,28 @@
 		<w2:MSA />
 		<xf:model>
 			<w2:dataCollection baseNode="map">
-				<w2:dataList id="dlFolder" baseNode="list" repeatNode="map">
-					<w2:columnInfo>
-						<w2:column id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
-						<w2:column id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
-						<w2:column id="DEPTH" name="DEPTH" dataType="text" />
-					</w2:columnInfo>
-				</w2:dataList>
-				<w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
+				<w2:dataMap id="dmFolder" baseNode="map">
+					<w2:keyInfo>
+						<w2:key id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+						<w2:key id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+						<w2:key id="PARENT_FOLDER_ID" name="PARENT_FOLDER_ID" dataType="text" />
+						<w2:key id="PATH_DEPTH" name="PATH_DEPTH" dataType="text" />
+					</w2:keyInfo>
+					<w2:dataMap id="dmFolder" baseNode="map">
+					<w2:keyInfo>
+						<w2:key id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+						<w2:key id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+					</w2:keyInfo>
+				</w2:dataMap>
+				</w2:dataMap>
+					<w2:dataList id="dlFolder" baseNode="list" repeatNode="map">
+						<w2:columnInfo>
+							<w2:column id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+							<w2:column id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+							<w2:column id="DEPTH" name="DEPTH" dataType="text" />
+						</w2:columnInfo>
+					</w2:dataList>
+					<w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
 					<w2:columnInfo>
 						<w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
 						<w2:column id="ICON" name="ICON" dataType="text" />
@@ -43,6 +57,7 @@
 				<w2:dataMap id="dmPopup" baseNode="map">
 					<w2:keyInfo>
 						<w2:key id="ASSET_ID" name="ASSET_ID" dataType="text" />
+						<w2:key id="VER_ID" name="VER_ID" dataType="text" />
 						<w2:key id="FILE_NM" name="FILE_NM" dataType="text" />
 						<w2:key id="NEW_VER_NO" name="NEW_VER_NO" dataType="text" />
 						<w2:key id="UPLOAD_FILE_NM" name="UPLOAD_FILE_NM" dataType="text" />
@@ -62,23 +77,39 @@
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", url, true);
                 xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            var data;
-                            try {
-                                data = JSON.parse(xhr.responseText || "[]");
-                            } catch (e) {
-                                console.error("[FileBrowser] JSON parse error", url, e);
-                                data = [];
-                            }
-                            callback(data);
-                        } else {
-                            console.error("[FileBrowser] HTTP " + xhr.status + " " + url);
-                            callback(null);
+                   if (xhr.readyState !== 4) { return; }
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            callback(JSON.parse(xhr.responseText || "[]"));
+                        } catch (e) {
+                            console.error("[FileBrowser] JSON parse error", url, e);
+                            callback([]);
                         }
+                        } else {
+                        console.error("[FileBrowser] HTTP error", xhr.status, url);
+                        callback([]);
                     }
                 };
+                xhr.onerror = function() {
+                    console.error("[FileBrowser] Network error", url);
+                    callback([]);
+                };
                 xhr.send();
+            };
+            
+            scwin.callApiJson = function(method, url, payload, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open(method, url, true);
+                xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState !== 4) { return; }
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        callback(JSON.parse(xhr.responseText || "{}"));
+                    } else {
+                        alert("Lưu thất bại. HTTP " + xhr.status);
+                    }
+                };
+                xhr.send(JSON.stringify(payload || {}));
             };
 
             scwin._formatFileSize = function(bytes) {
@@ -113,30 +144,6 @@
                 scwin._setDetailField("inpFileSize", "FILE_SIZE", "");
                 scwin._setDetailField("inpOwnerNm", "OWNER_NM", "");
                 scwin._setDetailField("inpUploadDt", "UPLOAD_DT", "");
-            };
-            
-            scwin._buildFolderRows = function(folders) {
-                var childrenMap = {};
-                var allIds = {};
-                for (var i = 0; i < folders.length; i++) { allIds[folders[i].folderId] = true; }
-                for (var j = 0; j < folders.length; j++) {
-                    var pid = folders[j].parentFolderId || 0;
-                    if (!childrenMap[pid]) { childrenMap[pid] = []; }
-                    childrenMap[pid].push(folders[j]);
-                }
-                var roots = [];
-                for (var k = 0; k < folders.length; k++) {
-                    var f = folders[k];
-                    if (!f.parentFolderId || !allIds[f.parentFolderId]) { roots.push(f); }
-                }
-                var result = [];
-                var visit = function(node, depth) {
-                    result.push({ FOLDER_ID: String(node.folderId), FOLDER_NM: node.folderNm || '', DEPTH: String(depth) });
-                    var children = childrenMap[node.folderId] || [];
-                    for (var c = 0; c < children.length; c++) { visit(children[c], depth + 1); }
-                };
-                for (var r = 0; r < roots.length; r++) { visit(roots[r], 1); }
-                return result;
             };
 
             scwin._realRowIndex = function(displayRow) {
@@ -177,23 +184,71 @@
                     if (grd && typeof grd.setSelectedIndex === "function") {
                         grd.setSelectedIndex(displayRowIndex);
                     }
-                } catch (e) {}
-            };
+                 } catch (e) {}
+	            };
+
+	            scwin._buildFolderRows = function(folders) {
+	                var list = folders || [];
+	                var childrenMap = {};
+	                var allIds = {};
+	                for (var i = 0; i < list.length; i++) {
+	                    var id = list[i].folderId != null ? list[i].folderId : list[i].FOLDER_ID;
+	                    allIds[id] = true;
+	                }
+	                for (var j = 0; j < list.length; j++) {
+	                    var item = list[j];
+	                    var pid = item.parentFolderId != null ? item.parentFolderId : item.PARENT_FOLDER_ID;
+	                    if (!pid) { pid = 0; }
+	                    if (!childrenMap[pid]) { childrenMap[pid] = []; }
+	                    childrenMap[pid].push(item);
+	                }
+	                var roots = [];
+	                for (var k = 0; k < list.length; k++) {
+	                    var f = list[k];
+	                    var parentId = f.parentFolderId != null ? f.parentFolderId : f.PARENT_FOLDER_ID;
+	                    if (!parentId || !allIds[parentId]) { roots.push(f); }
+	                }
+	                var rows = [];
+	                var visit = function(node, depth) {
+	                    var nodeId = node.folderId != null ? node.folderId : node.FOLDER_ID;
+	                    rows.push({
+	                        FOLDER_ID: String(nodeId),
+	                        FOLDER_NM: node.folderNm || node.FOLDER_NM || "",
+	                        DEPTH: String(depth)
+	                    });
+	                    var children = childrenMap[nodeId] || [];
+	                    for (var n = 0; n < children.length; n++) {
+	                        visit(children[n], depth + 1);
+	                    }
+	                };
+	                for (var r = 0; r < roots.length; r++) { visit(roots[r], 1); }
+	                return rows;
+	            };
+	            scwin.buildFolderRows = scwin._buildFolderRows;
 
             scwin.loadFolders = function() {
                 scwin.callApi("/api/dam/folders", function(folders) {
                     if (!folders || !folders.length) {
+                     dlFolder.setJSON([]);
                         dlAsset.setJSON([]);
                         scwin._clearAssetDetail();
                         return;
                     }
-                    scwin._loadFirstFolderWithAssets(folders, 0);
+                                        var buildRowsFn = (typeof scwin._buildFolderRows === "function")
+	                        ? scwin._buildFolderRows
+	                        : (typeof scwin.buildFolderRows === "function" ? scwin.buildFolderRows : null);
+	                    if (typeof buildRowsFn !== "function") {
+	                        console.error("[FileBrowser] buildFolderRows function is missing");
+	                        dlFolder.setJSON([]);
+	                        return;
+	                    }
+	                    var rows = buildRowsFn(folders);
+                    dlFolder.setJSON(rows);
                     window.setTimeout(function() {
-                        try {
-                            var tv = $p.getComponentById("trvFolder");
-                            if (tv && typeof tv.expandAll === "function") { tv.expandAll(); }
-                        } catch (e) {}
-                    }, 80);
+                        try { trvFolder.expandAll(); } catch (e) {}
+                    }, 100);
+
+                    scwin._loadFirstFolderWithAssets(folders, 0);
                 });
             };
 
@@ -254,8 +309,8 @@
                 });
             };
 
-            scwin.trvFolder_onlabelclick = function(value) {
-                var folderId = parseInt(value, 10);
+              scwin.trvFolder_onclick = function() {
+                var folderId = parseInt(trvFolder.getSelectedValue(), 10);
                 if (isNaN(folderId)) { return; }
                 dmFolder.set("FOLDER_ID", String(folderId));
                 scwin.loadAssets(folderId);
@@ -374,6 +429,7 @@
             scwin._openInlineUploadPopup = function(param) {
                 var assetId = param && (param.assetId != null ? param.assetId : param.ASSET_ID);
                 dmPopup.set("ASSET_ID", assetId ? String(assetId) : "");
+                dmPopup.set("VER_ID", "");
                 dmPopup.set("FILE_NM", "");
                 dmPopup.set("NEW_VER_NO", "v1.0");
                 dmPopup.set("UPLOAD_FILE_NM", "");
@@ -391,6 +447,7 @@
                         var latestVer = latest ? latest.verNo : "";
                         var preview = (latest && latest.previewUrl) ? latest.previewUrl : (a.previewUrl || "/cm/dam/images/preview/document.svg");
                         dmPopup.set("ASSET_ID", String(a.assetId != null ? a.assetId : ""));
+                        dmPopup.set("VER_ID", latest && latest.verId != null ? String(latest.verId) : "");
                         dmPopup.set("FILE_NM", a.fileNm || "");
                         dmPopup.set("NEW_VER_NO", scwin._suggestNextVerNo(latestVer));
                         dmPopup.set("CONTRIBUTORS", a.ownerNm || "Carol");
@@ -414,8 +471,22 @@
             };
 
             scwin.btn_fb_submit_onclick = function() {
-                alert("Demo: chưa có API lưu phiên bản. Gửi sẽ gồm VER_NO=" + (dmPopup.get("NEW_VER_NO") || "") + ", Contributors=" + (dmPopup.get("CONTRIBUTORS") || "") + ".");
-                scwin.btn_fb_cancel_onclick();
+                var assetId = dmPopup.get("ASSET_ID");
+                var verId = dmPopup.get("VER_ID");
+                if (!assetId || !verId) {
+                    alert("Không tìm thấy version để cập nhật.");
+                    return;
+                }
+                var payload = {
+                    verNo: dmPopup.get("NEW_VER_NO") || "",
+                    ownerNm: dmPopup.get("CONTRIBUTORS") || "",
+                    changeLog: dmPopup.get("CHANGE_NOTES") || ""
+                };
+                scwin.callApiJson("PUT", "/api/dam/assets/" + encodeURIComponent(assetId) + "/versions/" + encodeURIComponent(verId), payload, function() {
+                    alert("Cập nhật version thành công.");
+                    scwin.btn_fb_cancel_onclick();
+                    scwin.loadAssetsByFolder();
+                });
             };
         ]]></script>
 	</head>
@@ -428,68 +499,12 @@
 							<w2:textbox class="dam-asset-panel-title" label="Folder Structure" tagname="h3" />
 						</xf:group>
 						<xf:group class="dam-asset-folder-body">
-							<w2:treeview id="trvFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed"
-								tooltipGroupClass="false" ev:onlabelclick="scwin.trvFolder_onlabelclick">
-								<w2:node>
-									<w2:label><![CDATA[Digital Assets]]></w2:label>
-									<w2:value><![CDATA[1]]></w2:value>
-									<w2:folder><![CDATA[true]]></w2:folder>
-									<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-									<w2:node>
-										<w2:label><![CDATA[Marketing Documents]]></w2:label>
-										<w2:value><![CDATA[2]]></w2:value>
-										<w2:folder><![CDATA[true]]></w2:folder>
-										<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-										<w2:node>
-											<w2:label><![CDATA[Campaign Banners]]></w2:label>
-											<w2:value><![CDATA[3]]></w2:value>
-											<w2:folder><![CDATA[true]]></w2:folder>
-											<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-										</w2:node>
-										<w2:node>
-											<w2:label><![CDATA[PDF Brochures]]></w2:label>
-											<w2:value><![CDATA[4]]></w2:value>
-											<w2:folder><![CDATA[true]]></w2:folder>
-											<w2:iconImage><![CDATA[/cm/images/base/ico_docu.png]]></w2:iconImage>
-										</w2:node>
-										<w2:node>
-											<w2:label><![CDATA[Social Media Assets]]></w2:label>
-											<w2:value><![CDATA[5]]></w2:value>
-											<w2:folder><![CDATA[true]]></w2:folder>
-											<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-										</w2:node>
-									</w2:node>
-									<w2:node>
-										<w2:label><![CDATA[Video Assets]]></w2:label>
-										<w2:value><![CDATA[6]]></w2:value>
-										<w2:folder><![CDATA[true]]></w2:folder>
-										<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-										<w2:node>
-											<w2:label><![CDATA[Training Videos]]></w2:label>
-											<w2:value><![CDATA[7]]></w2:value>
-											<w2:folder><![CDATA[true]]></w2:folder>
-											<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-										</w2:node>
-									</w2:node>
-									<w2:node>
-										<w2:label><![CDATA[Internal Manuals]]></w2:label>
-										<w2:value><![CDATA[8]]></w2:value>
-										<w2:folder><![CDATA[true]]></w2:folder>
-										<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-									</w2:node>
-									<w2:node>
-										<w2:label><![CDATA[Product Images]]></w2:label>
-										<w2:value><![CDATA[9]]></w2:value>
-										<w2:folder><![CDATA[true]]></w2:folder>
-										<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-									</w2:node>
-									<w2:node>
-										<w2:label><![CDATA[Audio Library]]></w2:label>
-										<w2:value><![CDATA[10]]></w2:value>
-										<w2:folder><![CDATA[true]]></w2:folder>
-										<w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-									</w2:node>
-								</w2:node>
+							<w2:treeview id="trvFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed" tooltipGroupClass="false" ev:onclick="scwin.trvFolder_onclick">
+								<w2:itemset nodeset="data:dlFolder">
+									<w2:label ref="FOLDER_NM"></w2:label>
+									<w2:value ref="FOLDER_ID"></w2:value>
+									<w2:depth ref="DEPTH"></w2:depth>
+								</w2:itemset>
 							</w2:treeview>
 						</xf:group>
 					</xf:group>
@@ -571,18 +586,18 @@
 				</xf:group>
 			</xf:group>
 			<div id="fbPopupBackdrop" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;padding:24px;box-sizing:border-box;overflow:auto;">
-				<xf:group class="dam-fb-upload-modal" style="max-width:580px;margin:24px auto;">
+				<xf:group class="dam-fb-upload-modal" style="max-width:580px;margin:24px auto;background:#fff;border-radius:12px;box-shadow:0 20px 45px rgba(15,23,42,.25);overflow:hidden;">
 					<xf:group class="dam-fb-upload-modal-header">
-						<w2:textbox id="txt_fb_popup_title" class="dam-fb-upload-modal-title" label="Upload New Version" tagname="h2" />
+						<w2:textbox id="txt_fb_popup_title" class="dam-fb-upload-modal-title" label="Upload New Version" tagname="h2" style=";margin-left:3%;padding-bottom:2%;padding-top:2%;"/>
 					</xf:group>
-					<xf:group class="dam-fb-upload-modal-body">
+					<xf:group class="dam-fb-upload-modal-body" style="padding:16px 20px;">
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="New Version Number" /><xf:input ref="data:dmPopup/NEW_VER_NO" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Upload File" /><xf:group class="dam-fb-upload-file-row"><xf:input ref="data:dmPopup/UPLOAD_FILE_NM" readOnly="true" class="dam-fb-popup-input" style="flex:1;min-width:0;" /><xf:trigger class="dam-fb-btn-primary dam-fb-btn-browse" ev:onclick="scwin.btn_fb_browse_onclick"><xf:label>Browse</xf:label></xf:trigger><xf:image class="dam-fb-upload-doc-icon" src="/cm/images/base/ico_docu.png" title="File" /></xf:group></xf:group>
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Contributors" /><xf:select1 ref="data:dmPopup/CONTRIBUTORS" appearance="minimal" class="dam-fb-popup-select" renderType="select" style="width:100%;"><xf:choices><xf:item><xf:label>Carol</xf:label><xf:value>Carol</xf:value></xf:item><xf:item><xf:label>David</xf:label><xf:value>David</xf:value></xf:item><xf:item><xf:label>Alice</xf:label><xf:value>Alice</xf:value></xf:item><xf:item><xf:label>Bob</xf:label><xf:value>Bob</xf:value></xf:item><xf:item><xf:label>SYSTEM</xf:label><xf:value>SYSTEM</xf:value></xf:item></xf:choices></xf:select1></xf:group>
 						<xf:group class="dam-fb-upload-row dam-fb-upload-row-notes"><w2:textbox class="dam-fb-upload-label" label="Change Notes" /><xf:textarea ref="data:dmPopup/CHANGE_NOTES" class="dam-fb-popup-textarea" style="width:100%;" /></xf:group>
-						<xf:group class="dam-fb-upload-row dam-fb-upload-preview-block"><w2:textbox class="dam-fb-upload-label" label="Preview" /><xf:group class="dam-fb-upload-preview-wrap"><xf:image id="img_fb_popup_preview" class="dam-fb-upload-preview-img" src="/cm/dam/images/preview/document.svg" /></xf:group></xf:group>
+						<xf:group class="dam-fb-upload-row dam-fb-upload-preview-block"><w2:textbox class="dam-fb-upload-label" label="Preview" /><xf:group class="dam-fb-upload-preview-wrap" style="margin-top:6px;border:1px solid #d1d5db;border-radius:8px;background:#f8fafc;padding:12px;height:180px;display:flex;align-items:center;justify-content:center;overflow:hidden;"><xf:image id="img_fb_popup_preview" class="dam-fb-upload-preview-img" src="/cm/dam/images/preview/document.svg" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;" /></xf:group></xf:group>
 					</xf:group>
-					<xf:group class="dam-fb-upload-modal-footer"><xf:trigger class="dam-fb-btn-secondary" ev:onclick="scwin.btn_fb_cancel_onclick"><xf:label>Cancel</xf:label></xf:trigger><xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_fb_submit_onclick"><xf:label>Submit</xf:label></xf:trigger></xf:group>
+					<xf:group class="dam-fb-upload-modal-footer" style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px 16px;border-top:1px solid #e5e7eb;"><xf:trigger class="dam-fb-btn-secondary" ev:onclick="scwin.btn_fb_cancel_onclick" style=";background-color:red;border:1px solid #d1d5db;width:10em;"><xf:label>Cancel</xf:label></xf:trigger><xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_fb_submit_onclick" style=";background-color:green;border:1px solid #d1d5db;width:5em;"><xf:label>Submit</xf:label></xf:trigger></xf:group>
 				</xf:group>
 			</div>
 		</xf:group>
