@@ -1,40 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
 <?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
-<html xmlns="http://www.w3.org/1999/xhtml"
-    xmlns:ev="http://www.w3.org/2001/xml-events"
-    xmlns:w2="http://www.inswave.com/websquare"
-    xmlns:xf="http://www.w3.org/2002/xforms">
-    <head>
-        <w2:type>COMPONENT</w2:type>
-        <w2:buildDate/>
-        <w2:MSA/>
-        <xf:model>
-            <w2:dataCollection baseNode="map">
-                <w2:dataList id="dlVersion" baseNode="list" repeatNode="map">
-                    <w2:columnInfo>
-                        <w2:column id="CHK" name="CHK" dataType="text"/>
-                        <w2:column id="ASSET_ID" name="ASSET_ID" dataType="text"/>
-                        <w2:column id="ICON" name="ICON" dataType="text"/>
-                        <w2:column id="FILE_NM" name="FILE_NM" dataType="text"/>
-                        <w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text"/>
-                        <w2:column id="FILE_SIZE" name="FILE_SIZE" dataType="text"/>
-                        <w2:column id="STATUS" name="STATUS" dataType="text"/>
-                        <w2:column id="PREVIEW_URL" name="PREVIEW_URL" dataType="text"/>
-                        <w2:column id="TAGS" name="TAGS" dataType="text"/>
-                        <w2:column id="CREATOR" name="CREATOR" dataType="text"/>
-                        <w2:column id="RESOLUTION" name="RESOLUTION" dataType="text"/>
-                        <w2:column id="UPLOAD_DT" name="UPLOAD_DT" dataType="text"/>
-                    </w2:columnInfo>
-                </w2:dataList>
-            </w2:dataCollection>
-            <w2:workflowCollection/>
-        </xf:model>
-        <w2:layoutInfo/>
-        <w2:publicInfo method=""/>
-        <script lazy="false" type="text/javascript"><![CDATA[
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:w2="http://www.inswave.com/websquare"
+	xmlns:xf="http://www.w3.org/2002/xforms">
+	<head>
+		<w2:type>COMPONENT</w2:type>
+		<w2:buildDate />
+		<w2:MSA />
+		<xf:model>
+
+			<w2:dataCollection baseNode="map">
+				<w2:dataList id="dlFolder" baseNode="list" repeatNode="map">
+					<w2:columnInfo>
+						<w2:column id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+						<w2:column id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+						<w2:column id="DEPTH" name="DEPTH" dataType="text" />
+					</w2:columnInfo>
+				</w2:dataList>
+				<w2:dataList id="dlVersion" baseNode="list" repeatNode="map">
+					<w2:columnInfo>
+						<w2:column id="CHK" name="CHK" dataType="text" />
+						<w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
+						<w2:column id="ICON" name="ICON" dataType="text" />
+						<w2:column id="FILE_NM" name="FILE_NM" dataType="text" />
+						<w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
+						<w2:column id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
+						<w2:column id="STATUS" name="STATUS" dataType="text" />
+						<w2:column id="PREVIEW_URL" name="PREVIEW_URL" dataType="text" />
+						<w2:column id="TAGS" name="TAGS" dataType="text" />
+						<w2:column id="CREATOR" name="CREATOR" dataType="text" />
+						<w2:column id="RESOLUTION" name="RESOLUTION" dataType="text" />
+						<w2:column id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
+					</w2:columnInfo>
+				</w2:dataList>
+			</w2:dataCollection>
+			<w2:workflowCollection />
+		</xf:model>
+		<w2:layoutInfo />
+		<w2:publicInfo method="" />
+		<script lazy="false" type="text/javascript"><![CDATA[
 scwin.onpageload = function () {
     scwin.loadFolders();
+    window.setTimeout(function () { scwin._setEditable(false); }, 50);
 };
 
 scwin.callApi = function (url, callback) {
@@ -49,13 +56,43 @@ scwin.callApi = function (url, callback) {
     };
     xhr.send();
 };
+scwin._currentFolderId = 1;
+
+scwin._buildFolderRows = function (folders) {
+    var childrenMap = {};
+    var allIds = {};
+    for (var i = 0; i < folders.length; i++) { allIds[folders[i].folderId] = true; }
+    for (var j = 0; j < folders.length; j++) {
+        var pid = folders[j].parentFolderId || 0;
+        if (!childrenMap[pid]) { childrenMap[pid] = []; }
+        childrenMap[pid].push(folders[j]);
+    }
+    var roots = [];
+    for (var k = 0; k < folders.length; k++) {
+        var f = folders[k];
+        if (!f.parentFolderId || !allIds[f.parentFolderId]) { roots.push(f); }
+    }
+    var result = [];
+    var visit = function (node, depth) {
+        result.push({ FOLDER_ID: String(node.folderId), FOLDER_NM: node.folderNm || "", DEPTH: String(depth) });
+        var children = childrenMap[node.folderId] || [];
+        for (var x = 0; x < children.length; x++) { visit(children[x], depth + 1); }
+    };
+    for (var y = 0; y < roots.length; y++) { visit(roots[y], 1); }
+    return result;
+};
+
 
 scwin.loadFolders = function () {
     scwin.callApi("/api/dam/folders", function (folders) {
-        if (!folders || folders.length === 0) {
+       if (!folders || folders.length === 0) {
+            dlFolder.setJSON([]);
             dlVersion.setJSON([]);
+            scwin._applyDetail(-1);
             return;
         }
+
+        dlFolder.setJSON(scwin._buildFolderRows(folders));
         scwin._loadFirstFolderWithAssets(folders, 0);
 
         try {
@@ -63,6 +100,13 @@ scwin.loadFolders = function () {
             if (tv && typeof tv.expandAll === "function") { tv.expandAll(); }
         } catch (e) {}
     });
+};
+scwin.trvVersionFolder_onclick = function () {
+    var nodeValue = trvVersionFolder.getSelectedValue();
+    var fid = parseInt(nodeValue, 10);
+    if (isNaN(fid) || fid <= 0 || fid === scwin._currentFolderId) { return; }
+    scwin._currentFolderId = fid;
+    scwin.loadAssets(fid);
 };
 
 scwin._loadFirstFolderWithAssets = function (folders, index) {
@@ -75,6 +119,7 @@ scwin._loadFirstFolderWithAssets = function (folders, index) {
     var folderId = folder.folderId || folder.FOLDER_ID;
     scwin.callApi("/api/dam/assets?folderId=" + folderId, function (list) {
         if (list && list.length > 0) {
+        scwin._currentFolderId = parseInt(folderId, 10) || 1;
             scwin.loadAssets(folderId);
         } else {
             scwin._loadFirstFolderWithAssets(folders, index + 1);
@@ -188,197 +233,262 @@ scwin._applyDetail = function (rowIndex) {
 };
 
 scwin.btn_versionDownload_onclick = function () { /* mock */ };
-scwin.btn_versionEdit_onclick = function () { /* mock */ };
+scwin._editMode = false;
+scwin._currentRow = -1;
+
+scwin._setEditable = function (editable) {
+    try { inp_versionFileName.setReadOnly(!editable); } catch (e) {}
+    try {
+        var statusEl = document.getElementById("sel_versionStatus");
+        if (statusEl) {
+            statusEl.style.pointerEvents = editable ? "auto" : "none";
+            statusEl.style.opacity = editable ? "1" : "0.9";
+        }
+    } catch (e) {}
+    try {
+        var tagsEl = document.getElementById("sel_versionAssetType");
+        if (tagsEl) {
+            tagsEl.style.pointerEvents = editable ? "auto" : "none";
+            tagsEl.style.opacity = editable ? "1" : "0.9";
+        }
+    } catch (e) {}
+    try { btn_versionEdit.setLabel(editable ? "Save Changes" : "Edit Metadata"); } catch (e) {}
+};
+
+scwin._persistMetadata = function (rowIndex) {
+    var row = dlVersion.getRowJSON(rowIndex);
+    if (!row || !row.ASSET_ID) { return; }
+
+    var fileNm = inp_versionFileName.getValue() || "";
+    var tags = sel_versionAssetType.getValue() || "";
+    var status = sel_versionStatus.getValue() || "Draft";
+
+    row.FILE_NM = fileNm;
+    row.TAGS = tags;
+    row.STATUS = status;
+    dlVersion.setCellData(rowIndex, "FILE_NM", fileNm);
+    dlVersion.setCellData(rowIndex, "TAGS", tags);
+    dlVersion.setCellData(rowIndex, "STATUS", status);
+
+    fetch("/api/dam/assets/" + row.ASSET_ID, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileNm: fileNm, tags: tags, status: status })
+    }).then(function (r) { return r.json(); })
+      .then(function () { scwin.loadAssetDetail(row.ASSET_ID); }, function (e) {
+          console.warn("[Version] save metadata failed", e);
+      });
+};
+
+scwin.btn_versionEdit_onclick = function () {
+    var idx = grdVersion.getFocusedRowIndex ? grdVersion.getFocusedRowIndex() : -1;
+    if (idx < 0) { return; }
+    scwin._currentRow = idx;
+
+    if (!scwin._editMode) {
+        scwin._editMode = true;
+        scwin._setEditable(true);
+        return;
+    }
+
+    scwin._persistMetadata(idx);
+    scwin._editMode = false;
+    scwin._setEditable(false);
+};
+
 ]]></script>
-    </head>
-    <body ev:onpageload="scwin.onpageload">
-        <xf:group class="dam-page dam-asset-page">
-            
+	</head>
+	<body ev:onpageload="scwin.onpageload">
+		<xf:group class="dam-page dam-asset-page">
 
-            <xf:group class="dam-asset-grid">
-                <xf:group class="dam-asset-left">
-                    <xf:group class="dam-asset-panel dam-asset-folder">
-                        <xf:group class="dam-asset-panel-head">
-                            <w2:textbox class="dam-asset-panel-title" label="Folder Structure" tagname="h3"/>
-                            <xf:group class="dam-asset-panel-actions">
-                                <xf:trigger class="dam-icon-btn" title="Sort">
-                                    <xf:label><![CDATA[↑↓]]></xf:label>
-                                </xf:trigger>
-                                <xf:trigger class="dam-icon-btn" title="Refresh">
-                                    <xf:label><![CDATA[⟳]]></xf:label>
-                                </xf:trigger>
-                            </xf:group>
-                        </xf:group>
-                        <xf:group class="dam-asset-folder-body">
-                            <w2:treeview id="trvVersionFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed" tooltipGroupClass="false">
-                                <w2:node>
-                                    <w2:label><![CDATA[Digital Assets]]></w2:label>
-                                    <w2:value><![CDATA[1]]></w2:value>
-                                    <w2:folder><![CDATA[true]]></w2:folder>
-                                    <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                    <w2:node>
-                                        <w2:label><![CDATA[Marketing Documents]]></w2:label>
-                                        <w2:value><![CDATA[2]]></w2:value>
-                                        <w2:folder><![CDATA[true]]></w2:folder>
-                                        <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                        <w2:node>
-                                            <w2:label><![CDATA[Campaign Banners]]></w2:label>
-                                            <w2:value><![CDATA[3]]></w2:value>
-                                            <w2:folder><![CDATA[true]]></w2:folder>
-                                            <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                        </w2:node>
-                                        <w2:node class="tree-pdf-node">
-                                            <w2:label><![CDATA[PDF Brochures]]></w2:label>
-                                            <w2:value><![CDATA[4]]></w2:value>
-                                            <w2:folder><![CDATA[false]]></w2:folder>
-                                            <w2:iconImage><![CDATA[/cm/images/base/ico_docu.png]]></w2:iconImage>
-                                        </w2:node>
-                                        <w2:node>
-                                            <w2:label><![CDATA[Social Media Assets]]></w2:label>
-                                            <w2:value><![CDATA[5]]></w2:value>
-                                            <w2:folder><![CDATA[true]]></w2:folder>
-                                            <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                        </w2:node>
-                                    </w2:node>
-                                    <w2:node>
-                                        <w2:label><![CDATA[Video Assets]]></w2:label>
-                                        <w2:value><![CDATA[6]]></w2:value>
-                                        <w2:folder><![CDATA[true]]></w2:folder>
-                                        <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                    </w2:node>
-                                    <w2:node>
-                                        <w2:label><![CDATA[Internal Manuals]]></w2:label>
-                                        <w2:value><![CDATA[7]]></w2:value>
-                                        <w2:folder><![CDATA[true]]></w2:folder>
-                                        <w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                    </w2:node>
-                                </w2:node>
-                            </w2:treeview>
-                        </xf:group>
-                    </xf:group>
 
-                    <xf:group class="dam-asset-panel dam-asset-files">
-                        <w2:tabControl id="tab_versionHistory" class="dam-version-tab" style="width:100%;height:100%;">
-                            <w2:tabs id="tab_ver_main" label="Version History"></w2:tabs>
-                            <w2:tabs id="tab_ver_compare" label="Chontiat History"></w2:tabs>
-                            <w2:content id="cnt_ver_main">
-                                <xf:group class="dam-asset-files-body" style="height:100%;">
-                                    <xf:group class="dam-asset-panel-head">
-                                        <xf:group class="dam-asset-panel-actions">
-                                            <xf:trigger class="dam-icon-btn" title="Sort">
-                                                <xf:label><![CDATA[⇅]]></xf:label>
-                                            </xf:trigger>
-                                            <xf:trigger class="dam-icon-btn" title="Filter">
-                                                <xf:label><![CDATA[▽]]></xf:label>
-                                            </xf:trigger>
-                                        </xf:group>
-                                    </xf:group>
-                                    <w2:gridView id="grdVersion" class="dam-asset-grid-view" dataList="data:dlVersion" autoFit="allColumn" focusMode="row"
-                                        style="width:100%;height:calc(100% - 76px);" ev:onrowindexchange="scwin.grdVersion_onrowindexchange">
-                                        <w2:header>
-                                            <w2:row>
-                                                <w2:column id="hdVChk" inputType="checkbox" width="40" value=""/>
-                                                <w2:column id="hdVIcon" inputType="text" width="70" value="Icon"/>
-                                                <w2:column id="hdVName" inputType="text" width="240" value="Name"/>
-                                                <w2:column id="hdVType" inputType="text" width="140" value="Type"/>
-                                                <w2:column id="hdVSize" inputType="text" width="100" value="Size"/>
-                                                <w2:column id="hdVStatus" inputType="text" width="120" value="Status"/>
-                                            </w2:row>
-                                        </w2:header>
-                                        <w2:gBody>
-                                            <w2:row>
-                                                <w2:column id="CHK" inputType="checkbox" width="40" displayMode="always"/>
-                                                <w2:column id="ICON" inputType="text" width="70" displayMode="label" class="dam-cell-icon"/>
-                                                <w2:column id="FILE_NM" inputType="text" width="240" displayMode="label"/>
-                                                <w2:column id="FILE_TYPE" inputType="text" width="140" displayMode="label"/>
-                                                <w2:column id="FILE_SIZE" inputType="text" width="100" displayMode="label"/>
-                                                <w2:column id="STATUS" inputType="text" width="120" displayMode="label" class="dam-cell-status"/>
-                                            </w2:row>
-                                        </w2:gBody>
-                                    </w2:gridView>
-                                    <xf:group class="dam-asset-pagination">
-                                        <w2:textbox class="dam-pagi-label" label="Pagination"/>
-                                        <xf:group class="dam-pagi-controls">
-                                            <xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[|<]]></xf:label></xf:trigger>
-                                            <xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[<]]></xf:label></xf:trigger>
-                                            <xf:trigger class="dam-pagi-btn dam-pagi-active"><xf:label><![CDATA[1]]></xf:label></xf:trigger>
-                                            <xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[>]]></xf:label></xf:trigger>
-                                            <xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[>|]]></xf:label></xf:trigger>
-                                        </xf:group>
-                                    </xf:group>
-                                </xf:group>
-                            </w2:content>
-                            <w2:content id="cnt_ver_compare">
-                                <xf:group class="dam-asset-files-body" style="height:100%;padding:1rem;">
-                                    <w2:textbox label="Chontiat History content (mock)" style="font-size:13px;color:#64748b;"/>
-                                </xf:group>
-                            </w2:content>
-                        </w2:tabControl>
-                    </xf:group>
-                </xf:group>
+			<xf:group class="dam-asset-grid">
+				<xf:group class="dam-asset-left">
+					<xf:group class="dam-asset-panel dam-asset-folder">
+						<xf:group class="dam-asset-panel-head">
+							<w2:textbox class="dam-asset-panel-title" label="Folder Structure" tagname="h3" />
+							<xf:group class="dam-asset-panel-actions">
+								<xf:trigger class="dam-icon-btn" title="Sort">
+									<xf:label><![CDATA[↑↓]]></xf:label>
+								</xf:trigger>
+								<xf:trigger class="dam-icon-btn" title="Refresh">
+									<xf:label><![CDATA[⟳]]></xf:label>
+								</xf:trigger>
+							</xf:group>
+						</xf:group>
+						<xf:group class="dam-asset-folder-body">
+							<w2:treeview id="trvVersionFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed"
+								tooltipGroupClass="false" ev:onclick="scwin.trvVersionFolder_onclick">
+								<w2:itemset nodeset="data:dlFolder">
+									<w2:label ref="FOLDER_NM"></w2:label>
+									<w2:value ref="FOLDER_ID"></w2:value>
+									<w2:depth ref="DEPTH"></w2:depth>
+									<w2:folder ref=""></w2:folder>
+									<w2:checkbox ref=""></w2:checkbox>
+									<w2:checkboxDisabled ref=""></w2:checkboxDisabled>
+									<w2:image ref=""></w2:image>
+									<w2:iconImage ref=""></w2:iconImage>
+									<w2:selectedImage ref=""></w2:selectedImage>
+									<w2:expandedImage ref=""></w2:expandedImage>
+									<w2:leafImage ref=""></w2:leafImage>
+								</w2:itemset>
+							</w2:treeview>
+						</xf:group>
+					</xf:group>
 
-                <xf:group class="dam-asset-right">
-                    <xf:group class="dam-asset-panel dam-asset-detail">
-                        <xf:group class="dam-asset-panel-head">
-                            <w2:textbox class="dam-asset-panel-title" label="Asset Details Panel" tagname="h3"/>
-                        </xf:group>
+					<xf:group class="dam-asset-panel dam-asset-files">
+						<w2:tabControl id="tab_versionHistory" class="dam-version-tab" style="width:100%;height:100%;">
+							<w2:tabs id="tab_ver_main" label="Version History"></w2:tabs>
+							<w2:tabs id="tab_ver_compare" label="Chontiat History"></w2:tabs>
+							<w2:content id="cnt_ver_main">
+								<xf:group class="dam-asset-files-body" style="height:100%;">
+									<xf:group class="dam-asset-panel-head">
+										<xf:group class="dam-asset-panel-actions">
+											<xf:trigger class="dam-icon-btn" title="Sort">
+												<xf:label><![CDATA[⇅]]></xf:label>
+											</xf:trigger>
+											<xf:trigger class="dam-icon-btn" title="Filter">
+												<xf:label><![CDATA[▽]]></xf:label>
+											</xf:trigger>
+										</xf:group>
+									</xf:group>
+									<w2:gridView id="grdVersion" class="dam-asset-grid-view" dataList="data:dlVersion" autoFit="allColumn" focusMode="row"
+										style="width:100%;height:calc(100% - 76px);" ev:onrowindexchange="scwin.grdVersion_onrowindexchange">
+										<w2:header>
+											<w2:row>
+												<w2:column id="hdVChk" inputType="checkbox" width="40" value="" />
+												<w2:column id="hdVIcon" inputType="text" width="70" value="Icon" />
+												<w2:column id="hdVName" inputType="text" width="240" value="Name" />
+												<w2:column id="hdVType" inputType="text" width="140" value="Type" />
+												<w2:column id="hdVSize" inputType="text" width="100" value="Size" />
+												<w2:column id="hdVStatus" inputType="text" width="120" value="Status" />
+											</w2:row>
+										</w2:header>
+										<w2:gBody>
+											<w2:row>
+												<w2:column id="CHK" inputType="checkbox" width="40" displayMode="always" />
+												<w2:column id="ICON" inputType="text" width="70" displayMode="label" class="dam-cell-icon" />
+												<w2:column id="FILE_NM" inputType="text" width="240" displayMode="label" />
+												<w2:column id="FILE_TYPE" inputType="text" width="140" displayMode="label" />
+												<w2:column id="FILE_SIZE" inputType="text" width="100" displayMode="label" />
+												<w2:column id="STATUS" inputType="text" width="120" displayMode="label" class="dam-cell-status" />
+											</w2:row>
+										</w2:gBody>
+									</w2:gridView>
+									<xf:group class="dam-asset-pagination">
+										<w2:textbox class="dam-pagi-label" label="Pagination" />
+										<xf:group class="dam-pagi-controls">
+											<xf:trigger class="dam-pagi-btn">
+												<xf:label><![CDATA[|<]]></xf:label>
+											</xf:trigger>
+											<xf:trigger class="dam-pagi-btn">
+												<xf:label><![CDATA[<]]></xf:label>
+											</xf:trigger>
+											<xf:trigger class="dam-pagi-btn dam-pagi-active">
+												<xf:label><![CDATA[1]]></xf:label>
+											</xf:trigger>
+											<xf:trigger class="dam-pagi-btn">
+												<xf:label><![CDATA[>]]></xf:label>
+											</xf:trigger>
+											<xf:trigger class="dam-pagi-btn">
+												<xf:label><![CDATA[>|]]></xf:label>
+											</xf:trigger>
+										</xf:group>
+									</xf:group>
+								</xf:group>
+							</w2:content>
+							<w2:content id="cnt_ver_compare">
+								<xf:group class="dam-asset-files-body" style="height:100%;padding:1rem;">
+									<w2:textbox label="Chontiat History content (mock)" style="font-size:13px;color:#64748b;" />
+								</xf:group>
+							</w2:content>
+						</w2:tabControl>
+					</xf:group>
+				</xf:group>
 
-                        <xf:group class="dam-asset-preview">
-                            <xf:image id="img_versionPreview" class="dam-asset-preview-img" src="/cm/dam/images/preview/image.svg"></xf:image>
-                        </xf:group>
+				<xf:group class="dam-asset-right">
+					<xf:group class="dam-asset-panel dam-asset-detail">
+						<xf:group class="dam-asset-panel-head">
+							<w2:textbox class="dam-asset-panel-title" label="Asset Details Panel" tagname="h3" />
+						</xf:group>
 
-                        <xf:group class="dam-form-row">
-                            <w2:textbox class="dam-form-label" label="File Name"/>
-                            <w2:input id="inp_versionFileName" class="dam-form-input"/>
-                        </xf:group>
+						<xf:group class="dam-asset-preview">
+							<xf:image id="img_versionPreview" class="dam-asset-preview-img" src="/cm/dam/images/preview/image.svg"></xf:image>
+						</xf:group>
 
-                        <xf:group class="dam-form-row">
-                            <w2:textbox class="dam-form-label" label="Asset Type"/>
-                            <xf:select id="sel_versionAssetType" appearance="checkcombobox" class="dam-form-chips" renderType="component" style="width:100%;">
-                                <xf:choices>
-                                    <xf:item><xf:label>CheckComboBox</xf:label><xf:value>CheckComboBox</xf:value></xf:item>
-                                    <xf:item><xf:label>tags</xf:label><xf:value>tags</xf:value></xf:item>
-                                    <xf:item><xf:label>asset</xf:label><xf:value>asset</xf:value></xf:item>
-                                </xf:choices>
-                            </xf:select>
-                        </xf:group>
+						<xf:group class="dam-form-row" style="position:relative;">
+							<w2:textbox class="dam-form-label" label="Tags" />
+							<xf:group class="dam-tags-row">
+								<w2:input id="sel_versionAssetType" class="dam-form-input" readOnly="true" />
+								<xf:trigger id="btn_versionEditTags" class="dam-tags-edit-btn" style="display:none;"
+									ev:onclick="scwin.btn_versionEditTags_onclick">
+									<xf:label><![CDATA[⋯]]></xf:label>
+								</xf:trigger>
+							</xf:group>
+							<xf:group class="dam-tag-popup" style="display:none;">
+								<xf:group class="dam-tag-popup-head">
+									<w2:textbox class="dam-tag-popup-title" label="Select Tags" />
+									<xf:trigger class="dam-tag-popup-close" ev:onclick="scwin.btn_versionCancelTags_onclick">
+										<xf:label><![CDATA[×]]></xf:label>
+									</xf:trigger>
+								</xf:group>
+								<xf:group class="dam-tag-popup-body"></xf:group>
+								<xf:group class="dam-tag-popup-foot">
+									<xf:trigger class="dam-btn-outline" ev:onclick="scwin.btn_versionCancelTags_onclick">
+										<xf:label>Cancel</xf:label>
+									</xf:trigger>
+									<xf:trigger class="dam-btn-primary" ev:onclick="scwin.btn_versionConfirmTags_onclick">
+										<xf:label>Apply</xf:label>
+									</xf:trigger>
+								</xf:group>
+							</xf:group>
+						</xf:group>
 
-                        <xf:group class="dam-form-row">
-                            <w2:textbox class="dam-form-label" label="Status"/>
-                            <xf:select1 id="sel_versionStatus" appearance="minimal" class="dam-form-select" renderType="select" style="width:100%;">
-                                <xf:item><xf:label>Published</xf:label><xf:value>Published</xf:value></xf:item>
-                                <xf:item><xf:label>Draft</xf:label><xf:value>Draft</xf:value></xf:item>
-                                <xf:item><xf:label>Archived</xf:label><xf:value>Archived</xf:value></xf:item>
-                            </xf:select1>
-                        </xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Status" />
+							    <xf:select1 id="sel_versionStatus" appearance="minimal" class="dam-form-input dam-status-input" renderType="select" style="width:100%;">
+								<xf:item>
+									<xf:label>Published</xf:label>
+									<xf:value>Published</xf:value>
+								</xf:item>
+								<xf:item>
+									<xf:label>Draft</xf:label>
+									<xf:value>Draft</xf:value>
+								</xf:item>
+								<xf:item>
+									<xf:label>Archived</xf:label>
+									<xf:value>Archived</xf:value>
+								</xf:item>
+							</xf:select1>
+						</xf:group>
 
-                        <xf:group class="dam-form-actions">
-                            <xf:trigger id="btn_versionDownload" class="dam-btn-outline" ev:onclick="scwin.btn_versionDownload_onclick">
-                                <xf:label><![CDATA[↓ Download]]></xf:label>
-                            </xf:trigger>
-                            <xf:trigger id="btn_versionEdit" class="dam-btn-primary" ev:onclick="scwin.btn_versionEdit_onclick">
-                                <xf:label><![CDATA[Edit Metadata]]></xf:label>
-                            </xf:trigger>
-                        </xf:group>
+						<xf:group class="dam-form-actions">
+							<xf:trigger id="btn_versionDownload" class="dam-btn-outline" ev:onclick="scwin.btn_versionDownload_onclick">
+								<xf:label><![CDATA[↓ Download]]></xf:label>
+							</xf:trigger>
+							<xf:trigger id="btn_versionEdit" class="dam-btn-primary" ev:onclick="scwin.btn_versionEdit_onclick">
+								<xf:label><![CDATA[Edit Metadata]]></xf:label>
+							</xf:trigger>
+						</xf:group>
 
-                        <xf:group class="dam-meta-section">
-                            <w2:textbox class="dam-meta-title" label="Metadata" tagname="h4"/>
-                            <xf:group class="dam-form-row">
-                                <w2:textbox class="dam-form-label" label="Creator"/>
-                                <w2:input id="inp_versionCreator" class="dam-form-input" readOnly="true"/>
-                            </xf:group>
-                            <xf:group class="dam-form-row">
-                                <w2:textbox class="dam-form-label" label="Resolution"/>
-                                <w2:input id="inp_versionResolution" class="dam-form-input" readOnly="true"/>
-                            </xf:group>
-                            <xf:group class="dam-form-row">
-                                <w2:textbox class="dam-form-label" label="Uploaded Date"/>
-                                <w2:input id="inp_versionUploaded" class="dam-form-input" readOnly="true"/>
-                            </xf:group>
-                        </xf:group>
-                    </xf:group>
-                </xf:group>
-            </xf:group>
-        </xf:group>
-    </body>
+						<xf:group class="dam-meta-section">
+							<w2:textbox class="dam-meta-title" label="Metadata" tagname="h4" />
+							<xf:group class="dam-form-row">
+								<w2:textbox class="dam-form-label" label="Creator" />
+								<w2:input id="inp_versionCreator" class="dam-form-input" readOnly="true" />
+							</xf:group>
+							<xf:group class="dam-form-row">
+								<w2:textbox class="dam-form-label" label="Resolution" />
+								<w2:input id="inp_versionResolution" class="dam-form-input" readOnly="true" />
+							</xf:group>
+							<xf:group class="dam-form-row">
+								<w2:textbox class="dam-form-label" label="Uploaded Date" />
+								<w2:input id="inp_versionUploaded" class="dam-form-input" readOnly="true" />
+							</xf:group>
+						</xf:group>
+					</xf:group>
+				</xf:group>
+			</xf:group>
+		</xf:group>
+	</body>
 </html>

@@ -114,4 +114,24 @@
 		WHERE ASSET_ID = #{vo.assetId}
 		  AND VER_ID = #{vo.verId}
 	</update>
+	
+	<insert id="insertVersion" parameterType="com.inswave.training.dam.vo.DamVersionVo" useGeneratedKeys="true" keyProperty="verId" keyColumn="VER_ID">
+		INSERT INTO DAM_VERSION (
+			ASSET_ID,
+			VER_NO,
+			FILE_URL,
+			PREVIEW_URL,
+			CHANGE_LOG,
+			OWNER_NM,
+			UPLOAD_DT
+		) VALUES (
+			#{vo.assetId},
+			#{vo.verNo},
+			COALESCE(#{vo.fileUrl}, ''),
+			#{vo.previewUrl},
+			#{vo.changeLog},
+			#{vo.ownerNm},
+			NOW()
+		)
+	</insert>
 </mapper>

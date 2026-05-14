@@ -19,4 +19,6 @@ public interface DamService {
 	int updateAsset(DamAssetVo vo);
 	
 	int updateVersion(DamVersionVo vo);
+	
+	int createVersion(DamVersionVo vo);
 }

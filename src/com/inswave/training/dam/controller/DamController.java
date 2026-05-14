@@ -68,4 +68,15 @@ public class DamController {
 		result.put("updated", updated);
 		return ResponseEntity.ok(result);
 	}
+	@PostMapping("/assets/{assetId}/versions")
+	@ResponseBody
+	public ResponseEntity<?> createVersion(@PathVariable("assetId") Integer assetId,
+			@RequestBody DamVersionVo vo) {
+		vo.setAssetId(assetId);
+		int created = damService.createVersion(vo);
+		Map<String, Object> result = new LinkedHashMap<String, Object>();
+		result.put("created", created);
+		result.put("verId", vo.getVerId());
+		return ResponseEntity.ok(result);
+	}
 }
