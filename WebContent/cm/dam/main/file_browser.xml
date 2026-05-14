@@ -57,6 +57,7 @@
 				<w2:dataMap id="dmPopup" baseNode="map">
 					<w2:keyInfo>
 						<w2:key id="ASSET_ID" name="ASSET_ID" dataType="text" />
+						<w2:key id="VER_ID" name="VER_ID" dataType="text" />
 						<w2:key id="FILE_NM" name="FILE_NM" dataType="text" />
 						<w2:key id="NEW_VER_NO" name="NEW_VER_NO" dataType="text" />
 						<w2:key id="UPLOAD_FILE_NM" name="UPLOAD_FILE_NM" dataType="text" />
@@ -94,6 +95,21 @@
                     callback([]);
                 };
                 xhr.send();
+            };
+            
+            scwin.callApiJson = function(method, url, payload, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open(method, url, true);
+                xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState !== 4) { return; }
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        callback(JSON.parse(xhr.responseText || "{}"));
+                    } else {
+                        alert("Lưu thất bại. HTTP " + xhr.status);
+                    }
+                };
+                xhr.send(JSON.stringify(payload || {}));
             };
 
             scwin._formatFileSize = function(bytes) {
@@ -413,6 +429,7 @@
             scwin._openInlineUploadPopup = function(param) {
                 var assetId = param && (param.assetId != null ? param.assetId : param.ASSET_ID);
                 dmPopup.set("ASSET_ID", assetId ? String(assetId) : "");
+                dmPopup.set("VER_ID", "");
                 dmPopup.set("FILE_NM", "");
                 dmPopup.set("NEW_VER_NO", "v1.0");
                 dmPopup.set("UPLOAD_FILE_NM", "");
@@ -430,6 +447,7 @@
                         var latestVer = latest ? latest.verNo : "";
                         var preview = (latest && latest.previewUrl) ? latest.previewUrl : (a.previewUrl || "/cm/dam/images/preview/document.svg");
                         dmPopup.set("ASSET_ID", String(a.assetId != null ? a.assetId : ""));
+                        dmPopup.set("VER_ID", latest && latest.verId != null ? String(latest.verId) : "");
                         dmPopup.set("FILE_NM", a.fileNm || "");
                         dmPopup.set("NEW_VER_NO", scwin._suggestNextVerNo(latestVer));
                         dmPopup.set("CONTRIBUTORS", a.ownerNm || "Carol");
@@ -453,8 +471,22 @@
             };
 
             scwin.btn_fb_submit_onclick = function() {
-                alert("Demo: chưa có API lưu phiên bản. Gửi sẽ gồm VER_NO=" + (dmPopup.get("NEW_VER_NO") || "") + ", Contributors=" + (dmPopup.get("CONTRIBUTORS") || "") + ".");
-                scwin.btn_fb_cancel_onclick();
+                var assetId = dmPopup.get("ASSET_ID");
+                var verId = dmPopup.get("VER_ID");
+                if (!assetId || !verId) {
+                    alert("Không tìm thấy version để cập nhật.");
+                    return;
+                }
+                var payload = {
+                    verNo: dmPopup.get("NEW_VER_NO") || "",
+                    ownerNm: dmPopup.get("CONTRIBUTORS") || "",
+                    changeLog: dmPopup.get("CHANGE_NOTES") || ""
+                };
+                scwin.callApiJson("PUT", "/api/dam/assets/" + encodeURIComponent(assetId) + "/versions/" + encodeURIComponent(verId), payload, function() {
+                    alert("Cập nhật version thành công.");
+                    scwin.btn_fb_cancel_onclick();
+                    scwin.loadAssetsByFolder();
+                });
             };
         ]]></script>
 	</head>
@@ -565,7 +597,7 @@
 						<xf:group class="dam-fb-upload-row dam-fb-upload-row-notes"><w2:textbox class="dam-fb-upload-label" label="Change Notes" /><xf:textarea ref="data:dmPopup/CHANGE_NOTES" class="dam-fb-popup-textarea" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row dam-fb-upload-preview-block"><w2:textbox class="dam-fb-upload-label" label="Preview" /><xf:group class="dam-fb-upload-preview-wrap" style="margin-top:6px;border:1px solid #d1d5db;border-radius:8px;background:#f8fafc;padding:12px;height:180px;display:flex;align-items:center;justify-content:center;overflow:hidden;"><xf:image id="img_fb_popup_preview" class="dam-fb-upload-preview-img" src="/cm/dam/images/preview/document.svg" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;" /></xf:group></xf:group>
 					</xf:group>
-					<xf:group class="dam-fb-upload-modal-footer" style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px 16px;border-top:1px solid #e5e7eb;"><xf:trigger class="dam-fb-btn-secondary" ev:onclick="scwin.btn_fb_cancel_onclick"><xf:label>Cancel</xf:label></xf:trigger><xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_fb_submit_onclick"><xf:label>Submit</xf:label></xf:trigger></xf:group>
+					<xf:group class="dam-fb-upload-modal-footer" style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px 16px;border-top:1px solid #e5e7eb;"><xf:trigger class="dam-fb-btn-secondary" ev:onclick="scwin.btn_fb_cancel_onclick" style=";background-color:red;border:1px solid #d1d5db;width:10em;"><xf:label>Cancel</xf:label></xf:trigger><xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_fb_submit_onclick" style=";background-color:green;border:1px solid #d1d5db;width:5em;"><xf:label>Submit</xf:label></xf:trigger></xf:group>
 				</xf:group>
 			</div>
 		</xf:group>
