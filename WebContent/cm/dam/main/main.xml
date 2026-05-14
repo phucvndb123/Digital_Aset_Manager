@@ -18,11 +18,13 @@
         <script lazy="false" type="text/javascript"><![CDATA[
 scwin.onpageload = function () {
     console.log("[DAM] onpageload fired");
-    scwin._setActive(0);
+    var saved = parseInt(localStorage.getItem('dam_active_tab') || '0', 10);
+    scwin._setActive(isNaN(saved) ? 0 : saved);
 };
 
 scwin._setActive = function (idx) {
     console.log("[DAM] _setActive called, idx=" + idx);
+    localStorage.setItem('dam_active_tab', String(idx));
     var ids    = ["btn_navDashboard","btn_navFileBrowser","btn_navAssetDetails","btn_navVersionControl"];
     var titles = ["Dashboard","File Browser","Asset Details Panel","Version Control"];
     for (var i = 0; i < ids.length; i++) {

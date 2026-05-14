@@ -138,7 +138,7 @@ INSERT INTO DAM_ASSET (
   (1,  'Product_Image.jpg',          9, 'Images',    'jpg',  3000000000, 'Carol',
        'Published', 'Marketing,External,Web',
        'Main hero product image for landing page (current v3.0).',
-       '/cm/dam/images/preview/product.svg', '1950 x 1080',
+       '/cm/dam/images/preview/sample1.jpg', '1950 x 1080',
        '2026-03-20 14:30:00'),
 
   -- 2) Today
@@ -159,14 +159,14 @@ INSERT INTO DAM_ASSET (
   (4,  'Q4_Campaign_Banner.png',     3, 'Images',    'png',     2300000, 'Bob',
        'Draft',     'Marketing,Campaign,Q4',
        'Banner art for Q4 promotional campaign.',
-       '/cm/dam/images/preview/image.svg', '1920 x 1080',
+       '/cm/dam/images/preview/sample2.jpg', '1920 x 1080',
        '2026-04-25 16:45:00'),
 
   -- 5) Draft template (PSD)
   (5,  'Social_Post_Template.psd',   5, 'Images',    'psd',    45000000, 'Bob',
        'Draft',     'Marketing,Social,Template',
        'Photoshop template for Instagram square posts.',
-       '/cm/dam/images/preview/image.svg', '1080 x 1080',
+       '/cm/dam/images/preview/sample3.jpg', '1080 x 1080',
        '2026-03-08 11:00:00'),
 
   -- 6) Video published
@@ -194,7 +194,7 @@ INSERT INTO DAM_ASSET (
   (9,  'Old_Logo_v1.png',            9, 'Images',    'png',      850000, 'Alice',
        'Archived',  'Marketing,Legacy',
        'Original company logo (replaced 2025).',
-       '/cm/dam/images/preview/archive.svg', '512 x 512',
+       '/cm/dam/images/preview/sample4.jpg', '512 x 512',
        '2025-12-05 08:00:00'),
 
   -- 10) Internal manual
@@ -236,7 +236,7 @@ INSERT INTO DAM_ASSET (
   (15, 'Hero_Background.jpg',        3, 'Images',    'jpg',     4500000, 'Alice',
        'Published', 'Marketing,Web,Background',
        'Hero background for refreshed homepage.',
-       '/cm/dam/images/preview/image.svg', '2560 x 1440',
+       '/cm/dam/images/preview/sample5.jpg', '2560 x 1440',
        '2026-05-05 08:20:00');
 
 -- ------------------------------------------------------------

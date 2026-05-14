@@ -999,6 +999,83 @@
    display: none !important;
 }
 
+/* Tags display row */
+.dam-tags-row {
+   display: flex !important;
+   gap: 0.4rem !important;
+   align-items: center !important;
+}
+.dam-tags-edit-btn,
+.dam-tags-edit-btn button {
+   flex-shrink: 0 !important;
+   padding: 0 0.7rem !important;
+   height: 34px !important;
+   background: #f1f5f9 !important;
+   border: 1px solid #e2e8f0 !important;
+   border-radius: 0.4rem !important;
+   cursor: pointer !important;
+   font-size: 1.1rem !important;
+   color: #475569 !important;
+   white-space: nowrap !important;
+}
+
+/* Tag popup */
+.dam-tag-popup {
+   position: absolute !important;
+   top: 100% !important;
+   left: 0 !important;
+   z-index: 999 !important;
+   width: 100% !important;
+   background: #fff !important;
+   border: 1px solid #e2e8f0 !important;
+   border-radius: 0.5rem !important;
+   box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+   padding: 0.8rem !important;
+}
+.dam-tag-popup-head {
+   display: flex !important;
+   justify-content: space-between !important;
+   align-items: center !important;
+   margin-bottom: 0.6rem !important;
+}
+.dam-tag-popup-title {
+   font-weight: 600 !important;
+   font-size: 0.85rem !important;
+   color: #1e293b !important;
+}
+.dam-tag-popup-close,
+.dam-tag-popup-close button {
+   background: none !important;
+   border: none !important;
+   cursor: pointer !important;
+   font-size: 1rem !important;
+   color: #64748b !important;
+   padding: 0 0.3rem !important;
+}
+.dam-tag-popup-body {
+   display: flex !important;
+   flex-wrap: wrap !important;
+   gap: 0.4rem 0 !important;
+   max-height: 150px !important;
+   overflow-y: auto !important;
+   margin-bottom: 0.8rem !important;
+}
+.dam-tag-popup-item {
+   display: flex !important;
+   align-items: center !important;
+   gap: 0.3rem !important;
+   font-size: 0.82rem !important;
+   cursor: pointer !important;
+   width: 50% !important;
+   padding: 0.15rem 0 !important;
+   color: #334155 !important;
+}
+.dam-tag-popup-foot {
+   display: flex !important;
+   gap: 0.5rem !important;
+   justify-content: flex-end !important;
+}
+
 /* Form rows */
 .dam-form-row {
    display: flex !important;

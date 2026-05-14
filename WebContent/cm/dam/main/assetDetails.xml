@@ -44,8 +44,8 @@
 scwin.onpageload = function () {
     window.setTimeout(function () { scwin._loadData(); }, 50);
     window.setTimeout(function () {
-        try { var el  = document.getElementById('inp_assetTags'); if (el)  el.classList.add('dam-select-locked'); } catch(e) {}
-        try { var el2 = document.getElementById('inp_status');    if (el2) el2.classList.add('dam-select-locked'); } catch(e) {}
+        try { inp_assetTags.setReadOnly(true); } catch(e) {}
+        try { var el2 = document.getElementById('inp_status'); if (el2) el2.classList.add('dam-select-locked'); } catch(e) {}
     }, 200);
 };
 
@@ -315,7 +315,6 @@ scwin._applyDetail = function (rowIndex) {
     var row = dlAsset.getRowJSON(rowIndex);
     if (!row) { return; }
 
-    /* preview via background-image */
     try {
         var url = row.PREVIEW_URL || "/cm/dam/images/preview/document.svg";
         var pEl = document.querySelector(".dam-asset-preview");
@@ -324,7 +323,7 @@ scwin._applyDetail = function (rowIndex) {
 
     /* direct component access (with(scopeObj) scope) */
     try { inp_fileName.setValue(row.FILE_NM || ""); }          catch(e) {}
-    try { var tagsVal = (row.TAGS || '').split(',')[0].trim(); inp_assetTags.setValue(tagsVal); } catch(e) {}
+    try { inp_assetTags.setValue(row.TAGS || ''); } catch(e) {}
     try { inp_creator.setValue(row.CREATOR || ""); }        catch(e) {}
     try { inp_resolution.setValue(row.RESOLUTION || "-"); } catch(e) {}
     try { inp_uploaded.setValue(row.UPLOAD_DT || ""); }     catch(e) {}
@@ -380,23 +379,24 @@ scwin._setEditFields = function (editable) {
         }
     } catch(e) {}
     /* inp_assetTags, inp_status: renderType="select" — ID is on the <select> itself, style el directly */
-    var selectIds = ['inp_assetTags', 'inp_status'];
-    for (var i = 0; i < selectIds.length; i++) {
-        try {
-            var el = document.getElementById(selectIds[i]);
-            if (el) {
-                if (editable) {
-                    el.classList.remove('dam-select-locked');
-                    el.style.outline = '2px solid #6366f1';
-                    el.style.background = '#fff';
-                } else {
-                    el.classList.add('dam-select-locked');
-                    el.style.outline = '';
-                    el.style.background = '';
-                }
+    try {
+        var tagsBtn = document.querySelector('.dam-tags-edit-btn');
+        if (tagsBtn) tagsBtn.style.display = editable ? '' : 'none';
+    } catch(e) {}
+    try {
+        var el = document.getElementById('inp_status');
+        if (el) {
+            if (editable) {
+                el.classList.remove('dam-select-locked');
+                el.style.outline = '2px solid #6366f1';
+                el.style.background = '#fff';
+            } else {
+                el.classList.add('dam-select-locked');
+                el.style.outline = '';
+                el.style.background = '';
             }
-        } catch(e) {}
-    }
+        }
+    } catch(e) {}
     try { btn_edit.setLabel(editable ? 'Save Changes' : 'Edit Metadata'); } catch(e) {}
     try {
         var btnEl = document.getElementById('btn_edit');
@@ -447,6 +447,56 @@ scwin.btn_edit_onclick = function () {
         scwin._setEditFields(false);
         scwin._applyDetail(idx);
     }
+};
+
+scwin._ALL_TAGS = [
+    {v:'Marketing',l:'Marketing'}, {v:'Campaign',l:'Campaign'}, {v:'Branding',l:'Branding'},
+    {v:'Internal',l:'Internal'},   {v:'External',l:'External'}, {v:'Confidential',l:'Confidential'},
+    {v:'Digital',l:'Digital'},     {v:'Print',l:'Print'},       {v:'Web',l:'Web'},
+    {v:'SocialMedia',l:'Social Media'}, {v:'Photo',l:'Photo'}, {v:'Video',l:'Video'},
+    {v:'Legacy',l:'Legacy'},       {v:'HR',l:'HR'},             {v:'Training',l:'Training'},
+    {v:'Finance',l:'Finance'},     {v:'Legal',l:'Legal'},       {v:'Product',l:'Product'},
+    {v:'Background',l:'Background'},{v:'Brand',l:'Brand'},      {v:'Q4',l:'Q4'}
+];
+
+scwin.btn_editTags_onclick = function () {
+    var current = {};
+    try {
+        (inp_assetTags.getValue() || '').split(',').forEach(function(t) {
+            var s = t.trim(); if (s) current[s] = true;
+        });
+    } catch(e) {}
+
+    var body = document.querySelector('.dam-tag-popup-body');
+    if (!body) { return; }
+    body.innerHTML = '';
+    scwin._ALL_TAGS.forEach(function(tag) {
+        var lbl = document.createElement('label');
+        lbl.className = 'dam-tag-popup-item';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.value = tag.v;
+        if (current[tag.v]) { cb.checked = true; }
+        lbl.appendChild(cb);
+        lbl.appendChild(document.createTextNode(' ' + tag.l));
+        body.appendChild(lbl);
+    });
+
+    var popup = document.querySelector('.dam-tag-popup');
+    if (popup) { popup.style.display = ''; }
+};
+
+scwin.btn_confirmTags_onclick = function () {
+    var checked = document.querySelectorAll('.dam-tag-popup-body input[type="checkbox"]:checked');
+    var vals = [];
+    for (var i = 0; i < checked.length; i++) { vals.push(checked[i].value); }
+    try { inp_assetTags.setValue(vals.join(',')); } catch(e) {}
+    var popup = document.querySelector('.dam-tag-popup');
+    if (popup) { popup.style.display = 'none'; }
+};
+
+scwin.btn_cancelTags_onclick = function () {
+    var popup = document.querySelector('.dam-tag-popup');
+    if (popup) { popup.style.display = 'none'; }
 };
 ]]></script>
     </head>
@@ -560,22 +610,31 @@ scwin.btn_edit_onclick = function () {
                             <w2:input id="inp_fileName" class="dam-form-input" />
                         </xf:group>
 
-                        <xf:group class="dam-form-row">
-                            <w2:textbox class="dam-form-label" label="Asset Type" />
-                            <xf:select1 id="inp_assetTags" class="dam-form-input" appearance="minimal" renderType="select">
-                                <xf:choices>
-                                    <xf:item><xf:label><![CDATA[]]></xf:label><xf:value><![CDATA[]]></xf:value></xf:item>
-                                    <xf:item><xf:label><![CDATA[Marketing]]></xf:label><xf:value><![CDATA[Marketing]]></xf:value></xf:item>
-                                    <xf:item><xf:label><![CDATA[Legacy]]></xf:label><xf:value><![CDATA[Legacy]]></xf:value></xf:item>
-                                    <xf:item><xf:label><![CDATA[Branding]]></xf:label><xf:value><![CDATA[Branding]]></xf:value></xf:item>
-                                    <xf:item><xf:label><![CDATA[Social Media]]></xf:label><xf:value><![CDATA[SocialMedia]]></xf:value></xf:item>
-                                    <xf:item><xf:label><![CDATA[Campaign]]></xf:label><xf:value><![CDATA[Campaign]]></xf:value></xf:item>
-                                    <xf:item><xf:label><![CDATA[Print]]></xf:label><xf:value><![CDATA[Print]]></xf:value></xf:item>
-                                    <xf:item><xf:label><![CDATA[Digital]]></xf:label><xf:value><![CDATA[Digital]]></xf:value></xf:item>
-                                    <xf:item><xf:label><![CDATA[Video]]></xf:label><xf:value><![CDATA[Video]]></xf:value></xf:item>
-                                    <xf:item><xf:label><![CDATA[Photo]]></xf:label><xf:value><![CDATA[Photo]]></xf:value></xf:item>
-                                </xf:choices>
-                            </xf:select1>
+                        <xf:group class="dam-form-row" style="position:relative;">
+                            <w2:textbox class="dam-form-label" label="Tags" />
+                            <xf:group class="dam-tags-row">
+                                <w2:input id="inp_assetTags" class="dam-form-input" readOnly="true" />
+                                <xf:trigger id="btn_editTags" class="dam-tags-edit-btn" style="display:none;" ev:onclick="scwin.btn_editTags_onclick">
+                                    <xf:label><![CDATA[⋯]]></xf:label>
+                                </xf:trigger>
+                            </xf:group>
+                            <xf:group class="dam-tag-popup" style="display:none;">
+                                <xf:group class="dam-tag-popup-head">
+                                    <w2:textbox class="dam-tag-popup-title" label="Select Tags" />
+                                    <xf:trigger class="dam-tag-popup-close" ev:onclick="scwin.btn_cancelTags_onclick">
+                                        <xf:label><![CDATA[✕]]></xf:label>
+                                    </xf:trigger>
+                                </xf:group>
+                                <xf:group class="dam-tag-popup-body"></xf:group>
+                                <xf:group class="dam-tag-popup-foot">
+                                    <xf:trigger class="dam-btn-outline" ev:onclick="scwin.btn_cancelTags_onclick">
+                                        <xf:label><![CDATA[Cancel]]></xf:label>
+                                    </xf:trigger>
+                                    <xf:trigger class="dam-btn-primary" ev:onclick="scwin.btn_confirmTags_onclick">
+                                        <xf:label><![CDATA[Confirm]]></xf:label>
+                                    </xf:trigger>
+                                </xf:group>
+                            </xf:group>
                         </xf:group>
 
                         <xf:group class="dam-form-row">
