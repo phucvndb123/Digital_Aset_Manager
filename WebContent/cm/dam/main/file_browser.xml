@@ -440,16 +440,53 @@
                 }
                 return v + ".1";
             };
+             scwin._versionSortValue = function(ver) {
+                if (!ver) { return -1; }
+                var raw = String(ver).trim();
+                if (!raw) { return -1; }
+                var m = raw.match(/^(?:v|V)?(\d+)(?:\.(\d+))?$/);
+                if (m) {
+                    var major = parseInt(m[1], 10) || 0;
+                    var minor = parseInt(m[2] || "0", 10) || 0;
+                    return (major * 1000000) + minor;
+                }
+                var n = parseFloat(raw.replace(/^[vV]/, ""));
+                return isNaN(n) ? -1 : n;
+            };
+
+            scwin._pickLatestVersion = function(versions) {
+                var list = versions || [];
+                if (!list.length) { return null; }
+                var latest = list[0];
+                for (var i = 1; i < list.length; i++) {
+                    var cur = list[i];
+                    var curNo = scwin._versionSortValue(cur && cur.verNo);
+                    var latestNo = scwin._versionSortValue(latest && latest.verNo);
+                    if (curNo > latestNo) {
+                        latest = cur;
+                        continue;
+                    }
+                    if (curNo === latestNo) {
+                        var curId = parseInt(cur && cur.verId, 10);
+                        var latestId = parseInt(latest && latest.verId, 10);
+                        if (!isNaN(curId) && (isNaN(latestId) || curId > latestId)) {
+                            latest = cur;
+                        }
+                    }
+                }
+                return latest;
+            };
+            
 
             scwin._openInlineUploadPopup = function(param) {
                 var assetId = param && (param.assetId != null ? param.assetId : param.ASSET_ID);
                 dmPopup.set("ASSET_ID", assetId ? String(assetId) : "");
                 dmPopup.set("VER_ID", "");
                 dmPopup.set("FILE_NM", "");
-                dmPopup.set("NEW_VER_NO", "v1.0");
+                dmPopup.set("NEW_VER_NO", "");
                  dmPopup.set("POPUP_FILE_TYPE", "");
                 dmPopup.set("POPUP_FILE_EXT", "");
-                dmPopup.set("CONTRIBUTORS", "Carol");
+                
                 dmPopup.set("CONTRIBUTORS", "");
                 dmPopup.set("CHANGE_NOTES", "");
                 dmPopup.set("PREVIEW_URL", "/cm/dam/images/preview/document.svg");
@@ -460,17 +497,16 @@
                     scwin.callApi("/api/dam/assets/" + encodeURIComponent(assetId), function(res) {
                         if (!res || !res.asset) { return; }
                         var a = res.asset;
-                        var latest = (res.versions || [])[0] || null;
-                          var latestVer = latest ? latest.verNo : "v1.0";
+                          var latest = scwin._pickLatestVersion(res.versions);
+                        var latestVer = latest ? latest.verNo : "";
                         var preview = (latest && latest.previewUrl) ? latest.previewUrl : (a.previewUrl || "/cm/dam/images/preview/document.svg");
                         dmPopup.set("ASSET_ID", String(a.assetId != null ? a.assetId : ""));
                         dmPopup.set("VER_ID", latest && latest.verId != null ? String(latest.verId) : "");
                         dmPopup.set("FILE_NM", a.fileNm || "");
-                        dmPopup.set("NEW_VER_NO", scwin._suggestNextVerNo(latestVer));
+                          dmPopup.set("NEW_VER_NO", latestVer || "");
                         dmPopup.set("POPUP_FILE_TYPE", a.fileType || "");
                         dmPopup.set("POPUP_FILE_EXT", a.fileExt || "");
-                         dmPopup.set("CONTRIBUTORS", a.ownerNm || "");
-                        dmPopup.set("CONTRIBUTORS", a.ownerNm || "Carol");
+                        dmPopup.set("CONTRIBUTORS", a.ownerNm || "");
                         dmPopup.set("CHANGE_NOTES", (latest && latest.changeLog) ? latest.changeLog : "");
                         dmPopup.set("PREVIEW_URL", preview);
                         $p.getComponentById("txt_fb_popup_title").setLabel("Upload New Version: " + (a.fileNm || ""));
