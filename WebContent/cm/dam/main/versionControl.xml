@@ -1,494 +1,687 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
 <?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:w2="http://www.inswave.com/websquare"
-	xmlns:xf="http://www.w3.org/2002/xforms">
-	<head>
-		<w2:type>COMPONENT</w2:type>
-		<w2:buildDate />
-		<w2:MSA />
-		<xf:model>
-
-			<w2:dataCollection baseNode="map">
-				<w2:dataList id="dlFolder" baseNode="list" repeatNode="map">
-					<w2:columnInfo>
-						<w2:column id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
-						<w2:column id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
-						<w2:column id="DEPTH" name="DEPTH" dataType="text" />
-					</w2:columnInfo>
-				</w2:dataList>
-				<w2:dataList id="dlVersion" baseNode="list" repeatNode="map">
-					<w2:columnInfo>
-						<w2:column id="CHK" name="CHK" dataType="text" />
-						<w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
-						<w2:column id="ICON" name="ICON" dataType="text" />
-						<w2:column id="FILE_NM" name="FILE_NM" dataType="text" />
-						<w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
-						<w2:column id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
-						<w2:column id="STATUS" name="STATUS" dataType="text" />
-						<w2:column id="PREVIEW_URL" name="PREVIEW_URL" dataType="text" />
-						<w2:column id="TAGS" name="TAGS" dataType="text" />
-						<w2:column id="CREATOR" name="CREATOR" dataType="text" />
-						<w2:column id="RESOLUTION" name="RESOLUTION" dataType="text" />
-						<w2:column id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
-					</w2:columnInfo>
-				</w2:dataList>
-			</w2:dataCollection>
-			<w2:workflowCollection />
-		</xf:model>
-		<w2:layoutInfo />
-		<w2:publicInfo method="" />
-		<script lazy="false" type="text/javascript"><![CDATA[
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ev="http://www.w3.org/2001/xml-events"
+    xmlns:w2="http://www.inswave.com/websquare"
+    xmlns:xf="http://www.w3.org/2002/xforms">
+    <head>
+        <w2:type>COMPONENT</w2:type>
+        <w2:buildDate/>
+        <w2:MSA/>
+        <xf:model>
+            <w2:dataCollection baseNode="map">
+                <w2:dataList id="dlFolder" baseNode="list" repeatNode="map">
+                    <w2:columnInfo>
+                        <w2:column id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+                        <w2:column id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+                        <w2:column id="DEPTH" name="DEPTH" dataType="text" />
+                    </w2:columnInfo>
+                </w2:dataList>
+                <w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
+                    <w2:columnInfo>
+                        <w2:column id="CHK" name="CHK" dataType="text" />
+                        <w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
+                        <w2:column id="ICON" name="ICON" dataType="text" />
+                        <w2:column id="FILE_NM" name="FILE_NM" dataType="text" />
+                        <w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
+                        <w2:column id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
+                        <w2:column id="STATUS" name="STATUS" dataType="text" />
+                        <w2:column id="TAGS" name="TAGS" dataType="text" />
+                        <w2:column id="CREATOR" name="CREATOR" dataType="text" />
+                        <w2:column id="RESOLUTION" name="RESOLUTION" dataType="text" />
+                        <w2:column id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
+                        <w2:column id="PREVIEW_URL" name="PREVIEW_URL" dataType="text" />
+                        <w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
+                    </w2:columnInfo>
+                </w2:dataList>
+            </w2:dataCollection>
+            <w2:workflowCollection/>
+        </xf:model>
+        <w2:layoutInfo/>
+        <w2:publicInfo method=""/>
+        <script lazy="false" type="text/javascript"><![CDATA[
 scwin.onpageload = function () {
-    scwin.loadFolders();
-    window.setTimeout(function () { scwin._setEditable(false); }, 50);
+    window.setTimeout(function () { scwin._loadData(); }, 50);
+    window.setTimeout(function () {
+        try { inp_assetTags.setReadOnly(true); } catch(e) {}
+        try { var el2 = document.getElementById('inp_status'); if (el2) el2.classList.add('dam-select-locked'); } catch(e) {}
+    }, 200);
 };
 
-scwin.callApi = function (url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                callback(JSON.parse(xhr.responseText || "{}"));
-            }
-        }
-    };
-    xhr.send();
-};
 scwin._currentFolderId = 1;
+
+scwin._loadData = function () {
+    scwin._loadFolders();
+};
 
 scwin._buildFolderRows = function (folders) {
     var childrenMap = {};
     var allIds = {};
     for (var i = 0; i < folders.length; i++) { allIds[folders[i].folderId] = true; }
-    for (var j = 0; j < folders.length; j++) {
-        var pid = folders[j].parentFolderId || 0;
+    for (var i = 0; i < folders.length; i++) {
+        var pid = folders[i].parentFolderId || 0;
         if (!childrenMap[pid]) { childrenMap[pid] = []; }
-        childrenMap[pid].push(folders[j]);
+        childrenMap[pid].push(folders[i]);
     }
     var roots = [];
-    for (var k = 0; k < folders.length; k++) {
-        var f = folders[k];
+    for (var i = 0; i < folders.length; i++) {
+        var f = folders[i];
         if (!f.parentFolderId || !allIds[f.parentFolderId]) { roots.push(f); }
     }
     var result = [];
     var visit = function (node, depth) {
-        result.push({ FOLDER_ID: String(node.folderId), FOLDER_NM: node.folderNm || "", DEPTH: String(depth) });
+        result.push({ FOLDER_ID: String(node.folderId), FOLDER_NM: node.folderNm || '', DEPTH: String(depth) });
         var children = childrenMap[node.folderId] || [];
-        for (var x = 0; x < children.length; x++) { visit(children[x], depth + 1); }
+        for (var j = 0; j < children.length; j++) { visit(children[j], depth + 1); }
     };
-    for (var y = 0; y < roots.length; y++) { visit(roots[y], 1); }
+    for (var i = 0; i < roots.length; i++) { visit(roots[i], 1); }
     return result;
 };
 
-
-scwin.loadFolders = function () {
-    scwin.callApi("/api/dam/folders", function (folders) {
-       if (!folders || folders.length === 0) {
-            dlFolder.setJSON([]);
-            dlVersion.setJSON([]);
-            scwin._applyDetail(-1);
-            return;
-        }
-
-        dlFolder.setJSON(scwin._buildFolderRows(folders));
-        scwin._loadFirstFolderWithAssets(folders, 0);
-
-        try {
-            var tv = $p.getComponentById("trvVersionFolder");
-            if (tv && typeof tv.expandAll === "function") { tv.expandAll(); }
-        } catch (e) {}
-    });
-};
-scwin.trvVersionFolder_onclick = function () {
-    var nodeValue = trvVersionFolder.getSelectedValue();
-    var fid = parseInt(nodeValue, 10);
-    if (isNaN(fid) || fid <= 0 || fid === scwin._currentFolderId) { return; }
-    scwin._currentFolderId = fid;
-    scwin.loadAssets(fid);
-};
-
-scwin._loadFirstFolderWithAssets = function (folders, index) {
-    if (!folders || index >= folders.length) {
-        dlVersion.setJSON([]);
-        scwin._applyDetail(-1);
-        return;
-    }
-    var folder = folders[index];
-    var folderId = folder.folderId || folder.FOLDER_ID;
-    scwin.callApi("/api/dam/assets?folderId=" + folderId, function (list) {
-        if (list && list.length > 0) {
-        scwin._currentFolderId = parseInt(folderId, 10) || 1;
-            scwin.loadAssets(folderId);
-        } else {
-            scwin._loadFirstFolderWithAssets(folders, index + 1);
-        }
-    });
+scwin._loadFolders = function () {
+    fetch('/api/dam/folders')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data || !data.length) { return; }
+            var rows = scwin._buildFolderRows(data);
+            try {
+                dlFolder.setJSON(rows);
+                window.setTimeout(function () {
+                    try { trvFolder.expandAll(); } catch (e) {}
+                }, 100);
+            } catch (e) { console.warn('[Asset] dlFolder.setJSON error', e); }
+        })
+        .catch(function (e) { console.warn('[Asset] folders error', e); });
 };
 
 scwin._formatFileSize = function (bytes) {
-    var n = parseFloat(bytes || 0);
-    if (!n || n <= 0) { return "0 B"; }
-    var kb = 1024;
-    var mb = kb * 1024;
-    var gb = mb * 1024;
-    if (n >= gb) { return (n / gb).toFixed(2) + " GB"; }
-    if (n >= mb) { return (n / mb).toFixed(2) + " MB"; }
-    if (n >= kb) { return (n / kb).toFixed(2) + " KB"; }
-    return n + " B";
+    var n = Number(bytes);
+    if (!bytes || isNaN(n) || n === 0) { return '-'; }
+    if (n >= 1073741824) { return (n / 1073741824).toFixed(2) + ' GB'; }
+    if (n >= 1048576)    { return (n / 1048576).toFixed(2) + ' MB'; }
+    if (n >= 1024)       { return (n / 1024).toFixed(1) + ' KB'; }
+    return n + ' B';
 };
 
-scwin.loadAssets = function (folderId) {
-    scwin.callApi("/api/dam/assets?folderId=" + folderId, function (list) {
-        var rows = [];
-        for (var i = 0; i < (list || []).length; i++) {
-            var item = list[i];
-            rows.push({
-                "CHK": "",
-                "ASSET_ID": item.assetId,
-                "ICON": item.fileExt ? item.fileExt.toUpperCase() : (item.fileType || ""),
-                "FILE_NM": item.fileNm || "",
-                "FILE_TYPE": item.fileType || "",
-                "FILE_SIZE": scwin._formatFileSize(item.fileSize),
-                "STATUS": item.status || "Draft",
-                "PREVIEW_URL": item.previewUrl || "/cm/dam/images/preview/document.svg",
-                "TAGS": item.tags || "",
-                "CREATOR": item.ownerNm || "",
-                "RESOLUTION": item.resolution || "-",
-                "UPLOAD_DT": item.uploadDt || ""
-            });
-        }
-        dlVersion.setJSON(rows);
-        if (rows.length > 0) {
-            scwin.loadAssetDetail(rows[0].ASSET_ID);
-        } else {
-            scwin._applyDetail(-1);
-        }
-    });
-};
-
-scwin.loadAssetDetail = function (assetId) {
-    scwin.callApi("/api/dam/assets/" + assetId, function (response) {
-        var asset = response.asset || {};
-        var latestVersion = (response.versions && response.versions.length > 0) ? response.versions[0] : {};
-
-        scwin._setVal("inp_versionFileName", asset.fileNm || "");
-        scwin._setVal("sel_versionAssetType", asset.tags || "");
-        scwin._setVal("sel_versionStatus", asset.status || "Draft");
-        scwin._setVal("inp_versionCreator", asset.ownerNm || latestVersion.ownerNm || "");
-        scwin._setVal("inp_versionResolution", asset.resolution || "-");
-        scwin._setVal("inp_versionUploaded", asset.uploadDt || latestVersion.uploadDt || "");
-
-        try {
-            var img = $p.getComponentById("img_versionPreview");
-            if (img && typeof img.setSrc === "function") {
-                img.setSrc(asset.previewUrl || latestVersion.previewUrl || "/cm/dam/images/preview/document.svg");
+scwin._loadAssets = function (folderId) {
+    fetch('/api/dam/assets?folderId=' + (folderId || 1))
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var rows = [];
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+                var icon = ((d.fileExt || d.fileType || '')).toUpperCase().replace('.', '');
+                rows.push({
+                    CHK: '',
+                    ASSET_ID: String(d.assetId || ''),
+                    ICON: icon,
+                    FILE_NM: d.fileNm || '',
+                    FILE_TYPE: d.fileType || '',
+                    FILE_SIZE: scwin._formatFileSize(d.fileSize),
+                    STATUS: d.status || '',
+                    TAGS: d.tags || '',
+                    CREATOR: d.ownerNm || '',
+                    RESOLUTION: d.resolution || '-',
+                    UPLOAD_DT: d.uploadDt || '',
+                    PREVIEW_URL: d.previewUrl || '/cm/dam/images/preview/document.svg'
+                });
             }
+            try { dlAsset.setJSON(rows); } catch (e) { console.warn('[Asset] setJSON failed', e); }
+            scwin._clearDetail();
+            if (rows.length > 0) {
+                window.setTimeout(function () { scwin._styleIconBadges(); }, 100);
+                window.setTimeout(function () { scwin._styleIconBadges(); }, 500);
+            }
+            window.setTimeout(function () { scwin._attachSortOnMousedown(); }, 150);
+        })
+        .catch(function (e) { console.warn('[Asset] assets error', e); });
+};
+
+scwin.trvFolder_onclick = function (treeObj) {
+    var nodeValue = trvFolder.getSelectedValue();
+    console.log('[Asset] tree onclick selectedValue=' + nodeValue);
+    if (!nodeValue) { return; }
+    var fid = parseInt(nodeValue, 10);
+    if (isNaN(fid) || fid <= 0) { return; }
+    if (fid === scwin._currentFolderId) { return; }
+    scwin._currentFolderId = fid;
+    scwin._loadAssets(fid);
+};
+
+scwin.grdAsset_onclick = function () {
+    window.setTimeout(function () {
+        try {
+            var idx = grdAsset.getFocusedRowIndex();
+            if (idx >= 0) { scwin._applyDetail(idx); }
         } catch (e) {}
-    });
+    }, 30);
 };
 
-scwin.grdVersion_onrowindexchange = function (gridObj, oldRowIndex, newRowIndex) {
-    var row = dlVersion.getRowJSON(newRowIndex);
-    if (row && row.ASSET_ID) {
-        scwin.loadAssetDetail(row.ASSET_ID);
-    } else {
-        scwin._applyDetail(newRowIndex);
-    }
+scwin._BADGE_COLORS = {
+    "PDF": "#dc2626",
+    "JPG": "#16a34a",
+    "JPEG": "#16a34a",
+    "PNG": "#2563eb",
+    "MP4": "#ea580c",
+    "DOC": "#2563eb",
+    "DOCX": "#2563eb",
+    "GIF": "#9333ea"
 };
 
-scwin._setVal = function (id, val) {
+scwin._styleIconBadges = function () {
     try {
-        var c = $p.getComponentById(id);
-        if (c && typeof c.setValue === "function") { c.setValue(val); }
-    } catch (e) {}
+        var colors = scwin._BADGE_COLORS;
+        var cells = document.querySelectorAll(".dam-asset-grid-view .dam-cell-icon");
+        for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            var txt = (cell.textContent || "").trim().toUpperCase();
+            var bg = colors[txt];
+            if (!bg) { continue; }
+            cell.style.cssText = "padding:4px 0 !important;text-align:center !important;font-weight:normal !important;";
+            var badge = cell.querySelector(".dam-badge-injected");
+            if (!badge) {
+                badge = document.createElement("span");
+                badge.className = "dam-badge-injected";
+                cell.innerHTML = "";
+                cell.appendChild(badge);
+            }
+            badge.textContent = txt;
+            badge.style.cssText = "display:inline-block !important;padding:3px 8px !important;background:" + bg + " !important;color:#fff !important;border-radius:3px !important;font-weight:700 !important;font-size:0.7rem !important;letter-spacing:0.02em !important;line-height:1.4 !important;min-width:30px !important;text-align:center !important;box-shadow:0 1px 2px rgba(0,0,0,0.15) !important;";
+        }
+    } catch (e) { /* ignore */ }
 };
+
+scwin.grdAsset_ondrawendrow = function () {
+    scwin._styleIconBadges();
+};
+
+scwin.grdAsset_onsort = function () {
+    window.setTimeout(function () { scwin._styleIconBadges(); }, 50);
+    window.setTimeout(function () { scwin._styleIconBadges(); }, 300);
+};
+
+scwin._sortState = {};
+
+/* mousedown capture — fires before focus-transfer, so works on first click */
+scwin._attachSortOnMousedown = function () {
+    if (document._damSortAttached) { return; }
+    document._damSortAttached = true;
+
+    /* inject initial ⇅ into sortable header cells */
+    var sortableIdxMap = { 2: true, 3: true, 4: true, 5: true };
+    var tryInitIcons = function () {
+        var sels = [
+            ".dam-asset-grid-view .w2grid_header .w2grid_cell",
+            ".dam-asset-grid-view .w2grid_header td",
+            ".dam-asset-grid-view .w2grid_header th",
+            ".dam-asset-grid-view thead td",
+            ".dam-asset-grid-view thead th"
+        ];
+        var hcells = null;
+        for (var s = 0; s < sels.length; s++) {
+            var found = document.querySelectorAll(sels[s]);
+            if (found && found.length > 0) { hcells = found; break; }
+        }
+        if (!hcells || !hcells.length) { return; }
+        for (var i = 0; i < hcells.length; i++) {
+            if (!sortableIdxMap[i]) { continue; }
+            if (!hcells[i].querySelector(".dam-sort-indicator")) {
+                var sp = document.createElement("span");
+                sp.className = "dam-sort-indicator";
+                sp.textContent = " ⇅";
+                sp.style.cssText = "font-size:0.7rem;color:#94a3b8;pointer-events:none;";
+                hcells[i].appendChild(sp);
+            }
+        }
+    };
+    tryInitIcons();
+    window.setTimeout(tryInitIcons, 300);
+
+    document.addEventListener("mousedown", function (e) {
+        var target = e.target;
+        if (!target || !target.closest) { return; }
+        if (!target.closest(".dam-asset-grid-view")) { return; }
+        var headerCell =
+            target.closest(".w2grid_header .w2grid_cell") ||
+            target.closest(".w2grid_header td") ||
+            target.closest(".w2grid_header th") ||
+            target.closest("thead td") ||
+            target.closest("thead th");
+        if (!headerCell) { return; }
+        var siblings = headerCell.parentElement ? headerCell.parentElement.children : [];
+        var idx = -1;
+        for (var i = 0; i < siblings.length; i++) {
+            if (siblings[i] === headerCell) { idx = i; break; }
+        }
+        var sortableMap = { 2: "FILE_NM", 3: "FILE_TYPE", 4: "FILE_SIZE", 5: "STATUS" };
+        var colId = sortableMap[idx];
+        if (!colId) { return; }
+        var cur = scwin._sortState[colId] || "none";
+        var next = cur === "asc" ? "desc" : "asc";
+        scwin._sortState = {};
+        scwin._sortState[colId] = next;
+        /* build rows array from DataList row-by-row (getJSON may not return array) */
+        try {
+            var count = dlAsset.getRowCount ? dlAsset.getRowCount() : 0;
+            var rows = [];
+            for (var r = 0; r < count; r++) { rows.push(dlAsset.getRowJSON(r)); }
+            if (rows.length) {
+                rows.sort(function (a, b) {
+                    var va = String(a[colId] || "");
+                    var vb = String(b[colId] || "");
+                    return next === "asc"
+                        ? va.localeCompare(vb, undefined, { numeric: true })
+                        : vb.localeCompare(va, undefined, { numeric: true });
+                });
+                dlAsset.setJSON(rows);
+                scwin._applyDetail(0);
+                window.setTimeout(function () { scwin._styleIconBadges(); }, 50);
+            }
+        } catch (ex) { console.warn("[Asset] sort error", ex); }
+        /* update header indicators */
+        var old = document.querySelectorAll(".dam-asset-grid-view .dam-sort-indicator");
+        for (var j = 0; j < old.length; j++) { old[j].textContent = " ⇅"; old[j].style.color = "#94a3b8"; }
+        var activeInd = headerCell.querySelector(".dam-sort-indicator");
+        if (activeInd) {
+            activeInd.textContent = next === "asc" ? " ▲" : " ▼";
+            activeInd.style.color = "#334155";
+        }
+    }, true);
+};
+
+scwin._clearDetail = function () {
+    scwin._lastDetailRow = -1;
+    scwin._editMode = false;
+    try {
+        var pEl = document.querySelector('.dam-asset-preview');
+        if (pEl) { pEl.style.backgroundImage = ''; }
+    } catch (e) {}
+    try { inp_fileName.setValue(''); }   catch (e) {}
+    try { inp_assetTags.setValue(''); } catch (e) {}
+    try { inp_status.setValue(''); }    catch (e) {}
+    try { inp_creator.setValue(''); }    catch (e) {}
+    try { inp_resolution.setValue(''); } catch (e) {}
+    try { inp_uploaded.setValue(''); }   catch (e) {}
+    scwin._setEditFields(false);
+};
+
+scwin._lastDetailRow = -1;
 
 scwin._applyDetail = function (rowIndex) {
-    var row = dlVersion.getRowJSON(rowIndex);
-    if (!row) {
-        scwin._setVal("inp_versionFileName", "");
-        scwin._setVal("sel_versionAssetType", "");
-        scwin._setVal("sel_versionStatus", "Draft");
-        scwin._setVal("inp_versionCreator", "");
-        scwin._setVal("inp_versionResolution", "");
-        scwin._setVal("inp_versionUploaded", "");
-        return;
-    }
+    if (rowIndex === scwin._lastDetailRow) { return; }
+    if (scwin._editMode) { scwin._editMode = false; }
+    scwin._lastDetailRow = rowIndex;
+    var row = dlAsset.getRowJSON(rowIndex);
+    if (!row) { return; }
 
     try {
-        var img = $p.getComponentById("img_versionPreview");
-        if (img && typeof img.setSrc === "function") {
-            img.setSrc(row.PREVIEW_URL || "/cm/dam/images/preview/document.svg");
-        }
+        var url = row.PREVIEW_URL || "/cm/dam/images/preview/document.svg";
+        var pEl = document.querySelector(".dam-asset-preview");
+        if (pEl) { pEl.style.backgroundImage = "url('" + url + "')"; }
     } catch (e) {}
 
-    scwin._setVal("inp_versionFileName", row.FILE_NM || "");
-    scwin._setVal("sel_versionAssetType", row.TAGS || "");
-    scwin._setVal("sel_versionStatus", row.STATUS || "");
-    scwin._setVal("inp_versionCreator", row.CREATOR || "");
-    scwin._setVal("inp_versionResolution", row.RESOLUTION || "");
-    scwin._setVal("inp_versionUploaded", row.UPLOAD_DT || "");
+    /* direct component access (with(scopeObj) scope) */
+    try { inp_fileName.setValue(row.FILE_NM || ""); }          catch(e) {}
+    try { inp_assetTags.setValue(row.TAGS || ''); } catch(e) {}
+    try { inp_creator.setValue(row.CREATOR || ""); }        catch(e) {}
+    try { inp_resolution.setValue(row.RESOLUTION || "-"); } catch(e) {}
+    try { inp_uploaded.setValue(row.UPLOAD_DT || ""); }     catch(e) {}
+    try { inp_status.setValue(row.STATUS || ""); }          catch(e) {}
+
+    /* re-lock selects after setValue — WebSquare may re-render and strip classes */
+    scwin._setEditFields(false);
 };
 
-scwin.btn_versionDownload_onclick = function () { /* mock */ };
-scwin._editMode = false;
-scwin._currentRow = -1;
-
-scwin._setEditable = function (editable) {
-    try { inp_versionFileName.setReadOnly(!editable); } catch (e) {}
-    try {
-        var statusEl = document.getElementById("sel_versionStatus");
-        if (statusEl) {
-            statusEl.style.pointerEvents = editable ? "auto" : "none";
-            statusEl.style.opacity = editable ? "1" : "0.9";
-        }
-    } catch (e) {}
-    try {
-        var tagsEl = document.getElementById("sel_versionAssetType");
-        if (tagsEl) {
-            tagsEl.style.pointerEvents = editable ? "auto" : "none";
-            tagsEl.style.opacity = editable ? "1" : "0.9";
-        }
-    } catch (e) {}
-    try { btn_versionEdit.setLabel(editable ? "Save Changes" : "Edit Metadata"); } catch (e) {}
-};
-
-scwin._persistMetadata = function (rowIndex) {
-    var row = dlVersion.getRowJSON(rowIndex);
-    if (!row || !row.ASSET_ID) { return; }
-
-    var fileNm = inp_versionFileName.getValue() || "";
-    var tags = sel_versionAssetType.getValue() || "";
-    var status = sel_versionStatus.getValue() || "Draft";
-
-    row.FILE_NM = fileNm;
-    row.TAGS = tags;
-    row.STATUS = status;
-    dlVersion.setCellData(rowIndex, "FILE_NM", fileNm);
-    dlVersion.setCellData(rowIndex, "TAGS", tags);
-    dlVersion.setCellData(rowIndex, "STATUS", status);
-
-    fetch("/api/dam/assets/" + row.ASSET_ID, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileNm: fileNm, tags: tags, status: status })
-    }).then(function (r) { return r.json(); })
-      .then(function () { scwin.loadAssetDetail(row.ASSET_ID); }, function (e) {
-          console.warn("[Version] save metadata failed", e);
-      });
-};
-
-scwin.btn_versionEdit_onclick = function () {
-    var idx = grdVersion.getFocusedRowIndex ? grdVersion.getFocusedRowIndex() : -1;
+scwin.btn_download_onclick = function () {
+    var idx = scwin._lastDetailRow;
     if (idx < 0) { return; }
-    scwin._currentRow = idx;
+    var row = dlAsset.getRowJSON(idx);
+    if (!row) { return; }
+    var lines = [
+        'Digital Asset Manager - File Info',
+        '==================================',
+        'File Name   : ' + (row.FILE_NM    || '-'),
+        'File Type   : ' + (row.FILE_TYPE  || '-'),
+        'File Size   : ' + (row.FILE_SIZE  || '-'),
+        'Status      : ' + (row.STATUS     || '-'),
+        'Tags        : ' + (row.TAGS       || '-'),
+        'Creator     : ' + (row.CREATOR    || '-'),
+        'Resolution  : ' + (row.RESOLUTION || '-'),
+        'Upload Date : ' + (row.UPLOAD_DT  || '-'),
+        '',
+        'Generated   : ' + new Date().toLocaleString()
+    ];
+    var blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href     = url;
+    a.download = (row.FILE_NM || 'asset').replace(/[\\/:*?"<>|]/g, '_') + '_info.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
 
+scwin._editMode = false;
+
+scwin._setEditFields = function (editable) {
+    /* inp_fileName: w2:input works fine with setReadOnly */
+    try { inp_fileName.setReadOnly(!editable); } catch(e) {}
+    try {
+        var fnWrap = document.getElementById('inp_fileName');
+        if (fnWrap) {
+            var fnInps = fnWrap.querySelectorAll('input,textarea');
+            for (var k = 0; k < fnInps.length; k++) {
+                fnInps[k].style.outline    = editable ? '2px solid #6366f1' : '';
+                fnInps[k].style.background = editable ? '#fff' : '';
+            }
+        }
+    } catch(e) {}
+    /* inp_assetTags, inp_status: renderType="select" — ID is on the <select> itself, style el directly */
+    try {
+        var tagsBtn = document.querySelector('.dam-tags-edit-btn');
+        if (tagsBtn) tagsBtn.style.display = editable ? '' : 'none';
+    } catch(e) {}
+    try {
+        var el = document.getElementById('inp_status');
+        if (el) {
+            if (editable) {
+                el.classList.remove('dam-select-locked');
+                el.style.outline = '2px solid #6366f1';
+                el.style.background = '#fff';
+            } else {
+                el.classList.add('dam-select-locked');
+                el.style.outline = '';
+                el.style.background = '';
+            }
+        }
+    } catch(e) {}
+    try { btn_edit.setLabel(editable ? 'Save Changes' : 'Edit Metadata'); } catch(e) {}
+    try {
+        var btnEl = document.getElementById('btn_edit');
+        if (btnEl) {
+            var walker = document.createTreeWalker(btnEl, 4, null, false);
+            var tNode = walker.nextNode();
+            if (tNode) { tNode.nodeValue = editable ? 'Save Changes' : 'Edit Metadata'; }
+        }
+    } catch(e) {}
+};
+
+scwin._saveMetadata = function (idx) {
+    try {
+        var count = dlAsset.getRowCount ? dlAsset.getRowCount() : 0;
+        var rows = [];
+        for (var r = 0; r < count; r++) { rows.push(dlAsset.getRowJSON(r)); }
+        var fileNm = inp_fileName.getValue();
+        var tags   = inp_assetTags.getValue() || '';
+        var status = inp_status.getValue();
+        rows[idx].FILE_NM = fileNm;
+        rows[idx].TAGS    = tags;
+        rows[idx].STATUS  = status;
+        dlAsset.setJSON(rows);
+        var assetId = rows[idx].ASSET_ID;
+        if (assetId) {
+            fetch('/api/dam/assets/' + assetId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileNm: fileNm, tags: tags, status: status })
+            }).then(function (r) { return r.json(); })
+              .then(function (data) { console.log('[Asset] metadata persisted', data); })
+              .catch(function (e) { console.warn('[Asset] saveMetadata API error', e); });
+        }
+        console.log('[Asset] metadata saved for row', idx);
+    } catch(e) { console.warn('[Asset] saveMetadata error', e); }
+};
+
+scwin.btn_edit_onclick = function () {
+    if (scwin._lastDetailRow < 0) { return; }
     if (!scwin._editMode) {
         scwin._editMode = true;
-        scwin._setEditable(true);
-        return;
+        scwin._setEditFields(true);
+    } else {
+        var idx = scwin._lastDetailRow;
+        scwin._saveMetadata(idx);
+        scwin._editMode = false;
+        scwin._lastDetailRow = -1;
+        scwin._setEditFields(false);
+        scwin._applyDetail(idx);
     }
-
-    scwin._persistMetadata(idx);
-    scwin._editMode = false;
-    scwin._setEditable(false);
 };
 
+scwin._ALL_TAGS = [
+    {v:'Marketing',l:'Marketing'}, {v:'Campaign',l:'Campaign'}, {v:'Branding',l:'Branding'},
+    {v:'Internal',l:'Internal'},   {v:'External',l:'External'}, {v:'Confidential',l:'Confidential'},
+    {v:'Digital',l:'Digital'},     {v:'Print',l:'Print'},       {v:'Web',l:'Web'},
+    {v:'SocialMedia',l:'Social Media'}, {v:'Photo',l:'Photo'}, {v:'Video',l:'Video'},
+    {v:'Legacy',l:'Legacy'},       {v:'HR',l:'HR'},             {v:'Training',l:'Training'},
+    {v:'Finance',l:'Finance'},     {v:'Legal',l:'Legal'},       {v:'Product',l:'Product'},
+    {v:'Background',l:'Background'},{v:'Brand',l:'Brand'},      {v:'Q4',l:'Q4'}
+];
+
+scwin.btn_editTags_onclick = function () {
+    var current = {};
+    try {
+        (inp_assetTags.getValue() || '').split(',').forEach(function(t) {
+            var s = t.trim(); if (s) current[s] = true;
+        });
+    } catch(e) {}
+
+    var body = document.querySelector('.dam-tag-popup-body');
+    if (!body) { return; }
+    body.innerHTML = '';
+    scwin._ALL_TAGS.forEach(function(tag) {
+        var lbl = document.createElement('label');
+        lbl.className = 'dam-tag-popup-item';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.value = tag.v;
+        if (current[tag.v]) { cb.checked = true; }
+        lbl.appendChild(cb);
+        lbl.appendChild(document.createTextNode(' ' + tag.l));
+        body.appendChild(lbl);
+    });
+
+    var popup = document.querySelector('.dam-tag-popup');
+    if (popup) { popup.style.display = ''; }
+};
+
+scwin.btn_confirmTags_onclick = function () {
+    var checked = document.querySelectorAll('.dam-tag-popup-body input[type="checkbox"]:checked');
+    var vals = [];
+    for (var i = 0; i < checked.length; i++) { vals.push(checked[i].value); }
+    try { inp_assetTags.setValue(vals.join(',')); } catch(e) {}
+    var popup = document.querySelector('.dam-tag-popup');
+    if (popup) { popup.style.display = 'none'; }
+};
+
+scwin.btn_cancelTags_onclick = function () {
+    var popup = document.querySelector('.dam-tag-popup');
+    if (popup) { popup.style.display = 'none'; }
+};
 ]]></script>
-	</head>
-	<body ev:onpageload="scwin.onpageload">
-		<xf:group class="dam-page dam-asset-page">
+    </head>
+    <body ev:onpageload="scwin.onpageload">
+        <xf:group class="dam-page dam-asset-page">
 
+            <xf:group class="dam-asset-grid">
 
-			<xf:group class="dam-asset-grid">
-				<xf:group class="dam-asset-left">
-					<xf:group class="dam-asset-panel dam-asset-folder">
-						<xf:group class="dam-asset-panel-head">
-							<w2:textbox class="dam-asset-panel-title" label="Folder Structure" tagname="h3" />
-							<xf:group class="dam-asset-panel-actions">
-								<xf:trigger class="dam-icon-btn" title="Sort">
-									<xf:label><![CDATA[↑↓]]></xf:label>
-								</xf:trigger>
-								<xf:trigger class="dam-icon-btn" title="Refresh">
-									<xf:label><![CDATA[⟳]]></xf:label>
-								</xf:trigger>
-							</xf:group>
-						</xf:group>
-						<xf:group class="dam-asset-folder-body">
-							<w2:treeview id="trvVersionFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed"
-								tooltipGroupClass="false" ev:onclick="scwin.trvVersionFolder_onclick">
-								<w2:itemset nodeset="data:dlFolder">
-									<w2:label ref="FOLDER_NM"></w2:label>
-									<w2:value ref="FOLDER_ID"></w2:value>
-									<w2:depth ref="DEPTH"></w2:depth>
-									<w2:folder ref=""></w2:folder>
-									<w2:checkbox ref=""></w2:checkbox>
-									<w2:checkboxDisabled ref=""></w2:checkboxDisabled>
-									<w2:image ref=""></w2:image>
-									<w2:iconImage ref=""></w2:iconImage>
-									<w2:selectedImage ref=""></w2:selectedImage>
-									<w2:expandedImage ref=""></w2:expandedImage>
-									<w2:leafImage ref=""></w2:leafImage>
-								</w2:itemset>
-							</w2:treeview>
-						</xf:group>
-					</xf:group>
+                <!-- LEFT COLUMN -->
+                <xf:group class="dam-asset-left">
 
-					<xf:group class="dam-asset-panel dam-asset-files">
-						<w2:tabControl id="tab_versionHistory" class="dam-version-tab" style="width:100%;height:100%;">
-							<w2:tabs id="tab_ver_main" label="Version History"></w2:tabs>
-							<w2:tabs id="tab_ver_compare" label="Chontiat History"></w2:tabs>
-							<w2:content id="cnt_ver_main">
-								<xf:group class="dam-asset-files-body" style="height:100%;">
-									<xf:group class="dam-asset-panel-head">
-										<xf:group class="dam-asset-panel-actions">
-											<xf:trigger class="dam-icon-btn" title="Sort">
-												<xf:label><![CDATA[⇅]]></xf:label>
-											</xf:trigger>
-											<xf:trigger class="dam-icon-btn" title="Filter">
-												<xf:label><![CDATA[▽]]></xf:label>
-											</xf:trigger>
-										</xf:group>
-									</xf:group>
-									<w2:gridView id="grdVersion" class="dam-asset-grid-view" dataList="data:dlVersion" autoFit="allColumn" focusMode="row"
-										style="width:100%;height:calc(100% - 76px);" ev:onrowindexchange="scwin.grdVersion_onrowindexchange">
-										<w2:header>
-											<w2:row>
-												<w2:column id="hdVChk" inputType="checkbox" width="40" value="" />
-												<w2:column id="hdVIcon" inputType="text" width="70" value="Icon" />
-												<w2:column id="hdVName" inputType="text" width="240" value="Name" />
-												<w2:column id="hdVType" inputType="text" width="140" value="Type" />
-												<w2:column id="hdVSize" inputType="text" width="100" value="Size" />
-												<w2:column id="hdVStatus" inputType="text" width="120" value="Status" />
-											</w2:row>
-										</w2:header>
-										<w2:gBody>
-											<w2:row>
-												<w2:column id="CHK" inputType="checkbox" width="40" displayMode="always" />
-												<w2:column id="ICON" inputType="text" width="70" displayMode="label" class="dam-cell-icon" />
-												<w2:column id="FILE_NM" inputType="text" width="240" displayMode="label" />
-												<w2:column id="FILE_TYPE" inputType="text" width="140" displayMode="label" />
-												<w2:column id="FILE_SIZE" inputType="text" width="100" displayMode="label" />
-												<w2:column id="STATUS" inputType="text" width="120" displayMode="label" class="dam-cell-status" />
-											</w2:row>
-										</w2:gBody>
-									</w2:gridView>
-									<xf:group class="dam-asset-pagination">
-										<w2:textbox class="dam-pagi-label" label="Pagination" />
-										<xf:group class="dam-pagi-controls">
-											<xf:trigger class="dam-pagi-btn">
-												<xf:label><![CDATA[|<]]></xf:label>
-											</xf:trigger>
-											<xf:trigger class="dam-pagi-btn">
-												<xf:label><![CDATA[<]]></xf:label>
-											</xf:trigger>
-											<xf:trigger class="dam-pagi-btn dam-pagi-active">
-												<xf:label><![CDATA[1]]></xf:label>
-											</xf:trigger>
-											<xf:trigger class="dam-pagi-btn">
-												<xf:label><![CDATA[>]]></xf:label>
-											</xf:trigger>
-											<xf:trigger class="dam-pagi-btn">
-												<xf:label><![CDATA[>|]]></xf:label>
-											</xf:trigger>
-										</xf:group>
-									</xf:group>
-								</xf:group>
-							</w2:content>
-							<w2:content id="cnt_ver_compare">
-								<xf:group class="dam-asset-files-body" style="height:100%;padding:1rem;">
-									<w2:textbox label="Chontiat History content (mock)" style="font-size:13px;color:#64748b;" />
-								</xf:group>
-							</w2:content>
-						</w2:tabControl>
-					</xf:group>
-				</xf:group>
+                    <!-- Folder Structure -->
+                    <xf:group class="dam-asset-panel dam-asset-folder">
+                        <xf:group class="dam-asset-panel-head">
+                            <w2:textbox class="dam-asset-panel-title" label="Folder Structure" tagname="h3" />
+                            <xf:group class="dam-asset-panel-actions">
+                                <xf:trigger id="btn_folderSort" class="dam-icon-btn" title="Sort">
+                                    <xf:label><![CDATA[↑↓]]></xf:label>
+                                </xf:trigger>
+                                <xf:trigger id="btn_folderRefresh" class="dam-icon-btn" title="Refresh">
+                                    <xf:label><![CDATA[⟳]]></xf:label>
+                                </xf:trigger>
+                            </xf:group>
+                        </xf:group>
+                        <xf:group class="dam-asset-folder-body">
+                            <w2:treeview id="trvFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed" tooltipGroupClass="false" ev:onclick="scwin.trvFolder_onclick">
+                                <w2:itemset nodeset="data:dlFolder">
+                                    <w2:label ref="FOLDER_NM"></w2:label>
+                                    <w2:value ref="FOLDER_ID"></w2:value>
+                                    <w2:depth ref="DEPTH"></w2:depth>
+                                    <w2:folder ref=""></w2:folder>
+                                    <w2:checkbox ref=""></w2:checkbox>
+                                    <w2:checkboxDisabled ref=""></w2:checkboxDisabled>
+                                    <w2:image ref=""></w2:image>
+                                    <w2:iconImage ref=""></w2:iconImage>
+                                    <w2:selectedImage ref=""></w2:selectedImage>
+                                    <w2:expandedImage ref=""></w2:expandedImage>
+                                    <w2:leafImage ref=""></w2:leafImage>
+                                </w2:itemset>
+                            </w2:treeview>
+                        </xf:group>
+                    </xf:group>
 
-				<xf:group class="dam-asset-right">
-					<xf:group class="dam-asset-panel dam-asset-detail">
-						<xf:group class="dam-asset-panel-head">
-							<w2:textbox class="dam-asset-panel-title" label="Asset Details Panel" tagname="h3" />
-						</xf:group>
+                    <!-- File List -->
+                    <xf:group class="dam-asset-panel dam-asset-files">
+                        <xf:group class="dam-asset-panel-head">
+                            <w2:textbox class="dam-asset-panel-title" label="File List" tagname="h3" />
+                            <xf:group class="dam-asset-panel-actions">
+                                <xf:trigger id="btn_filesSort" class="dam-icon-btn" title="Sort">
+                                    <xf:label><![CDATA[↑↓]]></xf:label>
+                                </xf:trigger>
+                                <xf:trigger id="btn_filesFilter" class="dam-icon-btn" title="Filter">
+                                    <xf:label><![CDATA[▽]]></xf:label>
+                                </xf:trigger>
+                            </xf:group>
+                        </xf:group>
+                        <xf:group class="dam-asset-files-body">
+                            <w2:gridView id="grdAsset" class="dam-asset-grid-view" dataList="data:dlAsset" autoFit="allColumn" focusMode="row"
+                                style="width:100%;height:calc(100% - 38px);"
+                                ev:onclick="scwin.grdAsset_onclick"
+                                ev:ondrawendrow="scwin.grdAsset_ondrawendrow">
+                                <w2:header>
+                                    <w2:row>
+                                        <w2:column id="hdChk" inputType="checkbox" width="40" value="" />
+                                        <w2:column id="hdIcon" inputType="text" width="70" value="Icon" />
+                                        <w2:column id="hdFileNm" inputType="text" width="240" value="Name" />
+                                        <w2:column id="hdType" inputType="text" width="140" value="Type" />
+                                        <w2:column id="hdSize" inputType="text" width="100" value="Size" />
+                                        <w2:column id="hdStatus" inputType="text" width="120" value="Status" />
+                                    </w2:row>
+                                </w2:header>
+                                <w2:gBody>
+                                    <w2:row>
+                                        <w2:column id="CHK" inputType="checkbox" width="40" displayMode="always" />
+                                        <w2:column id="ICON" inputType="text" width="70" displayMode="label" class="dam-cell-icon" />
+                                        <w2:column id="FILE_NM" inputType="text" width="240" displayMode="label" />
+                                        <w2:column id="FILE_TYPE" inputType="text" width="140" displayMode="label" />
+                                        <w2:column id="FILE_SIZE" inputType="text" width="100" displayMode="label" />
+                                        <w2:column id="STATUS" inputType="text" width="120" displayMode="label" class="dam-cell-status" />
+                                    </w2:row>
+                                </w2:gBody>
+                            </w2:gridView>
+                            <xf:group class="dam-asset-pagination">
+                                <w2:textbox class="dam-pagi-label" label="Pagination" />
+                                <xf:group class="dam-pagi-controls">
+                                    <xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[|<]]></xf:label></xf:trigger>
+                                    <xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[<]]></xf:label></xf:trigger>
+                                    <xf:trigger class="dam-pagi-btn dam-pagi-active"><xf:label><![CDATA[1]]></xf:label></xf:trigger>
+                                    <xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[>]]></xf:label></xf:trigger>
+                                    <xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[>|]]></xf:label></xf:trigger>
+                                </xf:group>
+                            </xf:group>
+                        </xf:group>
+                    </xf:group>
 
-						<xf:group class="dam-asset-preview">
-							<xf:image id="img_versionPreview" class="dam-asset-preview-img" src="/cm/dam/images/preview/image.svg"></xf:image>
-						</xf:group>
+                </xf:group>
 
-						<xf:group class="dam-form-row" style="position:relative;">
-							<w2:textbox class="dam-form-label" label="Tags" />
-							<xf:group class="dam-tags-row">
-								<w2:input id="sel_versionAssetType" class="dam-form-input" readOnly="true" />
-								<xf:trigger id="btn_versionEditTags" class="dam-tags-edit-btn" style="display:none;"
-									ev:onclick="scwin.btn_versionEditTags_onclick">
-									<xf:label><![CDATA[⋯]]></xf:label>
-								</xf:trigger>
-							</xf:group>
-							<xf:group class="dam-tag-popup" style="display:none;">
-								<xf:group class="dam-tag-popup-head">
-									<w2:textbox class="dam-tag-popup-title" label="Select Tags" />
-									<xf:trigger class="dam-tag-popup-close" ev:onclick="scwin.btn_versionCancelTags_onclick">
-										<xf:label><![CDATA[×]]></xf:label>
-									</xf:trigger>
-								</xf:group>
-								<xf:group class="dam-tag-popup-body"></xf:group>
-								<xf:group class="dam-tag-popup-foot">
-									<xf:trigger class="dam-btn-outline" ev:onclick="scwin.btn_versionCancelTags_onclick">
-										<xf:label>Cancel</xf:label>
-									</xf:trigger>
-									<xf:trigger class="dam-btn-primary" ev:onclick="scwin.btn_versionConfirmTags_onclick">
-										<xf:label>Apply</xf:label>
-									</xf:trigger>
-								</xf:group>
-							</xf:group>
-						</xf:group>
+                <!-- RIGHT COLUMN -->
+                <xf:group class="dam-asset-right">
+                    <xf:group class="dam-asset-panel dam-asset-detail">
+                        <xf:group class="dam-asset-panel-head">
+                            <w2:textbox class="dam-asset-panel-title" label="Asset Details Panel" tagname="h3" />
+                        </xf:group>
 
-						<xf:group class="dam-form-row">
-							<w2:textbox class="dam-form-label" label="Status" />
-							    <xf:select1 id="sel_versionStatus" appearance="minimal" class="dam-form-input dam-status-input" renderType="select" style="width:100%;">
-								<xf:item>
-									<xf:label>Published</xf:label>
-									<xf:value>Published</xf:value>
-								</xf:item>
-								<xf:item>
-									<xf:label>Draft</xf:label>
-									<xf:value>Draft</xf:value>
-								</xf:item>
-								<xf:item>
-									<xf:label>Archived</xf:label>
-									<xf:value>Archived</xf:value>
-								</xf:item>
-							</xf:select1>
-						</xf:group>
+                        <xf:group class="dam-asset-preview">
+                            <xf:image id="img_preview" class="dam-asset-preview-img" src="/cm/dam/images/preview/image.svg"></xf:image>
+                        </xf:group>
 
-						<xf:group class="dam-form-actions">
-							<xf:trigger id="btn_versionDownload" class="dam-btn-outline" ev:onclick="scwin.btn_versionDownload_onclick">
-								<xf:label><![CDATA[↓ Download]]></xf:label>
-							</xf:trigger>
-							<xf:trigger id="btn_versionEdit" class="dam-btn-primary" ev:onclick="scwin.btn_versionEdit_onclick">
-								<xf:label><![CDATA[Edit Metadata]]></xf:label>
-							</xf:trigger>
-						</xf:group>
+                        <xf:group class="dam-form-row">
+                            <w2:textbox class="dam-form-label" label="File Name" />
+                            <w2:input id="inp_fileName" class="dam-form-input" />
+                        </xf:group>
 
-						<xf:group class="dam-meta-section">
-							<w2:textbox class="dam-meta-title" label="Metadata" tagname="h4" />
-							<xf:group class="dam-form-row">
-								<w2:textbox class="dam-form-label" label="Creator" />
-								<w2:input id="inp_versionCreator" class="dam-form-input" readOnly="true" />
-							</xf:group>
-							<xf:group class="dam-form-row">
-								<w2:textbox class="dam-form-label" label="Resolution" />
-								<w2:input id="inp_versionResolution" class="dam-form-input" readOnly="true" />
-							</xf:group>
-							<xf:group class="dam-form-row">
-								<w2:textbox class="dam-form-label" label="Uploaded Date" />
-								<w2:input id="inp_versionUploaded" class="dam-form-input" readOnly="true" />
-							</xf:group>
-						</xf:group>
-					</xf:group>
-				</xf:group>
-			</xf:group>
-		</xf:group>
-	</body>
+                        <xf:group class="dam-form-row" style="position:relative;">
+                            <w2:textbox class="dam-form-label" label="Tags" />
+                            <xf:group class="dam-tags-row">
+                                <w2:input id="inp_assetTags" class="dam-form-input" readOnly="true" />
+                                <xf:trigger id="btn_editTags" class="dam-tags-edit-btn" style="display:none;" ev:onclick="scwin.btn_editTags_onclick">
+                                    <xf:label><![CDATA[⋯]]></xf:label>
+                                </xf:trigger>
+                            </xf:group>
+                            <xf:group class="dam-tag-popup" style="display:none;">
+                                <xf:group class="dam-tag-popup-head">
+                                    <w2:textbox class="dam-tag-popup-title" label="Select Tags" />
+                                    <xf:trigger class="dam-tag-popup-close" ev:onclick="scwin.btn_cancelTags_onclick">
+                                        <xf:label><![CDATA[✕]]></xf:label>
+                                    </xf:trigger>
+                                </xf:group>
+                                <xf:group class="dam-tag-popup-body"></xf:group>
+                                <xf:group class="dam-tag-popup-foot">
+                                    <xf:trigger class="dam-btn-outline" ev:onclick="scwin.btn_cancelTags_onclick">
+                                        <xf:label><![CDATA[Cancel]]></xf:label>
+                                    </xf:trigger>
+                                    <xf:trigger class="dam-btn-primary" ev:onclick="scwin.btn_confirmTags_onclick">
+                                        <xf:label><![CDATA[Confirm]]></xf:label>
+                                    </xf:trigger>
+                                </xf:group>
+                            </xf:group>
+                        </xf:group>
+
+                        <xf:group class="dam-form-row">
+                            <w2:textbox class="dam-form-label" label="Status" />
+                            <xf:select1 id="inp_status" class="dam-form-input dam-status-input" appearance="minimal" renderType="select">
+                                <xf:choices>
+                                    <xf:item><xf:label><![CDATA[]]></xf:label><xf:value><![CDATA[]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Draft]]></xf:label><xf:value><![CDATA[Draft]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Published]]></xf:label><xf:value><![CDATA[Published]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Archived]]></xf:label><xf:value><![CDATA[Archived]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Review]]></xf:label><xf:value><![CDATA[Review]]></xf:value></xf:item>
+                                    <xf:item><xf:label><![CDATA[Inactive]]></xf:label><xf:value><![CDATA[Inactive]]></xf:value></xf:item>
+                                </xf:choices>
+                            </xf:select1>
+                        </xf:group>
+
+                        <xf:group class="dam-form-actions">
+                            <xf:trigger id="btn_download" class="dam-btn-outline" ev:onclick="scwin.btn_download_onclick">
+                                <xf:label><![CDATA[⬇ Download]]></xf:label>
+                            </xf:trigger>
+                            <xf:trigger id="btn_edit" class="dam-btn-primary" ev:onclick="scwin.btn_edit_onclick">
+                                <xf:label><![CDATA[Edit Metadata]]></xf:label>
+                            </xf:trigger>
+                        </xf:group>
+
+                        <xf:group class="dam-meta-section">
+                            <w2:textbox class="dam-meta-title" label="Metadata" tagname="h4" />
+
+                            <xf:group class="dam-form-row">
+                                <w2:textbox class="dam-form-label" label="Creator" />
+                                <w2:input id="inp_creator" class="dam-form-input" readOnly="true" />
+                            </xf:group>
+
+                            <xf:group class="dam-form-row">
+                                <w2:textbox class="dam-form-label" label="Resolution" />
+                                <w2:input id="inp_resolution" class="dam-form-input" readOnly="true" />
+                            </xf:group>
+
+                            <xf:group class="dam-form-row">
+                                <w2:textbox class="dam-form-label" label="Uploaded Date" />
+                                <w2:input id="inp_uploaded" class="dam-form-input" readOnly="true" />
+                            </xf:group>
+                        </xf:group>
+                    </xf:group>
+                </xf:group>
+
+            </xf:group>
+        </xf:group>
+    </body>
 </html>
