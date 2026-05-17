@@ -60,7 +60,8 @@
 						<w2:key id="VER_ID" name="VER_ID" dataType="text" />
 						<w2:key id="FILE_NM" name="FILE_NM" dataType="text" />
 						<w2:key id="NEW_VER_NO" name="NEW_VER_NO" dataType="text" />
-						<w2:key id="UPLOAD_FILE_NM" name="UPLOAD_FILE_NM" dataType="text" />
+						<w2:key id="POPUP_FILE_TYPE" name="POPUP_FILE_TYPE" dataType="text" />
+						<w2:key id="POPUP_FILE_EXT" name="POPUP_FILE_EXT" dataType="text" />
 						<w2:key id="CONTRIBUTORS" name="CONTRIBUTORS" dataType="text" />
 						<w2:key id="CHANGE_NOTES" name="CHANGE_NOTES" dataType="text" />
 						<w2:key id="PREVIEW_URL" name="PREVIEW_URL" dataType="text" />
@@ -446,8 +447,10 @@
                 dmPopup.set("VER_ID", "");
                 dmPopup.set("FILE_NM", "");
                 dmPopup.set("NEW_VER_NO", "v1.0");
-                dmPopup.set("UPLOAD_FILE_NM", "");
+                 dmPopup.set("POPUP_FILE_TYPE", "");
+                dmPopup.set("POPUP_FILE_EXT", "");
                 dmPopup.set("CONTRIBUTORS", "Carol");
+                dmPopup.set("CONTRIBUTORS", "");
                 dmPopup.set("CHANGE_NOTES", "");
                 dmPopup.set("PREVIEW_URL", "/cm/dam/images/preview/document.svg");
                 scwin._applyPopupPreview(dmPopup.get("PREVIEW_URL"));
@@ -464,6 +467,9 @@
                         dmPopup.set("VER_ID", latest && latest.verId != null ? String(latest.verId) : "");
                         dmPopup.set("FILE_NM", a.fileNm || "");
                         dmPopup.set("NEW_VER_NO", scwin._suggestNextVerNo(latestVer));
+                        dmPopup.set("POPUP_FILE_TYPE", a.fileType || "");
+                        dmPopup.set("POPUP_FILE_EXT", a.fileExt || "");
+                         dmPopup.set("CONTRIBUTORS", a.ownerNm || "");
                         dmPopup.set("CONTRIBUTORS", a.ownerNm || "Carol");
                         dmPopup.set("CHANGE_NOTES", (latest && latest.changeLog) ? latest.changeLog : "");
                         dmPopup.set("PREVIEW_URL", preview);
@@ -475,9 +481,7 @@
                 if (bg) { bg.style.display = "block"; }
             };
 
-            scwin.btn_fb_browse_onclick = function() {
-                dmPopup.set("UPLOAD_FILE_NM", dmPopup.get("FILE_NM") || "");
-            };
+          
 
             scwin.btn_fb_cancel_onclick = function() {
                 var bg = document.getElementById("fbPopupBackdrop");
@@ -496,7 +500,7 @@
                     ownerNm: dmPopup.get("CONTRIBUTORS") || "",
                     changeLog: dmPopup.get("CHANGE_NOTES") || "",
                     previewUrl: dmPopup.get("PREVIEW_URL") || "",
-                    fileUrl: dmPopup.get("UPLOAD_FILE_NM") || dmPopup.get("FILE_NM") || ""
+                    fileUrl: dmPopup.get("FILE_NM") || ""
                 };
                   var method = verId ? "PUT" : "POST";
                 var url = verId
@@ -612,8 +616,9 @@
 					</xf:group>
 					<xf:group class="dam-fb-upload-modal-body" style="padding:16px 20px;">
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="New Version Number" /><xf:input ref="data:dmPopup/NEW_VER_NO" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
-						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Upload File" /><xf:group class="dam-fb-upload-file-row"><xf:input ref="data:dmPopup/UPLOAD_FILE_NM" readOnly="true" class="dam-fb-popup-input" style="flex:1;min-width:0;" /><xf:trigger class="dam-fb-btn-primary dam-fb-btn-browse" ev:onclick="scwin.btn_fb_browse_onclick"><xf:label>Browse</xf:label></xf:trigger><xf:image class="dam-fb-upload-doc-icon" src="/cm/images/base/ico_docu.png" title="File" /></xf:group></xf:group>
-						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Contributors" /><xf:select1 ref="data:dmPopup/CONTRIBUTORS" appearance="minimal" class="dam-fb-popup-select" renderType="select" style="width:100%;"><xf:choices><xf:item><xf:label>Carol</xf:label><xf:value>Carol</xf:value></xf:item><xf:item><xf:label>David</xf:label><xf:value>David</xf:value></xf:item><xf:item><xf:label>Alice</xf:label><xf:value>Alice</xf:value></xf:item><xf:item><xf:label>Bob</xf:label><xf:value>Bob</xf:value></xf:item><xf:item><xf:label>SYSTEM</xf:label><xf:value>SYSTEM</xf:value></xf:item></xf:choices></xf:select1></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="File Type" /><xf:input ref="data:dmPopup/POPUP_FILE_TYPE" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="File Extension" /><xf:input ref="data:dmPopup/POPUP_FILE_EXT" readOnly="true" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Contributors" /><xf:input ref="data:dmPopup/CONTRIBUTORS" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row dam-fb-upload-row-notes"><w2:textbox class="dam-fb-upload-label" label="Change Notes" /><xf:textarea ref="data:dmPopup/CHANGE_NOTES" class="dam-fb-popup-textarea" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row dam-fb-upload-preview-block"><w2:textbox class="dam-fb-upload-label" label="Preview" /><xf:group class="dam-fb-upload-preview-wrap" style="margin-top:6px;border:1px solid #d1d5db;border-radius:8px;background:#f8fafc;padding:12px;height:180px;display:flex;align-items:center;justify-content:center;overflow:hidden;"><xf:image id="img_fb_popup_preview" class="dam-fb-upload-preview-img" src="/cm/dam/images/preview/document.svg" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;" /></xf:group></xf:group>
 					</xf:group>
