@@ -1,11 +1,34 @@
+/* =========================================
+   Shell Layout — main.xml only
+   Includes: header, sidebar, content area,
+             tabControl shell hiding.
+   Phụ thuộc: common.css
+========================================= */
+
+/* WebSquare tab container background reset */
 .w2tabcontrol_container {
    border: none;
    background-color: #f4f6f8 !important;
+}
 
+/* Global tab control border strip (affects main shell tab) */
+.w2tabcontrol,
+.w2tabcontrol_contents,
+.w2tabcontrol_contents_wrapper {
+   border: none !important;
+   background: transparent !important;
+}
+
+.w2tabcontrol_contents {
+   min-height: 100% !important;
+}
+
+.w2tabcontrol_contents_wrapper {
+   min-height: 100% !important;
 }
 
 /* =========================================
-   1. Shell Layout
+   1. App Shell
 ========================================= */
 .dam-shell {
    width: 100%;
@@ -16,6 +39,7 @@
    font-family: 'Inter', sans-serif;
 }
 
+/* ----- Header ----- */
 .dam-header {
    width: 100%;
    height: 6vh;
@@ -70,6 +94,11 @@
    width: 1.5rem;
    height: 1.5rem;
    flex-shrink: 0;
+   transition: opacity 0.2s ease;
+}
+
+.dam-hamburger:hover {
+   opacity: 0.75;
 }
 
 .dam-bell {
@@ -85,6 +114,7 @@
    flex-shrink: 0;
 }
 
+/* Logout button in header — not a page-level action button */
 .dam-btn-logout {
    display: flex !important;
    align-items: center !important;
@@ -103,6 +133,7 @@
    box-shadow: none !important;
 }
 
+/* ----- Body wrapper ----- */
 .dam-body {
    width: 100%;
    flex: 1;
@@ -111,6 +142,7 @@
    flex-direction: row;
 }
 
+/* ----- Sidebar ----- */
 .dam-sidebar {
    width: 14%;
    min-width: 240px;
@@ -121,7 +153,7 @@
    padding-top: 1rem;
    box-sizing: border-box;
    flex-shrink: 0;
-   flex-shrink: 0;
+   transition: width 0.2s ease, min-width 0.2s ease;
 }
 
 .dam-nav-item {
@@ -146,6 +178,7 @@
    color: #fff;
 }
 
+/* Active nav item — red left border indicator */
 .dam-nav-item.dam-active {
    background: #3a3f46 !important;
    color: #fff !important;
@@ -169,17 +202,22 @@
    opacity: 1 !important;
 }
 
-/* Hamburger button */
-.dam-hamburger {
-   cursor: pointer;
-   transition: opacity 0.2s ease;
+.dam-nav-text {
+   line-height: 1.5;
+   pointer-events: none;
 }
 
-.dam-hamburger:hover {
-   opacity: 0.75;
+.dam-nav-hit {
+   position: absolute;
+   inset: 0;
+   background: transparent;
+   border: none;
+   width: 100%;
+   height: 100%;
+   display: block;
 }
 
-/* ===== Sidebar Collapsed State ===== */
+/* ----- Sidebar collapsed state (toggled by hamburger) ----- */
 .dam-sidebar-collapsed .dam-sidebar {
    width: 60px !important;
    min-width: 60px !important;
@@ -199,26 +237,7 @@
    margin-right: 0 !important;
 }
 
-/* Smooth transition for expanded state too */
-.dam-sidebar {
-   transition: width 0.2s ease, min-width 0.2s ease;
-}
-
-.dam-nav-text {
-   line-height: 1.5;
-   pointer-events: none;
-}
-
-.dam-nav-hit {
-   position: absolute;
-   inset: 0;
-   background: transparent;
-   border: none;
-   width: 100%;
-   height: 100%;
-   display: block;
- }
-
+/* ----- Content area ----- */
 .dam-content {
    flex: 1;
    width: 100%;
@@ -243,7 +262,7 @@
    flex-shrink: 0;
 }
 
-/* Hide TabControl tabs to act as a shell */
+/* ----- Tab shell (hides tab header, wframe fills area) ----- */
 .dam-tab-shell {
    width: 100%;
    min-height: 100%;
@@ -252,7 +271,7 @@
    flex: 1;
 }
 
-/* SP5 actual class for the tab header bar */
+/* Hide the tab header bar — navigation is done via sidebar */
 .dam-tab-shell .w2tabcontrol_tabhost {
    display: none !important;
 }
@@ -264,1014 +283,14 @@
    flex: 1;
 }
 
-/* SP5: each tab's content wrapper — no absolute, let WebSquare control display */
 .dam-tab-shell .w2tabcontrol_contents_wrapper {
    width: 100%;
    min-height: 100%;
    border: none !important;
 }
 
-/* The wframe must fill its wrapper — do NOT set display, WebSquare toggles it per active tab */
+/* wframe fills the entire wrapper — do NOT set display; WebSquare controls per active tab */
 .dam-tab-shell .w2wframe {
    width: 100% !important;
    min-height: 100% !important;
-}
-
-
-
-
-/* =========================================
-   2. Dashboard Layout
-========================================= */
-.dam-page {
-   width: 100%;
-   min-height: 100%;
-   box-sizing: border-box;
-   display: flex;
-   flex-direction: column;
-   background: #f8f9fa !important;
-}
-
-/* Strip ALL WebSquare default borders globally */
-.w2tabcontrol,
-.w2tabcontrol_contents,
-.w2tabcontrol_contents_wrapper {
-   border: none !important;
-   background: transparent !important;
-}
-
-.w2tabcontrol_contents {
-   min-height: 100% !important;
-}
-
-/* SP5: individual tab wrapper — do NOT set display; WebSquare controls show/hide via inline style */
-.w2tabcontrol_contents_wrapper {
-   min-height: 100% !important;
-}
-
-
-/* The inner title can be hidden if the shell title is enough */
-.dam-title {
-   display: none !important;
-}
-
-.dam-dashboard-grid {
-   flex: 1 !important;
-   width: 100% !important;
-   display: grid !important;
-   grid-template-columns: 1fr 1fr 1fr !important;
-   grid-auto-rows: minmax(320px, auto) !important;
-   gap: 1.5rem !important;
-   box-sizing: border-box !important;
-}
-
-.dam-panel {
-   width: 100% !important;
-   height: 100% !important;
-   box-sizing: border-box !important;
-   border-radius: 0.5rem !important;
-   background: #ffffff !important;
-   padding: 1.5rem !important;
-   overflow: hidden !important;
-   border: 1px solid #e2e8f0 !important;
-   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
-   outline: none !important;
-   display: flex !important;
-   flex-direction: column !important;
-}
-
-/* Override any inline borders injected by xf:group */
-.dam-panel[style] {
-   border: 1px solid #e2e8f0 !important;
-}
-
-.dam-stats {
-   grid-column: 1 !important;
-   grid-row: 1 !important;
-   display: flex !important;
-   flex-direction: column !important;
-   gap: 0.5rem !important;
-   justify-content: flex-start !important;
-}
-
-.dam-donut {
-   grid-column: 2 !important;
-   grid-row: 1 !important;
-}
-
-.dam-line {
-   grid-column: 1 / span 2 !important;
-   grid-row: 2 !important;
-}
-
-.dam-recent {
-   grid-column: 3 !important;
-   grid-row: 1 / span 2 !important;
-}
-
-/* Cards inside Stats */
-.dam-stats-title {
-   font-size: 1rem;
-   font-weight: 700;
-   color: #1f2733;
-   flex-shrink: 0;
-}
-
-.dam-card {
-   height: calc(33.33% - 0.66rem) !important;
-   flex: none !important;
-   width: 100%;
-   border-radius: 0.5rem;
-   box-sizing: border-box;
-   padding: 0 1.25rem;
-   display: flex;
-   flex-direction: row;
-   align-items: center;
-   justify-content: space-between;
-   position: relative;
-   overflow: hidden;
-   margin-bottom: 0 !important;
-}
-
-.dam-card-purple {
-   background: #dcd0ff;
-}
-
-.dam-card-green {
-   background: #bcf0d3;
-}
-
-.dam-card-pink {
-   background: #ffdcd2;
-}
-
-.dam-card-content {
-   display: flex;
-   flex-direction: column;
-   justify-content: center;
-   z-index: 2;
-}
-
-.dam-card-value {
-   font-size: 2rem;
-   font-weight: 600;
-   color: #1f2733;
-   margin-bottom: 0.15rem;
-   line-height: 1.1;
-}
-
-.dam-card-label {
-   font-size: 0.85rem;
-   color: #1f2733;
-   font-weight: 500;
-   line-height: 1.2;
-}
-
-.dam-card-icon-wrap {
-   width: 2.75rem;
-   height: 2.75rem;
-   border-radius: 50%;
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   position: absolute;
-   right: 1rem;
-   top: 50%;
-   transform: translateY(-50%);
-   z-index: 1;
-   overflow: hidden;
-}
-
-.dam-card-icon-wrap * {
-   margin: 0 auto !important;
-   position: static !important;
-   display: block !important;
-}
-
-.dam-card-purple .dam-card-icon-wrap {
-   background: #9b51e0;
-}
-
-.dam-card-green .dam-card-icon-wrap {
-   background: #27ae60;
-}
-
-.dam-card-pink .dam-card-icon-wrap {
-   background: #eb5757;
-}
-
-.dam-card-icon {
-   width: 1.5rem !important;
-   height: 1.5rem !important;
-   filter: brightness(0) invert(1);
-   object-fit: contain;
-}
-
-/* white icon */
-
-/* Panels */
-.dam-panel-title {
-   font-size: 1rem;
-   font-weight: 700;
-   color: #1f2733;
-   margin-bottom: 1rem;
-   flex-shrink: 0;
-}
-
-.dam-chart-wrap {
-   flex: 1;
-   width: 100%;
-   height: 100%;
-   min-height: 0;
-   position: relative;
-}
-
-.dam-chart {
-   width: 100%;
-   height: 100%;
-   position: absolute;
-   top: 0;
-   left: 0;
-}
-
-/* Recent Uploads List (Timeline matching Mockup) */
-.dam-recent-list {
-   flex: 1;
-   width: 100%;
-   overflow-y: auto;
-   padding-right: 2%;
-   display: flex;
-   flex-direction: column;
-   gap: 1.5rem;
-   position: relative;
-   padding-left: 0.5rem;
-}
-
-.dam-recent-row {
-   width: 100%;
-   display: flex;
-   flex-direction: row;
-   align-items: flex-start;
-   gap: 1rem;
-   position: relative;
-   z-index: 2;
-}
-
-.dam-recent-row:not(:last-child)::after {
-   content: '';
-   position: absolute;
-   left: 1.1rem;
-   top: 2.5rem;
-   bottom: -1.2rem;
-   width: 2px;
-   background: #f1f5f9;
-   z-index: 1;
-}
-
-.dam-timeline-dot {
-   width: 2.2rem;
-   height: 2.2rem;
-   border-radius: 50%;
-   background: #e6f4ea;
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   flex-shrink: 0;
-   margin-top: 0;
-}
-
-.dam-timeline-dot img {
-   width: 50%;
-   height: 50%;
-   /* Convert black/white SVG to Dark Green (#2e7d32 approx) */
-   filter: invert(39%) sepia(50%) saturate(674%) hue-rotate(85deg) brightness(97%) contrast(93%);
-}
-
-.dam-recent-card {
-   flex: 1;
-   display: flex;
-   flex-direction: column;
-   background: transparent;
-   border: none;
-   box-shadow: none;
-   padding: 0;
-   gap: 0.25rem;
-}
-
-.dam-recent-name {
-   font-size: 1rem;
-   font-weight: 600;
-   color: #1f2733;
-   white-space: nowrap;
-   overflow: hidden;
-   text-overflow: ellipsis;
-   margin-bottom: 0.2rem;
-}
-
-.dam-recent-meta {
-   font-size: 0.85rem;
-   color: #64748b;
-}
-
-.dam-recent-sep {
-   display: none;
-}
-
-
-/* =========================================
-   3. Asset Details Page
-========================================= */
-.dam-asset-page {
-   width: 100% !important;
-   min-height: 100% !important;
-   box-sizing: border-box !important;
-   background: #f8f9fa !important;
-   padding: 0 !important;
-   display: flex !important;
-   flex-direction: column !important;
-}
-
-.dam-asset-grid {
-   width: 100% !important;
-   display: grid !important;
-   grid-template-columns: minmax(0, 6fr) minmax(0, 4fr) !important;
-   gap: 1rem !important;
-   box-sizing: border-box !important;
-   min-height: 100% !important;
-   align-items: start !important;
-}
-
-/* File Browser tab: fill tab/wframe width and stretch file list vertically */
-.dam-file-browser-page.dam-asset-page > .dam-asset-grid {
-   flex: 1 !important;
-   min-height: 0 !important;
-   align-items: stretch !important;
-}
-
-.dam-file-browser-page .dam-asset-left {
-   min-height: 0 !important;
-   height: 100% !important;
-}
-
-.dam-file-browser-page .dam-asset-files {
-   flex: 1 !important;
-   min-height: 280px !important;
-}
-
-.dam-asset-left {
-   display: flex !important;
-   flex-direction: column !important;
-   gap: 1rem !important;
-   min-width: 0 !important;
-}
-
-.dam-asset-right {
-   display: flex !important;
-   flex-direction: column !important;
-   min-width: 0 !important;
-}
-
-.dam-asset-panel {
-   background: #ffffff !important;
-   border: 1px solid #e2e8f0 !important;
-   border-radius: 0.5rem !important;
-   box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
-   box-sizing: border-box !important;
-   display: flex !important;
-   flex-direction: column !important;
-   min-height: 0 !important;
-}
-
-.dam-asset-panel:not(.dam-asset-detail) {
-   padding: 1rem 1.25rem !important;
-}
-
-.dam-asset-panel.dam-asset-detail {
-   padding: 1.5rem 1.5rem 2rem !important;
-}
-
-.dam-asset-folder {
-   height: 320px !important;
-   flex-shrink: 0 !important;
-}
-
-.dam-asset-files {
-   flex: 1 !important;
-   min-height: 360px !important;
-}
-
-.dam-asset-detail {
-   flex: 1 !important;
-   overflow-y: auto !important;
-   overflow-x: hidden !important;
-}
-
-/* Panel head with title + action icons */
-.dam-asset-panel-head {
-   display: flex !important;
-   align-items: center !important;
-   justify-content: space-between !important;
-   margin-bottom: 1rem !important;
-   flex-shrink: 0 !important;
-   padding-bottom: 0.75rem !important;
-}
-
-.dam-asset-folder .dam-asset-panel-head,
-.dam-asset-files .dam-asset-panel-head {
-   border-bottom: 1px solid #e5e7eb !important;
-}
-
-.dam-asset-panel-title {
-   font-size: 0.95rem !important;
-   font-weight: 700 !important;
-   color: #1f2733 !important;
-   margin: 0 !important;
-   padding: 0 !important;
-}
-
-.dam-asset-panel-actions {
-   display: flex !important;
-   gap: 0.25rem !important;
-   align-items: center !important;
-}
-
-.dam-icon-btn {
-   width: 1.75rem !important;
-   height: 1.75rem !important;
-   display: inline-flex !important;
-   align-items: center !important;
-   justify-content: center !important;
-   background: transparent !important;
-   border: 1px solid transparent !important;
-   border-radius: 0.25rem !important;
-   color: #64748b !important;
-   cursor: pointer !important;
-   font-size: 0.85rem !important;
-   font-weight: 500 !important;
-   line-height: 1 !important;
-   padding: 0 !important;
-   box-shadow: none !important;
-   text-shadow: none !important;
-   letter-spacing: -0.3em !important;
-}
-
-.dam-icon-btn:hover {
-   background: #f1f5f9 !important;
-   color: #1f2733 !important;
-}
-
-/* Folder tree */
-.dam-asset-folder-body {
-   flex: 1 !important;
-   min-height: 0 !important;
-   overflow: auto !important;
-   border: 1px solid #e5e7eb !important;
-   border-radius: 0.375rem !important;
-   padding: 0 !important;
-   background: #ffffff !important;
-}
-
-.dam-asset-tree {
-   width: 100% !important;
-   height: 100% !important;
-   border: none !important;
-   background: transparent !important;
-   font-size: 0.95rem !important;
-   outline: none !important;
-}
-
-/* Remove focus outline (the annoying black border) */
-.dam-asset-tree,
-.dam-asset-tree *,
-.dam-asset-tree:focus,
-.dam-asset-tree *:focus,
-.dam-asset-tree .w2treeview_row_parent,
-.dam-asset-tree .w2treeview_row_parent:focus,
-.dam-asset-tree .w2treeview_select_node,
-.dam-asset-tree .w2treeview_select_node:focus {
-   outline: none !important;
-   outline-offset: 0 !important;
-   box-shadow: none !important;
-}
-
-/* Row styling - parent rows (folder level) */
-.dam-asset-tree .w2treeview_row_parent {
-   padding: 0.5rem 0 !important;
-   border-bottom: 1px solid #f1f5f9 !important;
-   cursor: pointer !important;
-   outline: none !important;
-}
-
-.dam-asset-tree .w2treeview_row_parent:hover {
-   background: #eef2ff !important;
-}
-
-/* Root item - Digital Assets (depth 0) */
-.dam-asset-tree .w2treeview_row_depth0 {
-   font-weight: 700 !important;
-}
-
-.dam-asset-tree .w2treeview_row_depth0 .w2treeview_label {
-   color: #0f172a !important;
-   font-weight: 700 !important;
-}
-
-/* Level 1 items - Marketing Documents, Video Assets, etc */
-.dam-asset-tree .w2treeview_row_depth1 .w2treeview_label {
-   color: #1f2733 !important;
-   font-weight: 600 !important;
-}
-
-/* Level 2+ items - children */
-.dam-asset-tree .w2treeview_row_depth2 .w2treeview_label,
-.dam-asset-tree .w2treeview_row_depth3 .w2treeview_label {
-   color: #475569 !important;
-   font-weight: 400 !important;
-}
-
-/* Folder icons */
-.dam-asset-tree .w2treeview_icon_navi {
-   width: 1.5rem !important;
-   height: 1.5rem !important;
-   opacity: 1 !important;
-}
-
-/* PDF document icon - red tint */
-.dam-asset-tree .tree-pdf-node .w2treeview_icon_navi {
-   opacity: 1 !important;
-   filter: brightness(0.9) saturate(2) hue-rotate(330deg) !important;
-   -webkit-filter: brightness(0.9) saturate(2) hue-rotate(330deg) !important;
-}
-
-/* Label text */
-.dam-asset-tree .w2treeview_label {
-   color: #1f2733 !important;
-   font-size: 0.93rem !important;
-   line-height: 1.5 !important;
-}
-
-.dam-asset-tree .w2treeview_select_node {
-   background: #dbeafe !important;
-   border-radius: 0.25rem !important;
-}
-
-/* File list */
-.dam-asset-files-body {
-   flex: 1 !important;
-   min-height: 0 !important;
-   display: flex !important;
-   flex-direction: column !important;
-   overflow: hidden !important;
-}
-
-.dam-asset-grid-view {
-   flex: 1 !important;
-   min-height: 0 !important;
-   border: 1px solid #e5e7eb !important;
-   border-radius: 0.375rem !important;
-   background: #ffffff !important;
-}
-
-.dam-asset-grid-view .w2grid_header {
-   background: #f8fafc !important;
-   border-bottom: 1px solid #e2e8f0 !important;
-   font-weight: 600 !important;
-   font-size: 0.8rem !important;
-   color: #1f2733 !important;
-}
-
-
-.dam-asset-grid-view .w2grid_row {
-   border-bottom: 1px solid #f1f5f9 !important;
-   height: 2.5rem !important;
-   background: #ffffff !important;
-}
-
-.dam-asset-grid-view .w2grid_row:hover {
-   background: #f8fafc !important;
-}
-
-/* Override WebSquare blue sort/focus row highlight */
-.dam-asset-grid-view .w2grid_row_focused,
-.dam-asset-grid-view .w2grid_row_selected,
-.dam-asset-grid-view tr.w2grid_row_focused,
-.dam-asset-grid-view tr.w2grid_row_selected {
-   background: #eff6ff !important;
-}
-
-/* Sort arrow in header - keep minimal */
-.dam-asset-grid-view .w2grid_header .w2grid_sort_asc,
-.dam-asset-grid-view .w2grid_header .w2grid_sort_desc {
-   color: #1f2733 !important;
-   font-size: 0.75rem !important;
-}
-
-/* Header cell sorted state - no ugly background change */
-.dam-asset-grid-view .w2grid_header .w2grid_cell {
-   background: #f8fafc !important;
-}
-
-/* Colored file type badges */
-.dam-cell-icon {
-   font-weight: 700 !important;
-   font-size: 0.65rem !important;
-   letter-spacing: 0.02em !important;
-   text-align: center !important;
-   padding: 0 !important;
-   vertical-align: middle !important;
-}
-
-.dam-cell-icon .w2grid_label,
-.dam-cell-icon span {
-   display: inline-block !important;
-   padding: 2px 6px !important;
-   border-radius: 3px !important;
-   color: #ffffff !important;
-   min-width: 32px !important;
-   line-height: 1.4 !important;
-   box-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
-}
-
-/* File type badge colors */
-.dam-file-badge-PDF .w2grid_label,
-.dam-file-badge-PDF span { background: #dc2626 !important; }
-
-.dam-file-badge-JPG .w2grid_label,
-.dam-file-badge-JPG span { background: #16a34a !important; }
-
-.dam-file-badge-PNG .w2grid_label,
-.dam-file-badge-PNG span { background: #2563eb !important; }
-
-.dam-file-badge-MP4 .w2grid_label,
-.dam-file-badge-MP4 span { background: #ea580c !important; }
-
-.dam-file-badge-DOC .w2grid_label,
-.dam-file-badge-DOC span { background: #2563eb !important; }
-
-.dam-file-badge-GIF .w2grid_label,
-.dam-file-badge-GIF span { background: #9333ea !important; }
-
-.dam-asset-grid-view .w2grid_body .w2grid_cell:nth-child(2) {
-   padding: 0.25rem 0.5rem !important;
-}
-
-/* Pagination */
-.dam-asset-pagination {
-   display: flex !important;
-   align-items: center !important;
-   justify-content: center !important;
-   position: relative !important;
-   padding: 0.75rem 0.5rem !important;
-   flex-shrink: 0 !important;
-   background: #f8fafc !important;
-   border-top: 1px solid #e5e7eb !important;
-   gap: 1rem !important;
-}
-
-.dam-pagi-label {
-   font-size: 0.75rem !important;
-   color: #64748b !important;
-   font-weight: 500 !important;
-   position: absolute !important;
-   left: 1rem !important;
-   top: 50% !important;
-   transform: translateY(-50%) !important;
-}
-
-.dam-pagi-controls {
-   display: flex !important;
-   gap: 0.25rem !important;
-   align-items: center !important;
-}
-
-.dam-pagi-btn {
-   min-width: 1.75rem !important;
-   height: 1.75rem !important;
-   padding: 0 0.5rem !important;
-   border: 1px solid #cbd5e1 !important;
-   background: #ffffff !important;
-   border-radius: 0.25rem !important;
-   font-size: 0.75rem !important;
-   color: #475569 !important;
-   cursor: pointer !important;
-   box-shadow: none !important;
-   text-shadow: none !important;
-   display: inline-flex !important;
-   align-items: center !important;
-   justify-content: center !important;
-   font-weight: 500 !important;
-   transition: all 0.15s ease !important;
-}
-
-.dam-pagi-btn:hover {
-   background: #f1f5f9 !important;
-   color: #0f172a !important;
-   border-color: #94a3b8 !important;
-}
-
-.dam-pagi-active {
-   background: #1f2733 !important;
-   color: #ffffff !important;
-   border-color: #1f2733 !important;
-   font-weight: 600 !important;
-}
-
-/* Asset Detail preview image */
-.dam-asset-preview {
-   width: 100% !important;
-   height: 170px !important;
-   border-radius: 0.625rem !important;
-   overflow: hidden !important;
-   margin-bottom: 1.4rem !important;
-   background-color: #e8edf3 !important;
-   background-size: cover !important;
-   background-repeat: no-repeat !important;
-   background-position: center !important;
-   flex-shrink: 0 !important;
-   display: flex !important;
-   align-items: center !important;
-   justify-content: center !important;
-}
-
-/* Hide the xf:image child — preview handled via background-image */
-.dam-asset-preview .dam-asset-preview-img,
-.dam-asset-preview img {
-   display: none !important;
-}
-
-/* Tags display row */
-.dam-tags-row {
-   display: flex !important;
-   gap: 0.4rem !important;
-   align-items: center !important;
-}
-.dam-tags-edit-btn,
-.dam-tags-edit-btn button {
-   flex-shrink: 0 !important;
-   padding: 0 0.7rem !important;
-   height: 34px !important;
-   background: #f1f5f9 !important;
-   border: 1px solid #e2e8f0 !important;
-   border-radius: 0.4rem !important;
-   cursor: pointer !important;
-   font-size: 1.1rem !important;
-   color: #475569 !important;
-   white-space: nowrap !important;
-}
-
-/* Tag popup */
-.dam-tag-popup {
-   position: absolute !important;
-   top: 100% !important;
-   left: 0 !important;
-   z-index: 999 !important;
-   width: 100% !important;
-   background: #fff !important;
-   border: 1px solid #e2e8f0 !important;
-   border-radius: 0.5rem !important;
-   box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
-   padding: 0.8rem !important;
-}
-.dam-tag-popup-head {
-   display: flex !important;
-   justify-content: space-between !important;
-   align-items: center !important;
-   margin-bottom: 0.6rem !important;
-}
-.dam-tag-popup-title {
-   font-weight: 600 !important;
-   font-size: 0.85rem !important;
-   color: #1e293b !important;
-}
-.dam-tag-popup-close,
-.dam-tag-popup-close button {
-   background: none !important;
-   border: none !important;
-   cursor: pointer !important;
-   font-size: 1rem !important;
-   color: #64748b !important;
-   padding: 0 0.3rem !important;
-}
-.dam-tag-popup-body {
-   display: flex !important;
-   flex-wrap: wrap !important;
-   gap: 0.4rem 0 !important;
-   max-height: 150px !important;
-   overflow-y: auto !important;
-   margin-bottom: 0.8rem !important;
-}
-.dam-tag-popup-item {
-   display: flex !important;
-   align-items: center !important;
-   gap: 0.3rem !important;
-   font-size: 0.82rem !important;
-   cursor: pointer !important;
-   width: 50% !important;
-   padding: 0.15rem 0 !important;
-   color: #334155 !important;
-}
-.dam-tag-popup-foot {
-   display: flex !important;
-   gap: 0.5rem !important;
-   justify-content: flex-end !important;
-}
-
-/* Form rows */
-.dam-form-row {
-   display: flex !important;
-   flex-direction: column !important;
-   gap: 0.35rem !important;
-   margin-bottom: 1rem !important;
-}
-
-.dam-form-label {
-   font-size: 0.78rem !important;
-   color: #64748b !important;
-   font-weight: 500 !important;
-   letter-spacing: 0 !important;
-}
-
-.dam-form-input,
-.dam-form-input input,
-.dam-form-select select {
-   width: 100% !important;
-   height: 2.25rem !important;
-   border: 1px solid #cbd5e1 !important;
-   border-radius: 0.375rem !important;
-   padding: 0.5rem !important;
-   font-size: 0.85rem !important;
-   background: #ffffff !important;
-   color: #1f2733 !important;
-   box-sizing: border-box !important;
-   line-height: 1.5 !important;
-}
-
-.dam-form-input:focus,
-.dam-form-input input:focus,
-.dam-form-select select:focus {
-   outline: none !important;
-   border-color: #94a3b8 !important;
-   box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1) !important;
-}
-
-.dam-form-chips {
-   width: 100% !important;
-}
-
-.dam-form-chips .w2checkcombobox,
-.dam-form-chips select {
-   width: 100% !important;
-   min-height: 2.25rem !important;
-   border: 1px solid #cbd5e1 !important;
-   border-radius: 0.375rem !important;
-   padding: 0.35rem 0.5rem !important;
-   font-size: 0.85rem !important;
-}
-
-.dam-form-chips .w2checkcombobox {
-   background: #ffffff !important;
-}
-
-.dam-form-chips .w2checkcombobox * {
-   font-size: 0.85rem !important;
-}
-
-/* Action buttons row */
-.dam-form-actions {
-   display: flex !important;
-   gap: 0.5rem !important;
-   margin: 1.35rem 0 1.9rem 0 !important;
-}
-
-.dam-btn-outline,
-.dam-btn-primary {
-   flex: 1 !important;
-   height: 2.25rem !important;
-   border-radius: 0.375rem !important;
-   font-size: 0.8rem !important;
-   font-weight: 700 !important;
-   cursor: pointer !important;
-   display: inline-flex !important;
-   align-items: center !important;
-   justify-content: center !important;
-   gap: 0.4rem !important;
-   box-shadow: none !important;
-   text-shadow: none !important;
-   padding: 0 0.75rem !important;
-   border: 1px solid transparent !important;
-   transition: all 0.15s ease !important;
-}
-
-.dam-btn-outline {
-   background: #ffffff !important;
-   color: #1f2733 !important;
-   border-color: #cbd5e1 !important;
-}
-
-.dam-btn-outline:hover {
-   background: #f8fafc !important;
-   border-color: #94a3b8 !important;
-   color: #0f172a !important;
-}
-
-.dam-btn-primary {
-   background: #1f2733 !important;
-   color: #ffffff !important;
-   border-color: #1f2733 !important;
-}
-
-.dam-btn-primary:hover {
-   background: #0f172a !important;
-   border-color: #0f172a !important;
-}
-
-/* Metadata section */
-.dam-meta-section {
-   margin-top: 1.5rem !important;
-   padding-top: 1.25rem !important;
-   border-top: 1px solid #e5e7eb !important;
-}
-
-.dam-meta-title {
-   font-size: 0.88rem !important;
-   font-weight: 700 !important;
-   color: #1f2733 !important;
-   margin: 0 0 0.75rem 0 !important;
-   letter-spacing: 0 !important;
-}
-
-/* Metadata rows: label on left, value on right */
-.dam-meta-section .dam-form-row {
-   flex-direction: row !important;
-   align-items: center !important;
-   gap: 0 !important;
-   margin-bottom: 0 !important;
-   padding: 0.55rem 0 !important;
-   border-bottom: 1px solid #f1f5f9 !important;
-}
-
-.dam-meta-section .dam-form-label {
-   flex: 0 0 42% !important;
-   color: #64748b !important;
-   font-weight: 400 !important;
-   font-size: 0.82rem !important;
-}
-
-/* Read-only metadata values: plain text, no input box */
-.dam-meta-section .dam-form-input,
-.dam-meta-section .dam-form-input input {
-   border: none !important;
-   background: transparent !important;
-   padding: 0 !important;
-   height: auto !important;
-   font-size: 0.82rem !important;
-   font-weight: 500 !important;
-   color: #1f2733 !important;
-   box-shadow: none !important;
-   flex: 1 !important;
-   width: auto !important;
-}
-
-/* File List grid cell styling */
-.dam-asset-grid-view .w2grid_cell {
-   font-size: 0.82rem !important;
-}
-
-/* Status cell — keep simple */
-.dam-cell-status {
-   font-weight: 500 !important;
-}
-
-/* ============================================================
-   xf:select1 renderType="select" — ID is on the <select> element
-   directly (no wrapper). .dam-form-input already gives correct
-   border/height/padding; just constrain width and add locked state.
-   ============================================================ */
-#inp_assetTags,
-#inp_status {
-   display: block !important;
-   width: 100% !important;
-   max-width: 100% !important;
-   min-width: 0 !important;
-   box-sizing: border-box !important;
-   -webkit-appearance: auto !important;
-   appearance: auto !important;
-   cursor: pointer !important;
-}
-
-#inp_assetTags:focus,
-#inp_status:focus {
-   outline: none !important;
-   border-color: #94a3b8 !important;
-   box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1) !important;
-}
-
-/* Locked (read-only) state — CSS-only, no WebSquare readOnly API */
-#inp_assetTags.dam-select-locked,
-#inp_status.dam-select-locked {
-   pointer-events: none !important;
-   background: #f8fafc !important;
-   color: #475569 !important;
-   border-color: #e2e8f0 !important;
-   cursor: default !important;
 }

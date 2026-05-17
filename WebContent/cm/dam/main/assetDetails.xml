@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
-<?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
+<?xml-stylesheet href="/cm/css/common.css" type="text/css"?>
+<?xml-stylesheet href="/cm/dam/css/asset_details.css" type="text/css"?>
 <html xmlns="http://www.w3.org/1999/xhtml"
     xmlns:ev="http://www.w3.org/2001/xml-events"
     xmlns:w2="http://www.inswave.com/websquare"
@@ -41,6 +42,7 @@
         <w2:layoutInfo/>
         <w2:publicInfo method=""/>
         <script lazy="false" type="text/javascript"><![CDATA[
+/* Khởi tạo trang: load dữ liệu sau 50ms và lock các field read-only */
 scwin.onpageload = function () {
     window.setTimeout(function () { scwin._loadData(); }, 50);
     window.setTimeout(function () {
@@ -49,12 +51,16 @@ scwin.onpageload = function () {
     }, 200);
 };
 
-scwin._currentFolderId = 1;
+/* -1 để lần đầu click bất kỳ folder nào (kể cả root ID=1) đều load được */
+scwin._currentFolderId = -1;
 
+/* Trigger khởi động tải dữ liệu ban đầu */
 scwin._loadData = function () {
     scwin._loadFolders();
+    scwin._loadAssets(1);
 };
 
+/* Chuyển flat list API thành rows có DEPTH cho w2:treeview dataType="listed" */
 scwin._buildFolderRows = function (folders) {
     var childrenMap = {};
     var allIds = {};
@@ -79,6 +85,7 @@ scwin._buildFolderRows = function (folders) {
     return result;
 };
 
+/* Gọi GET /api/dam/folders và render cây thư mục vào trvFolder */
 scwin._loadFolders = function () {
     fetch('/api/dam/folders')
         .then(function (r) { return r.json(); })
@@ -95,15 +102,22 @@ scwin._loadFolders = function () {
         .catch(function (e) { console.warn('[Asset] folders error', e); });
 };
 
+/* Format kích thước file; dùng com.num.formatByte nếu có, fallback thủ công nếu com chưa load */
 scwin._formatFileSize = function (bytes) {
+    if (!bytes || Number(bytes) === 0) { return '-'; }
+    try {
+        if (window.com && com.num && com.num.formatByte) {
+            return com.num.formatByte(bytes);
+        }
+    } catch(e) {}
     var n = Number(bytes);
-    if (!bytes || isNaN(n) || n === 0) { return '-'; }
-    if (n >= 1073741824) { return (n / 1073741824).toFixed(2) + ' GB'; }
-    if (n >= 1048576)    { return (n / 1048576).toFixed(2) + ' MB'; }
+    if (n >= 1073741824) { return (n / 1073741824).toFixed(1) + ' GB'; }
+    if (n >= 1048576)    { return (n / 1048576).toFixed(1) + ' MB'; }
     if (n >= 1024)       { return (n / 1024).toFixed(1) + ' KB'; }
     return n + ' B';
 };
 
+/* Gọi GET /api/dam/assets?folderId=X và cập nhật GridView */
 scwin._loadAssets = function (folderId) {
     fetch('/api/dam/assets?folderId=' + (folderId || 1))
         .then(function (r) { return r.json(); })
@@ -138,9 +152,9 @@ scwin._loadAssets = function (folderId) {
         .catch(function (e) { console.warn('[Asset] assets error', e); });
 };
 
+/* Xử lý click node TreeView; bỏ qua nếu folder không thay đổi */
 scwin.trvFolder_onclick = function (treeObj) {
     var nodeValue = trvFolder.getSelectedValue();
-    console.log('[Asset] tree onclick selectedValue=' + nodeValue);
     if (!nodeValue) { return; }
     var fid = parseInt(nodeValue, 10);
     if (isNaN(fid) || fid <= 0) { return; }
@@ -149,6 +163,7 @@ scwin.trvFolder_onclick = function (treeObj) {
     scwin._loadAssets(fid);
 };
 
+/* Xử lý click row GridView; delay 30ms để WebSquare cập nhật focused row index */
 scwin.grdAsset_onclick = function () {
     window.setTimeout(function () {
         try {
@@ -158,49 +173,71 @@ scwin.grdAsset_onclick = function () {
     }, 30);
 };
 
-scwin._BADGE_COLORS = {
-    "PDF": "#dc2626",
-    "JPG": "#16a34a",
-    "JPEG": "#16a34a",
-    "PNG": "#2563eb",
-    "MP4": "#ea580c",
-    "DOC": "#2563eb",
-    "DOCX": "#2563eb",
-    "GIF": "#9333ea"
+/* Màu sắc bottom-band theo extension — căn theo mẫu thiết kế */
+scwin._FILE_ICON_COLORS = {
+    "PDF":  "#f44336", "DOC":  "#1e88e5", "DOCX": "#1e88e5",
+    "XLS":  "#43a047", "XLSX": "#43a047", "PPT":  "#ff7043", "PPTX": "#ff7043",
+    "JPG":  "#43a047", "JPEG": "#43a047", "PNG":  "#1e88e5",
+    "GIF":  "#8e24aa", "SVG":  "#00897b", "PSD":  "#5e35b1",
+    "MP4":  "#fb8c00", "MOV":  "#f4511e", "AVI":  "#f4511e",
+    "MP3":  "#3949ab", "WAV":  "#3949ab", "AAC":  "#3949ab",
+    "ZIP":  "#546e7a", "RAR":  "#546e7a", "7Z":   "#546e7a"
 };
 
+/* Tạo data URL SVG hình tài liệu (thân trắng, góc gấp, band màu dưới + chữ extension) */
+scwin._makeFileIcon = function (ext) {
+    var color = scwin._FILE_ICON_COLORS[ext] || '#546e7a';
+    var lbl   = ext.substring(0, 4);
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40">'
+        + '<path d="M2,0 L22,0 L32,10 L32,40 L2,40 Z" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>'
+        + '<path d="M22,0 L22,10 L32,10 Z" fill="#e5e7eb"/>'
+        + '<rect x="2" y="26" width="30" height="14" fill="' + color + '"/>'
+        + '<text x="16" y="37" font-family="Arial,sans-serif" font-size="8" font-weight="bold" fill="#ffffff" text-anchor="middle">' + lbl + '</text>'
+        + '</svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+};
+
+/* Inject <img> SVG icon vào ô ICON; đọc extension từ label text của DataList.
+   Nếu cell đã có img nhưng alt không khớp ext (do WebSquare tái dùng DOM row),
+   xoá img cũ và tạo lại — tránh MP4 row hiển thị icon JPG từ lần load trước. */
 scwin._styleIconBadges = function () {
     try {
-        var colors = scwin._BADGE_COLORS;
         var cells = document.querySelectorAll(".dam-asset-grid-view .dam-cell-icon");
         for (var i = 0; i < cells.length; i++) {
             var cell = cells[i];
-            var txt = (cell.textContent || "").trim().toUpperCase();
-            var bg = colors[txt];
-            if (!bg) { continue; }
-            cell.style.cssText = "padding:4px 0 !important;text-align:center !important;font-weight:normal !important;";
-            var badge = cell.querySelector(".dam-badge-injected");
-            if (!badge) {
-                badge = document.createElement("span");
-                badge.className = "dam-badge-injected";
-                cell.innerHTML = "";
-                cell.appendChild(badge);
+            var labelEl = cell.querySelector(".w2grid_label");
+            var ext = (labelEl ? (labelEl.textContent || labelEl.innerText || '') : (cell.textContent || '')).trim().toUpperCase().replace('.', '');
+            if (!ext) { ext = 'FILE'; }
+            /* ẩn label text bằng inline style */
+            if (labelEl) { labelEl.style.cssText = 'display:none!important;visibility:hidden!important;'; }
+            /* giữ lại img nếu đã đúng ext; xoá nếu sai (DOM row bị tái dùng) */
+            var existingImg = cell.querySelector(".dam-icon-img");
+            if (existingImg) {
+                if (existingImg.alt === ext) { continue; }
+                existingImg.parentNode.removeChild(existingImg);
             }
-            badge.textContent = txt;
-            badge.style.cssText = "display:inline-block !important;padding:3px 8px !important;background:" + bg + " !important;color:#fff !important;border-radius:3px !important;font-weight:700 !important;font-size:0.7rem !important;letter-spacing:0.02em !important;line-height:1.4 !important;min-width:30px !important;text-align:center !important;box-shadow:0 1px 2px rgba(0,0,0,0.15) !important;";
+            var img = document.createElement('img');
+            img.className  = 'dam-icon-img';
+            img.src        = scwin._makeFileIcon(ext);
+            img.alt        = ext;
+            img.style.cssText = 'width:28px;height:34px;object-fit:contain;display:block;margin:0 auto;pointer-events:none;';
+            cell.appendChild(img);
         }
     } catch (e) { /* ignore */ }
 };
 
+/* Re-apply badge sau mỗi lần GridView vẽ lại row */
 scwin.grdAsset_ondrawendrow = function () {
     scwin._styleIconBadges();
 };
 
+/* Re-apply badge sau khi sort (double timeout: 50ms cho DOM render, 300ms cho WebSquare) */
 scwin.grdAsset_onsort = function () {
     window.setTimeout(function () { scwin._styleIconBadges(); }, 50);
     window.setTimeout(function () { scwin._styleIconBadges(); }, 300);
 };
 
+/* Trạng thái sort hiện tại: { colId: 'asc' | 'desc' } */
 scwin._sortState = {};
 
 /* mousedown capture — fires before focus-transfer, so works on first click */
@@ -288,8 +325,18 @@ scwin._attachSortOnMousedown = function () {
             activeInd.style.color = "#334155";
         }
     }, true);
+
+    /* Chặn dblclick trên ô icon — ngăn GridView vào edit mode và lộ URL thô */
+    document.addEventListener('dblclick', function (e) {
+        if (!e.target || !e.target.closest) { return; }
+        if (!e.target.closest('.dam-cell-icon')) { return; }
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        window.setTimeout(scwin._styleIconBadges, 30);
+    }, true);
 };
 
+/* Xóa nội dung panel detail và reset trạng thái khi không có row nào được chọn */
 scwin._clearDetail = function () {
     scwin._lastDetailRow = -1;
     scwin._editMode = false;
@@ -306,8 +353,10 @@ scwin._clearDetail = function () {
     scwin._setEditFields(false);
 };
 
+/* Index row đang hiển thị trong panel detail (-1 = chưa chọn) */
 scwin._lastDetailRow = -1;
 
+/* Điền thông tin asset đã chọn vào panel detail; bỏ qua nếu row không thay đổi */
 scwin._applyDetail = function (rowIndex) {
     if (rowIndex === scwin._lastDetailRow) { return; }
     if (scwin._editMode) { scwin._editMode = false; }
@@ -333,6 +382,7 @@ scwin._applyDetail = function (rowIndex) {
     scwin._setEditFields(false);
 };
 
+/* Tạo file .txt chứa thông tin asset và kích hoạt tải xuống qua Blob URL */
 scwin.btn_download_onclick = function () {
     var idx = scwin._lastDetailRow;
     if (idx < 0) { return; }
@@ -363,8 +413,10 @@ scwin.btn_download_onclick = function () {
     URL.revokeObjectURL(url);
 };
 
+/* Flag trạng thái edit: true = đang chỉnh sửa, false = chỉ xem */
 scwin._editMode = false;
 
+/* Lock/unlock các field theo chế độ; cập nhật label nút Edit/Save */
 scwin._setEditFields = function (editable) {
     /* inp_fileName: w2:input works fine with setReadOnly */
     try { inp_fileName.setReadOnly(!editable); } catch(e) {}
@@ -408,6 +460,7 @@ scwin._setEditFields = function (editable) {
     } catch(e) {}
 };
 
+/* Cập nhật DataList tại chỗ và gọi PUT /api/dam/assets/{id} lưu metadata */
 scwin._saveMetadata = function (idx) {
     try {
         var count = dlAsset.getRowCount ? dlAsset.getRowCount() : 0;
@@ -427,28 +480,42 @@ scwin._saveMetadata = function (idx) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fileNm: fileNm, tags: tags, status: status })
             }).then(function (r) { return r.json(); })
-              .then(function (data) { console.log('[Asset] metadata persisted', data); })
+              .then(function (data) { })
               .catch(function (e) { console.warn('[Asset] saveMetadata API error', e); });
         }
-        console.log('[Asset] metadata saved for row', idx);
     } catch(e) { console.warn('[Asset] saveMetadata error', e); }
 };
 
+/* Toggle chế độ view/edit; validate File Name và confirm trước khi lưu */
 scwin.btn_edit_onclick = function () {
     if (scwin._lastDetailRow < 0) { return; }
     if (!scwin._editMode) {
         scwin._editMode = true;
         scwin._setEditFields(true);
     } else {
-        var idx = scwin._lastDetailRow;
-        scwin._saveMetadata(idx);
-        scwin._editMode = false;
-        scwin._lastDetailRow = -1;
-        scwin._setEditFields(false);
-        scwin._applyDetail(idx);
+        /* validate trước khi save */
+        var fileNm = '';
+        try { fileNm = inp_fileName.getValue(); } catch(e) {}
+        if (!fileNm || fileNm.trim() === '') {
+            com.win.alert('File Name không được để trống.');
+            return;
+        }
+        com.win.confirm('Bạn có chắc muốn lưu thay đổi?', 'scwin._onConfirmSave');
     }
 };
 
+/* callback từ com.win.confirm */
+scwin._onConfirmSave = function (result) {
+    if (!result) { return; }
+    var idx = scwin._lastDetailRow;
+    scwin._saveMetadata(idx);
+    scwin._editMode = false;
+    scwin._lastDetailRow = -1;
+    scwin._setEditFields(false);
+    scwin._applyDetail(idx);
+};
+
+/* Danh sách 21 tag có thể chọn cho asset */
 scwin._ALL_TAGS = [
     {v:'Marketing',l:'Marketing'}, {v:'Campaign',l:'Campaign'}, {v:'Branding',l:'Branding'},
     {v:'Internal',l:'Internal'},   {v:'External',l:'External'}, {v:'Confidential',l:'Confidential'},
@@ -459,6 +526,7 @@ scwin._ALL_TAGS = [
     {v:'Background',l:'Background'},{v:'Brand',l:'Brand'},      {v:'Q4',l:'Q4'}
 ];
 
+/* Mở popup chọn tag, đánh dấu sẵn các tag hiện tại */
 scwin.btn_editTags_onclick = function () {
     var current = {};
     try {
@@ -485,6 +553,7 @@ scwin.btn_editTags_onclick = function () {
     if (popup) { popup.style.display = ''; }
 };
 
+/* Thu thập checkbox đã chọn, ghi vào inp_assetTags và đóng popup */
 scwin.btn_confirmTags_onclick = function () {
     var checked = document.querySelectorAll('.dam-tag-popup-body input[type="checkbox"]:checked');
     var vals = [];
@@ -494,6 +563,7 @@ scwin.btn_confirmTags_onclick = function () {
     if (popup) { popup.style.display = 'none'; }
 };
 
+/* Đóng popup tag mà không lưu thay đổi */
 scwin.btn_cancelTags_onclick = function () {
     var popup = document.querySelector('.dam-tag-popup');
     if (popup) { popup.style.display = 'none'; }
