@@ -349,21 +349,23 @@
             };
 
             scwin.grdAsset_oncellclick = function(row, col, colId) {
-                var newRow = scwin._normalizeRowIndex(row);
-                if (newRow < 0 && arguments.length >= 2) {
-                    newRow = scwin._normalizeRowIndex(arguments[1]);
-                }
-                if (newRow < 0) { return; }
-                if (colId && String(colId).indexOf("hd") === 0) { return; }
-                  scwin._selectRowAndShowDetail(newRow);
-                try {
-                    var rowData = dlAsset.getRowJSON(scwin._realRowIndex(newRow));
-                    if (rowData && rowData.ASSET_ID) {
-                        scwin.openAssetPopup(Number(rowData.ASSET_ID));
+                 window.setTimeout(function() {
+                    var newRow = -1;
+                    try {
+                        var grd = $p.getComponentById("grdAsset");
+                        if (grd && typeof grd.getFocusedRowIndex === "function") {
+                            newRow = scwin._normalizeRowIndex(grd.getFocusedRowIndex());
+                        }
+                    } catch (e) {}
+
+                    if (newRow < 0) {
+                        newRow = scwin._normalizeRowIndex(row);
                     }
-                } catch (e) {
-                    console.warn("[FileBrowser] oncellclick popup open", e);
-                }
+                    if (newRow < 0) { return; }
+                    if (colId && String(colId).indexOf("hd") === 0) { return; }
+                    // Chỉ hiển thị thông tin item được chọn. Popup upload mở bằng double-click.
+                    scwin._selectRowAndShowDetail(newRow);
+                }, 30);
             };
 
             scwin.loadAssetDetail = function(assetId, fallbackRow) {
