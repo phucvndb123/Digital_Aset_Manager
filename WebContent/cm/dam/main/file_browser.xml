@@ -5,8 +5,8 @@
 	xmlns:xf="http://www.w3.org/2002/xforms">
 	<head>
 		<w2:type>COMPONENT</w2:type>
-		<w2:buildDate/>
-		<w2:MSA/>
+		<w2:buildDate />
+		<w2:MSA />
 		<xf:model>
 			<w2:dataCollection baseNode="map">
 				<w2:dataMap id="dmFolder" baseNode="map">
@@ -16,10 +16,22 @@
 						<w2:key id="PARENT_FOLDER_ID" name="PARENT_FOLDER_ID" dataType="text" />
 						<w2:key id="PATH_DEPTH" name="PATH_DEPTH" dataType="text" />
 					</w2:keyInfo>
+					<w2:dataMap id="dmFolder" baseNode="map">
+					<w2:keyInfo>
+						<w2:key id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+						<w2:key id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+					</w2:keyInfo>
 				</w2:dataMap>
-				<w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
+				</w2:dataMap>
+					<w2:dataList id="dlFolder" baseNode="list" repeatNode="map">
+						<w2:columnInfo>
+							<w2:column id="FOLDER_ID" name="FOLDER_ID" dataType="text" />
+							<w2:column id="FOLDER_NM" name="FOLDER_NM" dataType="text" />
+							<w2:column id="DEPTH" name="DEPTH" dataType="text" />
+						</w2:columnInfo>
+					</w2:dataList>
+					<w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
 					<w2:columnInfo>
-						<w2:column id="CHK" name="CHK" dataType="text" />
 						<w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
 						<w2:column id="ICON" name="ICON" dataType="text" />
 						<w2:column id="FILE_NM" name="FILE_NM" dataType="text" />
@@ -35,10 +47,23 @@
 						<w2:key id="FILE_NM" name="FILE_NM" dataType="text" />
 						<w2:key id="DESCRIPTION" name="DESCRIPTION" dataType="text" />
 						<w2:key id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
+						<w2:key id="TAGS" name="TAGS" dataType="text" />
 						<w2:key id="ASSET_DATA" name="ASSET_DATA" dataType="text" />
 						<w2:key id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
 						<w2:key id="OWNER_NM" name="OWNER_NM" dataType="text" />
 						<w2:key id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
+					</w2:keyInfo>
+				</w2:dataMap>
+				<w2:dataMap id="dmPopup" baseNode="map">
+					<w2:keyInfo>
+						<w2:key id="ASSET_ID" name="ASSET_ID" dataType="text" />
+						<w2:key id="VER_ID" name="VER_ID" dataType="text" />
+						<w2:key id="FILE_NM" name="FILE_NM" dataType="text" />
+						<w2:key id="NEW_VER_NO" name="NEW_VER_NO" dataType="text" />
+						<w2:key id="UPLOAD_FILE_NM" name="UPLOAD_FILE_NM" dataType="text" />
+						<w2:key id="CONTRIBUTORS" name="CONTRIBUTORS" dataType="text" />
+						<w2:key id="CHANGE_NOTES" name="CHANGE_NOTES" dataType="text" />
+						<w2:key id="PREVIEW_URL" name="PREVIEW_URL" dataType="text" />
 					</w2:keyInfo>
 				</w2:dataMap>
 			</w2:dataCollection>
@@ -52,23 +77,39 @@
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", url, true);
                 xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            var data;
-                            try {
-                                data = JSON.parse(xhr.responseText || "[]");
-                            } catch (e) {
-                                console.error("[FileBrowser] JSON parse error", url, e);
-                                data = [];
-                            }
-                            callback(data);
-                        } else {
-                            console.error("[FileBrowser] HTTP " + xhr.status + " " + url);
-                            callback(null);
+                   if (xhr.readyState !== 4) { return; }
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            callback(JSON.parse(xhr.responseText || "[]"));
+                        } catch (e) {
+                            console.error("[FileBrowser] JSON parse error", url, e);
+                            callback([]);
                         }
+                        } else {
+                        console.error("[FileBrowser] HTTP error", xhr.status, url);
+                        callback([]);
                     }
                 };
+                xhr.onerror = function() {
+                    console.error("[FileBrowser] Network error", url);
+                    callback([]);
+                };
                 xhr.send();
+            };
+            
+            scwin.callApiJson = function(method, url, payload, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open(method, url, true);
+                xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState !== 4) { return; }
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        callback(JSON.parse(xhr.responseText || "{}"));
+                    } else {
+                        alert("Lưu thất bại. HTTP " + xhr.status);
+                    }
+                };
+                xhr.send(JSON.stringify(payload || {}));
             };
 
             scwin._formatFileSize = function(bytes) {
@@ -82,31 +123,132 @@
                 if (n >= kb) { return (n / kb).toFixed(2) + " KB"; }
                 return n + " B";
             };
+            
+            scwin._setDetailField = function(compId, key, value) {
+                var val = value == null ? "" : String(value);
+                dmAssetDetail.set(key, val);
+                try {
+                    var comp = $p.getComponentById(compId);
+                    if (comp && typeof comp.setValue === "function") {
+                        comp.setValue(val);
+                    }
+                } catch (e) {}
+            };
 
             scwin._clearAssetDetail = function() {
-                dmAssetDetail.set("FILE_NM", "");
-                dmAssetDetail.set("DESCRIPTION", "");
-                dmAssetDetail.set("FILE_TYPE", "");
-                dmAssetDetail.set("ASSET_DATA", "Draft");
-                dmAssetDetail.set("FILE_SIZE", "");
-                dmAssetDetail.set("OWNER_NM", "");
-                dmAssetDetail.set("UPLOAD_DT", "");
+                 scwin._setDetailField("inpFileNm", "FILE_NM", "");
+                scwin._setDetailField("taDescription", "DESCRIPTION", "");
+                scwin._setDetailField("inpFileType", "FILE_TYPE", "");
+                scwin._setDetailField("inpTags", "TAGS", "");
+                scwin._setDetailField("selAssetData", "ASSET_DATA", "Draft");
+                scwin._setDetailField("inpFileSize", "FILE_SIZE", "");
+                scwin._setDetailField("inpOwnerNm", "OWNER_NM", "");
+                scwin._setDetailField("inpUploadDt", "UPLOAD_DT", "");
             };
+
+            scwin._realRowIndex = function(displayRow) {
+                if (displayRow == null || displayRow < 0) { return -1; }
+                try {
+                    var grd = $p.getComponentById("grdAsset");
+                    if (grd && typeof grd.getRealRowIndex === "function") {
+                        return grd.getRealRowIndex(displayRow);
+                    }
+                } catch (e) {}
+                return displayRow;
+            };
+
+            scwin._applyDetailFromGridRow = function(rowData) {
+                if (!rowData) { return; }
+                var st = rowData.STATUS || "Draft";
+                if (st !== "Draft" && st !== "Published" && st !== "Archived") { st = "Draft"; }
+                scwin._setDetailField("inpFileNm", "FILE_NM", rowData.FILE_NM || "");
+                scwin._setDetailField("inpFileType", "FILE_TYPE", rowData.FILE_TYPE || "");
+                scwin._setDetailField("inpFileSize", "FILE_SIZE", rowData.FILE_SIZE || "");
+                scwin._setDetailField("selAssetData", "ASSET_DATA", st);
+                scwin._setDetailField("inpOwnerNm", "OWNER_NM", rowData.OWNER_NM || "");
+                scwin._setDetailField("inpUploadDt", "UPLOAD_DT", rowData.UPLOAD_DT || "");
+            };
+
+            scwin._selectRowAndShowDetail = function(displayRowIndex) {
+                var ri = scwin._realRowIndex(displayRowIndex);
+                if (ri < 0) { return; }
+                var rowData = dlAsset.getRowJSON(ri);
+                if ((!rowData || rowData.ASSET_ID == null || rowData.ASSET_ID === "") && displayRowIndex >= 0) {
+                    rowData = dlAsset.getRowJSON(displayRowIndex);
+                }
+                if (!rowData || rowData.ASSET_ID == null || rowData.ASSET_ID === "") { return; }
+                scwin._applyDetailFromGridRow(rowData);
+                scwin.loadAssetDetail(rowData.ASSET_ID, rowData);
+                try {
+                    var grd = $p.getComponentById("grdAsset");
+                    if (grd && typeof grd.setSelectedIndex === "function") {
+                        grd.setSelectedIndex(displayRowIndex);
+                    }
+                 } catch (e) {}
+	            };
+
+	            scwin._buildFolderRows = function(folders) {
+	                var list = folders || [];
+	                var childrenMap = {};
+	                var allIds = {};
+	                for (var i = 0; i < list.length; i++) {
+	                    var id = list[i].folderId != null ? list[i].folderId : list[i].FOLDER_ID;
+	                    allIds[id] = true;
+	                }
+	                for (var j = 0; j < list.length; j++) {
+	                    var item = list[j];
+	                    var pid = item.parentFolderId != null ? item.parentFolderId : item.PARENT_FOLDER_ID;
+	                    if (!pid) { pid = 0; }
+	                    if (!childrenMap[pid]) { childrenMap[pid] = []; }
+	                    childrenMap[pid].push(item);
+	                }
+	                var roots = [];
+	                for (var k = 0; k < list.length; k++) {
+	                    var f = list[k];
+	                    var parentId = f.parentFolderId != null ? f.parentFolderId : f.PARENT_FOLDER_ID;
+	                    if (!parentId || !allIds[parentId]) { roots.push(f); }
+	                }
+	                var rows = [];
+	                var visit = function(node, depth) {
+	                    var nodeId = node.folderId != null ? node.folderId : node.FOLDER_ID;
+	                    rows.push({
+	                        FOLDER_ID: String(nodeId),
+	                        FOLDER_NM: node.folderNm || node.FOLDER_NM || "",
+	                        DEPTH: String(depth)
+	                    });
+	                    var children = childrenMap[nodeId] || [];
+	                    for (var n = 0; n < children.length; n++) {
+	                        visit(children[n], depth + 1);
+	                    }
+	                };
+	                for (var r = 0; r < roots.length; r++) { visit(roots[r], 1); }
+	                return rows;
+	            };
+	            scwin.buildFolderRows = scwin._buildFolderRows;
 
             scwin.loadFolders = function() {
                 scwin.callApi("/api/dam/folders", function(folders) {
                     if (!folders || !folders.length) {
+                     dlFolder.setJSON([]);
                         dlAsset.setJSON([]);
                         scwin._clearAssetDetail();
                         return;
                     }
-                    scwin._loadFirstFolderWithAssets(folders, 0);
+                                        var buildRowsFn = (typeof scwin._buildFolderRows === "function")
+	                        ? scwin._buildFolderRows
+	                        : (typeof scwin.buildFolderRows === "function" ? scwin.buildFolderRows : null);
+	                    if (typeof buildRowsFn !== "function") {
+	                        console.error("[FileBrowser] buildFolderRows function is missing");
+	                        dlFolder.setJSON([]);
+	                        return;
+	                    }
+	                    var rows = buildRowsFn(folders);
+                    dlFolder.setJSON(rows);
                     window.setTimeout(function() {
-                        try {
-                            var tv = $p.getComponentById("trvFolder");
-                            if (tv && typeof tv.expandAll === "function") { tv.expandAll(); }
-                        } catch (e) {}
-                    }, 80);
+                        try { trvFolder.expandAll(); } catch (e) {}
+                    }, 100);
+
+                    scwin._loadFirstFolderWithAssets(folders, 0);
                 });
             };
 
@@ -139,7 +281,6 @@
                     for (var i = 0; i < (list || []).length; i++) {
                         var item = list[i];
                         rows.push({
-                            "CHK": "",
                             "ASSET_ID": item.assetId,
                             "ICON": item.fileExt ? String(item.fileExt).toUpperCase() : (item.fileType || ""),
                             "FILE_NM": item.fileNm || "",
@@ -152,56 +293,103 @@
                     }
                     dlAsset.setJSON(rows);
                     if (rows.length > 0) {
+                        scwin._applyDetailFromGridRow(rows[0]);
                         scwin.loadAssetDetail(rows[0].ASSET_ID, rows[0]);
+                        window.setTimeout(function() {
+                            try {
+                                var grd = $p.getComponentById("grdAsset");
+                                if (grd && typeof grd.setSelectedIndex === "function") {
+                                    grd.setSelectedIndex(0);
+                                }
+                            } catch (e) {}
+                        }, 50);
                     } else {
                         scwin._clearAssetDetail();
                     }
                 });
             };
 
-            scwin.trvFolder_onlabelclick = function(value) {
-                var folderId = parseInt(value, 10);
+              scwin.trvFolder_onclick = function() {
+                var folderId = parseInt(trvFolder.getSelectedValue(), 10);
                 if (isNaN(folderId)) { return; }
                 dmFolder.set("FOLDER_ID", String(folderId));
                 scwin.loadAssets(folderId);
             };
 
-            scwin.grdAsset_onrowindexchange = function(gridObj, oldRowIndex, newRowIndex) {
-                var rowData = dlAsset.getRowJSON(newRowIndex);
-                if (rowData && rowData.ASSET_ID) {
-                    scwin.loadAssetDetail(rowData.ASSET_ID, rowData);
+            scwin._normalizeRowIndex = function(rowLike) {
+                var row = rowLike;
+                if (row && typeof row === "object") {
+                    if (typeof row.rowIndex === "number") { row = row.rowIndex; }
+                    else if (typeof row.newRowIndex === "number") { row = row.newRowIndex; }
+                    else if (typeof row.index === "number") { row = row.index; }
                 }
+                row = parseInt(row, 10);
+                if (isNaN(row) || row < 0) { return -1; }
+                return row;
+            };
+            scwin.grdAsset_onrowindexchange = function(row, oldRow) {
+                 var newRow = scwin._normalizeRowIndex(row);
+                if (newRow < 0 && arguments.length >= 3) {
+                    newRow = scwin._normalizeRowIndex(arguments[2]);
+                }
+                if (newRow < 0) { return; }
+                scwin._selectRowAndShowDetail(newRow);
+            };
+
+            /* Khi focus ô đổi hàng (chuột / phím), đồng bộ panel phải */
+            scwin.grdAsset_oncellindexchange = function(row, col, oldRow, oldCol) {
+                 var newRow = scwin._normalizeRowIndex(row);
+                var prevRow = scwin._normalizeRowIndex(oldRow);
+                if (newRow < 0 && arguments.length >= 3) {
+                    prevRow = scwin._normalizeRowIndex(arguments[1]);
+                    newRow = scwin._normalizeRowIndex(arguments[2]);
+                }
+                if (newRow < 0 || newRow === prevRow) { return; }
+                scwin._selectRowAndShowDetail(newRow);
+            };
+
+            scwin.grdAsset_oncellclick = function(row, col, colId) {
+                var newRow = scwin._normalizeRowIndex(row);
+                if (newRow < 0 && arguments.length >= 2) {
+                    newRow = scwin._normalizeRowIndex(arguments[1]);
+                }
+                if (newRow < 0) { return; }
+                if (colId && String(colId).indexOf("hd") === 0) { return; }
+                 scwin._selectRowAndShowDetail(newRow);
             };
 
             scwin.loadAssetDetail = function(assetId, fallbackRow) {
                 scwin.callApi("/api/dam/assets/" + encodeURIComponent(assetId), function(response) {
-                    if (!response) {
+                    var base = fallbackRow || {};
+                    if (!response || !response.asset) {
+                        scwin._applyDetailFromGridRow(base);
+                          scwin._setDetailField("taDescription", "DESCRIPTION", "");
+                        scwin._setDetailField("inpTags", "TAGS", "");
                         return;
                     }
-                    var base = fallbackRow || {};
-                    var asset = response.asset || base;
+                    var asset = response.asset;
                     var status = asset.status || base.STATUS || "Draft";
                     if (status !== "Draft" && status !== "Published" && status !== "Archived") {
                         status = "Draft";
                     }
-                    dmAssetDetail.set("FILE_NM", asset.fileNm || base.FILE_NM || "");
-                    dmAssetDetail.set("DESCRIPTION", asset.description || "");
-                    dmAssetDetail.set("FILE_TYPE", asset.fileType || base.FILE_TYPE || "");
-                    dmAssetDetail.set("ASSET_DATA", status);
+                    scwin._setDetailField("inpFileNm", "FILE_NM", asset.fileNm || base.FILE_NM || "");
+                    scwin._setDetailField("taDescription", "DESCRIPTION", asset.description || "");
+                    scwin._setDetailField("inpFileType", "FILE_TYPE", asset.fileType || base.FILE_TYPE || "");
+                    scwin._setDetailField("inpTags", "TAGS", asset.tags || "");
+                    scwin._setDetailField("selAssetData", "ASSET_DATA", status);
                     var sz = "";
                     if (asset.fileSize != null && typeof asset.fileSize === "number") {
                         sz = scwin._formatFileSize(asset.fileSize);
                     } else {
                         sz = base.FILE_SIZE || "";
                     }
-                    dmAssetDetail.set("FILE_SIZE", sz);
-                    dmAssetDetail.set("OWNER_NM", asset.ownerNm || base.OWNER_NM || "");
-                    dmAssetDetail.set("UPLOAD_DT", asset.uploadDt || base.UPLOAD_DT || "");
+                    scwin._setDetailField("inpFileSize", "FILE_SIZE", sz);
+                    scwin._setDetailField("inpOwnerNm", "OWNER_NM", asset.ownerNm || base.OWNER_NM || "");
+                    scwin._setDetailField("inpUploadDt", "UPLOAD_DT", asset.uploadDt || base.UPLOAD_DT || "");
                 });
             };
 
             scwin.grdAsset_oncelldblclick = function(row, col, colId) {
-                if (colId === "CHK") { return; }
                 try {
                     var grd = $p.getComponentById("grdAsset");
                     if (!grd) { return; }
@@ -217,115 +405,201 @@
 
             scwin.openAssetPopup = function(assetId) {
                 if (!assetId) { return; }
-                var data = { assetId: assetId };
-                var opts = { id: "pop_fileBrowserAsset", popupName: "Upload New Version", width: 580, height: 660, modal: true, resizable: true };
-                if (window.gcm && gcm.win && typeof gcm.win.openPopup === "function") {
-                    gcm.win.openPopup($p, "/cm/dam/main/fileBrowserAssetPopup.xml", opts, data);
-                } else if (typeof $p.openPopup === "function") {
-                    $p.openPopup("/cm/dam/main/fileBrowserAssetPopup.xml", {
-                        id: opts.id,
-                        width: opts.width + "px",
-                        height: opts.height + "px",
-                        modal: true,
-                        resizable: true,
-                        dataObject: { type: "json", name: "paramData", data: data }
+                 scwin._openInlineUploadPopup({ assetId: assetId });
+            };
+
+            scwin._applyPopupPreview = function(url) {
+                var u = url || "/cm/dam/images/preview/document.svg";
+                try {
+                    var img = $p.getComponentById("img_fb_popup_preview");
+                    if (img && typeof img.setSrc === "function") { img.setSrc(u); }
+                } catch (e) {}
+            };
+
+            scwin._suggestNextVerNo = function(latestVer) {
+                var v = (latestVer || "").trim();
+                if (!v) { return "v1.0"; }
+                var m = v.match(/^(v?)(\d+)\.(\d+)$/i);
+                if (m) {
+                    return (m[1] === "V" ? "V" : "v") + parseInt(m[2], 10) + "." + (parseInt(m[3], 10) + 1);
+                }
+                return v + ".1";
+            };
+
+            scwin._openInlineUploadPopup = function(param) {
+                var assetId = param && (param.assetId != null ? param.assetId : param.ASSET_ID);
+                dmPopup.set("ASSET_ID", assetId ? String(assetId) : "");
+                dmPopup.set("VER_ID", "");
+                dmPopup.set("FILE_NM", "");
+                dmPopup.set("NEW_VER_NO", "v1.0");
+                dmPopup.set("UPLOAD_FILE_NM", "");
+                dmPopup.set("CONTRIBUTORS", "Carol");
+                dmPopup.set("CHANGE_NOTES", "");
+                dmPopup.set("PREVIEW_URL", "/cm/dam/images/preview/document.svg");
+                scwin._applyPopupPreview(dmPopup.get("PREVIEW_URL"));
+                $p.getComponentById("txt_fb_popup_title").setLabel("Upload New Version");
+
+                if (assetId) {
+                    scwin.callApi("/api/dam/assets/" + encodeURIComponent(assetId), function(res) {
+                        if (!res || !res.asset) { return; }
+                        var a = res.asset;
+                        var latest = (res.versions || [])[0] || null;
+                        var latestVer = latest ? latest.verNo : "";
+                        var preview = (latest && latest.previewUrl) ? latest.previewUrl : (a.previewUrl || "/cm/dam/images/preview/document.svg");
+                        dmPopup.set("ASSET_ID", String(a.assetId != null ? a.assetId : ""));
+                        dmPopup.set("VER_ID", latest && latest.verId != null ? String(latest.verId) : "");
+                        dmPopup.set("FILE_NM", a.fileNm || "");
+                        dmPopup.set("NEW_VER_NO", scwin._suggestNextVerNo(latestVer));
+                        dmPopup.set("CONTRIBUTORS", a.ownerNm || "Carol");
+                        dmPopup.set("CHANGE_NOTES", (latest && latest.changeLog) ? latest.changeLog : "");
+                        dmPopup.set("PREVIEW_URL", preview);
+                        $p.getComponentById("txt_fb_popup_title").setLabel("Upload New Version: " + (a.fileNm || ""));
+                        scwin._applyPopupPreview(preview);
                     });
                 }
+                var bg = document.getElementById("fbPopupBackdrop");
+                if (bg) { bg.style.display = "block"; }
+            };
+
+            scwin.btn_fb_browse_onclick = function() {
+                dmPopup.set("UPLOAD_FILE_NM", dmPopup.get("FILE_NM") || "");
+            };
+
+            scwin.btn_fb_cancel_onclick = function() {
+                var bg = document.getElementById("fbPopupBackdrop");
+                if (bg) { bg.style.display = "none"; }
+            };
+
+            scwin.btn_fb_submit_onclick = function() {
+                var assetId = dmPopup.get("ASSET_ID");
+                var verId = dmPopup.get("VER_ID");
+                if (!assetId || !verId) {
+                    alert("Không tìm thấy version để cập nhật.");
+                    return;
+                }
+                var payload = {
+                    verNo: dmPopup.get("NEW_VER_NO") || "",
+                    ownerNm: dmPopup.get("CONTRIBUTORS") || "",
+                    changeLog: dmPopup.get("CHANGE_NOTES") || ""
+                };
+                scwin.callApiJson("PUT", "/api/dam/assets/" + encodeURIComponent(assetId) + "/versions/" + encodeURIComponent(verId), payload, function() {
+                    alert("Cập nhật version thành công.");
+                    scwin.btn_fb_cancel_onclick();
+                    scwin.loadAssetsByFolder();
+                });
             };
         ]]></script>
 	</head>
 	<body ev:onpageload="scwin.onpageload">
-        <xf:group class="dam-page dam-asset-page dam-file-browser-page">
-            <xf:group class="dam-asset-grid">
-                <xf:group class="dam-asset-left">
-                    <xf:group class="dam-asset-panel dam-asset-folder">
-                        <xf:group class="dam-asset-panel-head">
-                            <w2:textbox class="dam-asset-panel-title" label="Folder Structure" tagname="h3"/>
-                        </xf:group>
-                        <xf:group class="dam-asset-folder-body">
-                            <w2:treeview id="trvFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed" tooltipGroupClass="false"
-                                ev:onlabelclick="scwin.trvFolder_onlabelclick">
-                                <w2:node>
-                                    <w2:label><![CDATA[Digital Assets]]></w2:label><w2:value><![CDATA[1]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                    <w2:node><w2:label><![CDATA[Marketing Documents]]></w2:label><w2:value><![CDATA[2]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                        <w2:node><w2:label><![CDATA[Campaign Banners]]></w2:label><w2:value><![CDATA[3]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage></w2:node>
-                                        <w2:node><w2:label><![CDATA[PDF Brochures]]></w2:label><w2:value><![CDATA[4]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_docu.png]]></w2:iconImage></w2:node>
-                                        <w2:node><w2:label><![CDATA[Social Media Assets]]></w2:label><w2:value><![CDATA[5]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage></w2:node>
-                                    </w2:node>
-                                    <w2:node><w2:label><![CDATA[Video Assets]]></w2:label><w2:value><![CDATA[6]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage>
-                                        <w2:node><w2:label><![CDATA[Training Videos]]></w2:label><w2:value><![CDATA[7]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage></w2:node>
-                                    </w2:node>
-                                    <w2:node><w2:label><![CDATA[Internal Manuals]]></w2:label><w2:value><![CDATA[8]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage></w2:node>
-                                    <w2:node><w2:label><![CDATA[Product Images]]></w2:label><w2:value><![CDATA[9]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage></w2:node>
-                                    <w2:node><w2:label><![CDATA[Audio Library]]></w2:label><w2:value><![CDATA[10]]></w2:value><w2:folder><![CDATA[true]]></w2:folder><w2:iconImage><![CDATA[/cm/images/base/ico_ds_tree.png]]></w2:iconImage></w2:node>
-                                </w2:node>
-                            </w2:treeview>
-                        </xf:group>
-                    </xf:group>
+		<xf:group class="dam-page dam-asset-page dam-file-browser-page">
+			<xf:group class="dam-asset-grid">
+				<xf:group class="dam-asset-left">
+					<xf:group class="dam-asset-panel dam-asset-folder">
+						<xf:group class="dam-asset-panel-head">
+							<w2:textbox class="dam-asset-panel-title" label="Folder Structure" tagname="h3" />
+						</xf:group>
+						<xf:group class="dam-asset-folder-body">
+							<w2:treeview id="trvFolder" class="dam-asset-tree" style="width:100%;height:100%;" dataType="listed" tooltipGroupClass="false" ev:onclick="scwin.trvFolder_onclick">
+								<w2:itemset nodeset="data:dlFolder">
+									<w2:label ref="FOLDER_NM"></w2:label>
+									<w2:value ref="FOLDER_ID"></w2:value>
+									<w2:depth ref="DEPTH"></w2:depth>
+								</w2:itemset>
+							</w2:treeview>
+						</xf:group>
+					</xf:group>
 
-                    <xf:group class="dam-asset-panel dam-asset-files">
-                        <xf:group class="dam-asset-files-body" style="height:100%;">
-                            <xf:group class="dam-asset-panel-head">
-                                <w2:textbox class="dam-asset-panel-title" label="File List" tagname="h3"/>
-                            </xf:group>
-                            <w2:gridView id="grdAsset" class="dam-asset-grid-view" dataList="data:dlAsset" autoFit="allColumn" focusMode="row" sortable="false"
-                                style="width:100%;flex:1;min-height:240px;" ev:onrowindexchange="scwin.grdAsset_onrowindexchange" ev:oncelldblclick="scwin.grdAsset_oncelldblclick"
-                                oddRowBackgroundColor="#eef6ff" evenRowBackgroundColor="#ffffff">
-                                <w2:header><w2:row>
-                                    <w2:column id="hdChk" inputType="checkbox" width="38" value=""/>
-                                    <w2:column id="hdIcon" inputType="text" width="60" value="Icon"/>
-                                    <w2:column id="hdFileNm" inputType="text" width="240" value="Name"/>
-                                    <w2:column id="hdType" inputType="text" width="140" value="Type"/>
-                                    <w2:column id="hdSize" inputType="text" width="120" value="Size"/>
-                                    <w2:column id="hdStatus" inputType="text" width="100" value="Status"/>
-                                    <w2:column id="hdOwner" inputType="text" width="110" value="Owner"/>
-                                    <w2:column id="hdUploaded" inputType="text" width="140" value="Uploaded"/>
-                                </w2:row></w2:header>
-                                <w2:gBody><w2:row>
-                                    <w2:column id="CHK" inputType="checkbox" width="38" displayMode="always"/>
-                                    <w2:column id="ICON" inputType="text" width="60" displayMode="label" class="dam-cell-icon"/>
-                                    <w2:column id="FILE_NM" inputType="text" width="200" displayMode="label"/>
-                                    <w2:column id="FILE_TYPE" inputType="text" width="110" displayMode="label"/>
-                                    <w2:column id="FILE_SIZE" inputType="text" width="100" displayMode="label"/>
-                                    <w2:column id="STATUS" inputType="text" width="100" displayMode="label" class="dam-cell-status"/>
-                                    <w2:column id="OWNER_NM" inputType="text" width="110" displayMode="label"/>
-                                    <w2:column id="UPLOAD_DT" inputType="text" width="140" displayMode="label"/>
-                                </w2:row></w2:gBody>
-                            </w2:gridView>
-                        </xf:group>
-                    </xf:group>
-                </xf:group>
+					<xf:group class="dam-asset-panel dam-asset-files">
+						<xf:group class="dam-asset-files-body" style="height:100%;">
+							<xf:group class="dam-asset-panel-head">
+								<w2:textbox class="dam-asset-panel-title" label="File List" tagname="h3" />
+							</xf:group>
+							<w2:gridView id="grdAsset" class="dam-asset-grid-view" dataList="data:dlAsset" autoFit="allColumn" focusMode="row"
+								sortable="false" style="width:100%;flex:1;min-height:240px;" ev:onrowindexchange="scwin.grdAsset_onrowindexchange"
+								ev:oncellindexchange="scwin.grdAsset_oncellindexchange" ev:oncellclick="scwin.grdAsset_oncellclick"
+								ev:oncelldblclick="scwin.grdAsset_oncelldblclick" oddRowBackgroundColor="#eef6ff" evenRowBackgroundColor="#ffffff">
+								<w2:header>
+									<w2:row>
+										<w2:column id="hdIcon" inputType="text" width="60" value="Icon" />
+										<w2:column id="hdFileNm" inputType="text" width="240" value="Name" />
+										<w2:column id="hdType" inputType="text" width="140" value="Type" />
+										<w2:column id="hdSize" inputType="text" width="120" value="Size" />
+										<w2:column id="hdStatus" inputType="text" width="100" value="Status" />
+										<w2:column id="hdOwner" inputType="text" width="110" value="Owner" />
+										<w2:column id="hdUploaded" inputType="text" width="140" value="Uploaded" />
+									</w2:row>
+								</w2:header>
+								<w2:gBody>
+									<w2:row>
+										<w2:column id="ICON" inputType="text" width="60" displayMode="label" class="dam-cell-icon" />
+										<w2:column id="FILE_NM" inputType="text" width="200" displayMode="label" />
+										<w2:column id="FILE_TYPE" inputType="text" width="110" displayMode="label" />
+										<w2:column id="FILE_SIZE" inputType="text" width="100" displayMode="label" />
+										<w2:column id="STATUS" inputType="text" width="100" displayMode="label" class="dam-cell-status" />
+										<w2:column id="OWNER_NM" inputType="text" width="110" displayMode="label" />
+										<w2:column id="UPLOAD_DT" inputType="text" width="140" displayMode="label" />
+									</w2:row>
+								</w2:gBody>
+							</w2:gridView>
+						</xf:group>
+					</xf:group>
+				</xf:group>
 
-                <xf:group class="dam-asset-right">
-                    <xf:group class="dam-asset-panel dam-asset-detail">
-                        <xf:group class="dam-asset-panel-head">
-                            <w2:textbox class="dam-asset-panel-title" label="Asset Details" tagname="h3"/>
-                        </xf:group>
-                        <xf:group class="dam-form-row">
-                            <w2:textbox class="dam-form-label" label="Name"/>
-                            <xf:input ref="data:dmAssetDetail/FILE_NM" class="dam-form-input" style="width:100%;"/>
-                        </xf:group>
-                        <xf:group class="dam-form-row">
-                            <w2:textbox class="dam-form-label" label="Description"/>
-                            <xf:textarea ref="data:dmAssetDetail/DESCRIPTION" class="dam-form-input" style="width:100%;height:120px;"/>
-                        </xf:group>
-                        <xf:group class="dam-form-row">
-                            <w2:textbox class="dam-form-label" label="Asset Type"/>
-                            <xf:input ref="data:dmAssetDetail/FILE_TYPE" class="dam-form-input" style="width:100%;"/>
-                        </xf:group>
-                        <xf:group class="dam-form-row">
-                            <w2:textbox class="dam-form-label" label="Status"/>
-                            <xf:select1 ref="data:dmAssetDetail/ASSET_DATA" appearance="minimal" class="dam-form-select" renderType="select" style="width:100%;">
-                                <xf:choices>
-                                    <xf:item><xf:label>Draft</xf:label><xf:value>Draft</xf:value></xf:item>
-                                    <xf:item><xf:label>Published</xf:label><xf:value>Published</xf:value></xf:item>
-                                    <xf:item><xf:label>Archived</xf:label><xf:value>Archived</xf:value></xf:item>
-                                </xf:choices>
-                            </xf:select1>
-                        </xf:group>
-                    </xf:group>
-                </xf:group>
-            </xf:group>
-        </xf:group>
-    </body>
+				<xf:group class="dam-asset-right">
+					<xf:group class="dam-asset-panel dam-asset-detail">
+						<xf:group class="dam-asset-panel-head">
+							<w2:textbox class="dam-asset-panel-title" label="Asset Details" tagname="h3" />
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Name" />
+							<xf:input id="inpFileNm" ref="data:dmAssetDetail/FILE_NM" readOnly="true" class="dam-form-input" style="width:100%;" />
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Description" />
+							<xf:input id="taDescription" ref="data:dmAssetDetail/DESCRIPTION" readOnly="true" class="dam-form-input" style="width:100%;" />
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Asset Type" />
+							<xf:input id="inpFileType" ref="data:dmAssetDetail/FILE_TYPE" readOnly="true" class="dam-form-input" style="width:100%;" />
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Tags" />
+							<xf:input id="inpTags" ref="data:dmAssetDetail/TAGS" readOnly="true" class="dam-form-input" style="width:100%;" />
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Asset Data" />
+							<xf:input id="selAssetData" ref="data:dmAssetDetail/ASSET_DATA" readOnly="true" class="dam-form-input" style="width:100%;" />
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="File Size" />
+							<xf:input id="inpFileSize" ref="data:dmAssetDetail/FILE_SIZE" readOnly="true" class="dam-form-input" style="width:100%;" />
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Owner" />
+							<xf:input id="inpOwnerNm" ref="data:dmAssetDetail/OWNER_NM" readOnly="true" class="dam-form-input" style="width:100%;" />
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Uploaded" />
+							<xf:input id="inpUploadDt" ref="data:dmAssetDetail/UPLOAD_DT" readOnly="true" class="dam-form-input" style="width:100%;" />
+						</xf:group>
+					</xf:group>
+				</xf:group>
+			</xf:group>
+			<div id="fbPopupBackdrop" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;padding:24px;box-sizing:border-box;overflow:auto;">
+				<xf:group class="dam-fb-upload-modal" style="max-width:580px;margin:24px auto;background:#fff;border-radius:12px;box-shadow:0 20px 45px rgba(15,23,42,.25);overflow:hidden;">
+					<xf:group class="dam-fb-upload-modal-header">
+						<w2:textbox id="txt_fb_popup_title" class="dam-fb-upload-modal-title" label="Upload New Version" tagname="h2" style=";margin-left:3%;padding-bottom:2%;padding-top:2%;"/>
+					</xf:group>
+					<xf:group class="dam-fb-upload-modal-body" style="padding:16px 20px;">
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="New Version Number" /><xf:input ref="data:dmPopup/NEW_VER_NO" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Upload File" /><xf:group class="dam-fb-upload-file-row"><xf:input ref="data:dmPopup/UPLOAD_FILE_NM" readOnly="true" class="dam-fb-popup-input" style="flex:1;min-width:0;" /><xf:trigger class="dam-fb-btn-primary dam-fb-btn-browse" ev:onclick="scwin.btn_fb_browse_onclick"><xf:label>Browse</xf:label></xf:trigger><xf:image class="dam-fb-upload-doc-icon" src="/cm/images/base/ico_docu.png" title="File" /></xf:group></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Contributors" /><xf:select1 ref="data:dmPopup/CONTRIBUTORS" appearance="minimal" class="dam-fb-popup-select" renderType="select" style="width:100%;"><xf:choices><xf:item><xf:label>Carol</xf:label><xf:value>Carol</xf:value></xf:item><xf:item><xf:label>David</xf:label><xf:value>David</xf:value></xf:item><xf:item><xf:label>Alice</xf:label><xf:value>Alice</xf:value></xf:item><xf:item><xf:label>Bob</xf:label><xf:value>Bob</xf:value></xf:item><xf:item><xf:label>SYSTEM</xf:label><xf:value>SYSTEM</xf:value></xf:item></xf:choices></xf:select1></xf:group>
+						<xf:group class="dam-fb-upload-row dam-fb-upload-row-notes"><w2:textbox class="dam-fb-upload-label" label="Change Notes" /><xf:textarea ref="data:dmPopup/CHANGE_NOTES" class="dam-fb-popup-textarea" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row dam-fb-upload-preview-block"><w2:textbox class="dam-fb-upload-label" label="Preview" /><xf:group class="dam-fb-upload-preview-wrap" style="margin-top:6px;border:1px solid #d1d5db;border-radius:8px;background:#f8fafc;padding:12px;height:180px;display:flex;align-items:center;justify-content:center;overflow:hidden;"><xf:image id="img_fb_popup_preview" class="dam-fb-upload-preview-img" src="/cm/dam/images/preview/document.svg" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;" /></xf:group></xf:group>
+					</xf:group>
+					<xf:group class="dam-fb-upload-modal-footer" style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px 16px;border-top:1px solid #e5e7eb;"><xf:trigger class="dam-fb-btn-secondary" ev:onclick="scwin.btn_fb_cancel_onclick" style=";background-color:red;border:1px solid #d1d5db;width:10em;"><xf:label>Cancel</xf:label></xf:trigger><xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_fb_submit_onclick" style=";background-color:green;border:1px solid #d1d5db;width:5em;"><xf:label>Submit</xf:label></xf:trigger></xf:group>
+				</xf:group>
+			</div>
+		</xf:group>
+	</body>
 </html>

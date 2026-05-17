@@ -19,4 +19,6 @@ public interface DamMapper {
 	List<DamVersionVo> selectVersionsByAssetId(@Param("assetId") Integer assetId);
 
 	int updateAsset(@Param("vo") DamAssetVo vo);
+	
+	int updateVersion(@Param("vo") DamVersionVo vo);
 }

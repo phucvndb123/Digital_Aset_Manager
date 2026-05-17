@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
+import com.inswave.training.dam.vo.DamVersionVo;
 import com.inswave.training.dam.service.DamService;
 import com.inswave.training.dam.vo.DamAssetVo;
 
@@ -52,6 +52,18 @@ public class DamController {
 			@RequestBody DamAssetVo vo) {
 		vo.setAssetId(assetId);
 		int updated = damService.updateAsset(vo);
+		Map<String, Object> result = new LinkedHashMap<String, Object>();
+		result.put("updated", updated);
+		return ResponseEntity.ok(result);
+	}
+	@PutMapping("/assets/{assetId}/versions/{verId}")
+	@ResponseBody
+	public ResponseEntity<?> updateVersion(@PathVariable("assetId") Integer assetId,
+			@PathVariable("verId") Integer verId,
+			@RequestBody DamVersionVo vo) {
+		vo.setAssetId(assetId);
+		vo.setVerId(verId);
+		int updated = damService.updateVersion(vo);
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
 		result.put("updated", updated);
 		return ResponseEntity.ok(result);

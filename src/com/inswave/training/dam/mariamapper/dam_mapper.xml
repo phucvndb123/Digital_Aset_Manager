@@ -106,4 +106,12 @@
 		WHERE ASSET_ID = #{vo.assetId}
 	</update>
 
+<update id="updateVersion">
+		UPDATE DAM_VERSION
+		SET VER_NO = #{vo.verNo},
+		    OWNER_NM = #{vo.ownerNm},
+		    CHANGE_LOG = #{vo.changeLog}
+		WHERE ASSET_ID = #{vo.assetId}
+		  AND VER_ID = #{vo.verId}
+	</update>
 </mapper>
