@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
-<?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
+<?xml-stylesheet href="/cm/css/common.css" type="text/css"?>
+<?xml-stylesheet href="/cm/dam/css/dashboard.css" type="text/css"?>
 <html xmlns="http://www.w3.org/1999/xhtml"
     xmlns:ev="http://www.w3.org/2001/xml-events"
     xmlns:w2="http://www.inswave.com/websquare"
@@ -61,6 +62,7 @@
         <w2:layoutInfo/>
         <w2:publicInfo method=""/>
         <script lazy="false" type="text/javascript"><![CDATA[
+/* Khởi động tải dữ liệu một lần; guard bằng _loaded flag tránh gọi nhiều lần */
 scwin._triggerLoad = function () {
     if (scwin._loaded) {
         return;
@@ -69,6 +71,7 @@ scwin._triggerLoad = function () {
     scwin._tryLoad(0);
 };
 
+/* Fire 4 API submissions; retry tối đa 5 lần nếu submissions chưa sẵn sàng */
 scwin._tryLoad = function (attempt) {
     var sbmStats = (typeof sbm_getStats !== "undefined") ? sbm_getStats : $p.getSubmission("sbm_getStats");
     var sbmDist = (typeof sbm_getDistribution !== "undefined") ? sbm_getDistribution : $p.getSubmission("sbm_getDistribution");
@@ -105,6 +108,7 @@ setTimeout(function () {
     }
 }, 0);
 
+/* Vẽ biểu đồ donut phân bố loại file bằng FusionCharts */
 scwin.drawDistributionChart = function(dataList) {
     var totalCnt = 0;
     for (var i = 0; i < dataList.length; i++) {
@@ -152,6 +156,7 @@ scwin.drawDistributionChart = function(dataList) {
     chart_distribution.setJSONData({ "data": fcData });
 };
 
+/* Vẽ biểu đồ đường xu hướng dung lượng lưu trữ theo tháng */
 scwin.drawTrendChart = function(dataList) {
     var fcData = [];
     var maxVal = 0;
@@ -200,6 +205,7 @@ scwin.drawTrendChart = function(dataList) {
     chart_trend.setJSONData({ "data": fcData });
 };
 
+/* Callback nhận dữ liệu thống kê, cập nhật 3 stat card */
 scwin.sbm_getStats_submitdone = function (e) {
     var response = (e && e.responseJSON) ? e.responseJSON : {};
     var body = response.body ? response.body : response;
@@ -211,6 +217,7 @@ scwin.sbm_getStats_submitdone = function (e) {
     txt_newUploads.setLabel(String(payload.NEW_UPLOADS_TODAY || 0));
 };
 
+/* Callback nhận phân bố file type, vẽ donut chart */
 scwin.sbm_getDistribution_submitdone = function (e) {
     var response = (e && e.responseJSON) ? e.responseJSON : {};
     var body = response.body ? response.body : response;
@@ -220,6 +227,7 @@ scwin.sbm_getDistribution_submitdone = function (e) {
     scwin.drawDistributionChart(rows);
 };
 
+/* Callback nhận xu hướng storage, vẽ line chart */
 scwin.sbm_getStorageTrend_submitdone = function (e) {
     var response = (e && e.responseJSON) ? e.responseJSON : {};
     var body = response.body ? response.body : response;
@@ -229,6 +237,7 @@ scwin.sbm_getStorageTrend_submitdone = function (e) {
     scwin.drawTrendChart(rows);
 };
 
+/* Callback nhận danh sách uploads mới nhất */
 scwin.sbm_getRecentUploads_submitdone = function (e) {
     var response = (e && e.responseJSON) ? e.responseJSON : {};
     var body = response.body ? response.body : response;
@@ -237,6 +246,7 @@ scwin.sbm_getRecentUploads_submitdone = function (e) {
     scwin._renderRecentUploads(rows);
 };
 
+/* Render timeline danh sách uploads vào generator group */
 scwin._renderRecentUploads = function (rows) {
     gen_recent.removeAll();
 
@@ -257,9 +267,11 @@ scwin._renderRecentUploads = function (rows) {
     }
 };
 
+/* Xử lý lỗi API — silent, WebSquare đã hiển thị thông báo lỗi */
 scwin.sbm_submiterror = function () {
 };
 
+/* Format số thành chuỗi "X.XX GB" */
 scwin._formatGb = function (value) {
     var n = Number(value);
     if (isNaN(n)) {
@@ -268,6 +280,7 @@ scwin._formatGb = function (value) {
     return n.toFixed(2) + " GB";
 };
 
+/* Trả về đường dẫn icon SVG tương ứng với loại file */
 scwin._getFileIcon = function (fileType) {
     if (fileType === "Images") return "/cm/dam/images/preview/image.svg";
     if (fileType === "Videos") return "/cm/dam/images/preview/video.svg";

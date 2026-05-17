@@ -1,0 +1,268 @@
+/* =========================================
+   Dashboard — Layout & Component Styles
+   Dùng riêng cho: dashboard.xml
+========================================= */
+
+/* Outer page wrapper (fills wframe) */
+.dam-page {
+   width: 100%;
+   min-height: 100%;
+   box-sizing: border-box;
+   display: flex;
+   flex-direction: column;
+   background: #f8f9fa !important;
+}
+
+/* Hide the inner page title — shell title is sufficient */
+.dam-title {
+   display: none !important;
+}
+
+/* ----- Dashboard grid (3-column layout) ----- */
+.dam-dashboard-grid {
+   flex: 1 !important;
+   width: 100% !important;
+   display: grid !important;
+   grid-template-columns: 1fr 1fr 1fr !important;
+   grid-auto-rows: minmax(320px, auto) !important;
+   gap: 1.5rem !important;
+   box-sizing: border-box !important;
+}
+
+/* White card panel used by every grid cell */
+.dam-panel {
+   width: 100% !important;
+   height: 100% !important;
+   box-sizing: border-box !important;
+   border-radius: 0.5rem !important;
+   background: #ffffff !important;
+   padding: 1.5rem !important;
+   overflow: hidden !important;
+   border: 1px solid #e2e8f0 !important;
+   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+   outline: none !important;
+   display: flex !important;
+   flex-direction: column !important;
+}
+
+/* Override any inline borders injected by xf:group */
+.dam-panel[style] {
+   border: 1px solid #e2e8f0 !important;
+}
+
+/* Grid placement for each panel */
+.dam-stats {
+   grid-column: 1 !important;
+   grid-row: 1 !important;
+   display: flex !important;
+   flex-direction: column !important;
+   gap: 0.5rem !important;
+   justify-content: flex-start !important;
+}
+
+.dam-donut {
+   grid-column: 2 !important;
+   grid-row: 1 !important;
+}
+
+.dam-line {
+   grid-column: 1 / span 2 !important;
+   grid-row: 2 !important;
+}
+
+.dam-recent {
+   grid-column: 3 !important;
+   grid-row: 1 / span 2 !important;
+}
+
+/* ----- Stat cards inside the Stats panel ----- */
+.dam-stats-title {
+   font-size: 1rem;
+   font-weight: 700;
+   color: #1f2733;
+   flex-shrink: 0;
+}
+
+.dam-card {
+   height: calc(33.33% - 0.66rem) !important;
+   flex: none !important;
+   width: 100%;
+   border-radius: 0.5rem;
+   box-sizing: border-box;
+   padding: 0 1.25rem;
+   display: flex;
+   flex-direction: row;
+   align-items: center;
+   justify-content: space-between;
+   position: relative;
+   overflow: hidden;
+   margin-bottom: 0 !important;
+}
+
+/* Card colour variants */
+.dam-card-purple { background: #dcd0ff; }
+.dam-card-green  { background: #bcf0d3; }
+.dam-card-pink   { background: #ffdcd2; }
+
+.dam-card-content {
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   z-index: 2;
+}
+
+.dam-card-value {
+   font-size: 2rem;
+   font-weight: 600;
+   color: #1f2733;
+   margin-bottom: 0.15rem;
+   line-height: 1.1;
+}
+
+.dam-card-label {
+   font-size: 0.85rem;
+   color: #1f2733;
+   font-weight: 500;
+   line-height: 1.2;
+}
+
+/* Circular icon positioned at right of card */
+.dam-card-icon-wrap {
+   width: 2.75rem;
+   height: 2.75rem;
+   border-radius: 50%;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   position: absolute;
+   right: 1rem;
+   top: 50%;
+   transform: translateY(-50%);
+   z-index: 1;
+   overflow: hidden;
+}
+
+.dam-card-icon-wrap * {
+   margin: 0 auto !important;
+   position: static !important;
+   display: block !important;
+}
+
+.dam-card-purple .dam-card-icon-wrap { background: #9b51e0; }
+.dam-card-green  .dam-card-icon-wrap { background: #27ae60; }
+.dam-card-pink   .dam-card-icon-wrap { background: #eb5757; }
+
+.dam-card-icon {
+   width: 1.5rem !important;
+   height: 1.5rem !important;
+   filter: brightness(0) invert(1);
+   object-fit: contain;
+}
+
+/* ----- Chart panel ----- */
+.dam-panel-title {
+   font-size: 1rem;
+   font-weight: 700;
+   color: #1f2733;
+   margin-bottom: 1rem;
+   flex-shrink: 0;
+}
+
+.dam-chart-wrap {
+   flex: 1;
+   width: 100%;
+   height: 100%;
+   min-height: 0;
+   position: relative;
+}
+
+.dam-chart {
+   width: 100%;
+   height: 100%;
+   position: absolute;
+   top: 0;
+   left: 0;
+}
+
+/* ----- Recent Uploads timeline list ----- */
+.dam-recent-list {
+   flex: 1;
+   width: 100%;
+   overflow-y: auto;
+   padding-right: 2%;
+   display: flex;
+   flex-direction: column;
+   gap: 1.5rem;
+   position: relative;
+   padding-left: 0.5rem;
+}
+
+.dam-recent-row {
+   width: 100%;
+   display: flex;
+   flex-direction: row;
+   align-items: flex-start;
+   gap: 1rem;
+   position: relative;
+   z-index: 2;
+}
+
+/* Vertical connector line between timeline items */
+.dam-recent-row:not(:last-child)::after {
+   content: '';
+   position: absolute;
+   left: 1.1rem;
+   top: 2.5rem;
+   bottom: -1.2rem;
+   width: 2px;
+   background: #f1f5f9;
+   z-index: 1;
+}
+
+.dam-timeline-dot {
+   width: 2.2rem;
+   height: 2.2rem;
+   border-radius: 50%;
+   background: #e6f4ea;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   flex-shrink: 0;
+   margin-top: 0;
+}
+
+.dam-timeline-dot img {
+   width: 50%;
+   height: 50%;
+   filter: invert(39%) sepia(50%) saturate(674%) hue-rotate(85deg) brightness(97%) contrast(93%);
+}
+
+.dam-recent-card {
+   flex: 1;
+   display: flex;
+   flex-direction: column;
+   background: transparent;
+   border: none;
+   box-shadow: none;
+   padding: 0;
+   gap: 0.25rem;
+}
+
+.dam-recent-name {
+   font-size: 1rem;
+   font-weight: 600;
+   color: #1f2733;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   margin-bottom: 0.2rem;
+}
+
+.dam-recent-meta {
+   font-size: 0.85rem;
+   color: #64748b;
+}
+
+.dam-recent-sep {
+   display: none;
+}

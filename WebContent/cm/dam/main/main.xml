@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
+<?xml-stylesheet href="/cm/css/common.css" type="text/css"?>
 <?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
 <html xmlns="http://www.w3.org/1999/xhtml"
     xmlns:ev="http://www.w3.org/2001/xml-events"
@@ -16,14 +17,14 @@
         <w2:layoutInfo/>
         <w2:publicInfo method=""/>
         <script lazy="false" type="text/javascript"><![CDATA[
+/* Khôi phục tab đang xem từ localStorage khi refresh trang */
 scwin.onpageload = function () {
-    console.log("[DAM] onpageload fired");
     var saved = parseInt(localStorage.getItem('dam_active_tab') || '0', 10);
     scwin._setActive(isNaN(saved) ? 0 : saved);
 };
 
+/* Đánh dấu nav item active, lưu lựa chọn vào localStorage, chuyển tab tương ứng */
 scwin._setActive = function (idx) {
-    console.log("[DAM] _setActive called, idx=" + idx);
     localStorage.setItem('dam_active_tab', String(idx));
     var ids    = ["btn_navDashboard","btn_navFileBrowser","btn_navAssetDetails","btn_navVersionControl"];
     var titles = ["Dashboard","File Browser","Asset Details Panel","Version Control"];
@@ -40,6 +41,7 @@ scwin._setActive = function (idx) {
     scwin._switchTab(idx, 0);
 };
 
+/* Chuyển tab_main sang index idx; retry tối đa 15 lần nếu component chưa sẵn sàng */
 scwin._switchTab = function (idx, attempt) {
     var tab = $p.getComponentById("tab_main");
     if (tab && typeof tab.setSelectedTabIndex === "function") {
@@ -55,15 +57,23 @@ scwin._switchTab = function (idx, attempt) {
     }
 };
 
-scwin.btn_navDashboard_onclick      = function () { console.log("[DAM] click Dashboard");      scwin._setActive(0); };
-scwin.btn_navFileBrowser_onclick    = function () { console.log("[DAM] click FileBrowser");    scwin._setActive(1); };
-scwin.btn_navAssetDetails_onclick   = function () { console.log("[DAM] click AssetDetails");   scwin._setActive(2); };
-scwin.btn_navVersionControl_onclick = function () { console.log("[DAM] click VersionControl"); scwin._setActive(3); };
+/* Handlers điều hướng sidebar — delegate về _setActive */
+scwin.btn_navDashboard_onclick      = function () { scwin._setActive(0); };
+scwin.btn_navFileBrowser_onclick    = function () { scwin._setActive(1); };
+scwin.btn_navAssetDetails_onclick   = function () { scwin._setActive(2); };
+scwin.btn_navVersionControl_onclick = function () { scwin._setActive(3); };
 
+/* Mở hộp thoại xác nhận trước khi đăng xuất */
 scwin.btn_logout_onclick = function () {
-    if (confirm("Logout?")) { location.href = "/"; }
+    com.win.confirm('Bạn có chắc muốn đăng xuất?', 'scwin._onConfirmLogout');
 };
 
+/* Callback xử lý kết quả xác nhận đăng xuất */
+scwin._onConfirmLogout = function (result) {
+    if (result) { location.href = '/'; }
+};
+
+/* Toggle thu gọn/mở rộng sidebar */
 scwin.img_hamburger_onclick = function () {
     var shell = $p.getComponentById("grp_appShell");
     if (shell) {
