@@ -21,4 +21,6 @@ public interface DamMapper {
 	int updateAsset(@Param("vo") DamAssetVo vo);
 	
 	int updateVersion(@Param("vo") DamVersionVo vo);
+	
+	int insertVersion(@Param("vo") DamVersionVo vo);
 }
