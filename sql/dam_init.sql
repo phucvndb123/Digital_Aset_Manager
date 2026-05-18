@@ -65,9 +65,7 @@ CREATE TABLE DAM_VERSION (
     ASSET_ID     INT NOT NULL,
     VER_NO       VARCHAR(20)  NOT NULL,
     FILE_URL     VARCHAR(500),
-    PREVIEW_URL  VARCHAR(500),
     CHANGE_LOG   TEXT,
-    OWNER_NM     VARCHAR(50),
     UPLOAD_DT    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (VER_ID),
     KEY IDX_VERSION_ASSET (ASSET_ID),
@@ -246,31 +244,31 @@ INSERT INTO DAM_ASSET (
 --   Asset 3  Brand_Guidelines      : v1.0 → v2.0 (current)
 -- ------------------------------------------------------------
 INSERT INTO DAM_VERSION (
-    VER_ID, ASSET_ID, VER_NO, FILE_URL, PREVIEW_URL, CHANGE_LOG, OWNER_NM, UPLOAD_DT
+    VER_ID, ASSET_ID, VER_NO, FILE_URL, CHANGE_LOG, UPLOAD_DT
 ) VALUES
   -- Product_Image.jpg
-  (1, 1, 'v1.0', '/files/product_image_v1.0.jpg', '/cm/dam/images/preview/product.svg',
-        'Initial creative direction.',                'Carol', '2026-01-15 10:00:00'),
-  (2, 1, 'v1.1', '/files/product_image_v1.1.jpg', '/cm/dam/images/preview/product.svg',
-        'Color tone tweak per stakeholder feedback.', 'Carol', '2026-02-10 14:30:00'),
-  (3, 1, 'v2.0', '/files/product_image_v2.0.jpg', '/cm/dam/images/preview/product.svg',
-        'New layout with product close-up.',          'Carol', '2026-02-28 09:45:00'),
-  (4, 1, 'v2.1', '/files/product_image_v2.1.jpg', '/cm/dam/images/preview/product.svg',
-        'Text overlay updated for Q1 promo.',         'Alice', '2026-03-15 11:20:00'),
-  (5, 1, 'v3.0', '/files/product_image_v3.0.jpg', '/cm/dam/images/preview/product.svg',
-        'Final approved hero image.',                 'Carol', '2026-03-20 14:30:00'),
+  (1, 1, 'v1.0', '/files/product_image_v1.0.jpg', 
+        'Initial creative direction.',                '2026-01-15 10:00:00'),
+  (2, 1, 'v1.1', '/files/product_image_v1.1.jpg', 
+        'Color tone tweak per stakeholder feedback.', '2026-02-10 14:30:00'),
+  (3, 1, 'v2.0', '/files/product_image_v2.0.jpg', 
+        'New layout with product close-up.',          '2026-02-28 09:45:00'),
+  (4, 1, 'v2.1', '/files/product_image_v2.1.jpg', 
+        'Text overlay updated for Q1 promo.',         '2026-03-15 11:20:00'),
+  (5, 1, 'v3.0', '/files/product_image_v3.0.jpg', 
+        'Final approved hero image.',                 '2026-03-20 14:30:00'),
 
   -- Annual_Report_2024.pdf
-  (6, 2, 'v1.0', '/files/annual_report_2024_v1.0.pdf',  '/cm/dam/images/preview/document.svg',
-        'Initial draft for review.',                   'David', '2026-04-30 16:00:00'),
-  (7, 2, 'v1.1', '/files/annual_report_2024_v1.1.pdf',  '/cm/dam/images/preview/document.svg',
-        'Final after CFO sign-off.',                   'David', '2026-05-05 09:15:00'),
+  (6, 2, 'v1.0', '/files/annual_report_2024_v1.0.pdf',  
+        'Initial draft for review.',                   '2026-04-30 16:00:00'),
+  (7, 2, 'v1.1', '/files/annual_report_2024_v1.1.pdf',  
+        'Final after CFO sign-off.',                   '2026-05-05 09:15:00'),
 
   -- Brand_Guidelines.pdf
-  (8, 3, 'v1.0', '/files/brand_guidelines_v1.0.pdf',    '/cm/dam/images/preview/document.svg',
-        'First public release.',                       'Alice', '2026-03-01 10:00:00'),
-  (9, 3, 'v2.0', '/files/brand_guidelines_v2.0.pdf',    '/cm/dam/images/preview/document.svg',
-        'Updated logo usage rules.',                   'Alice', '2026-04-12 10:20:00');
+  (8, 3, 'v1.0', '/files/brand_guidelines_v1.0.pdf',    
+        'First public release.',                       '2026-03-01 10:00:00'),
+  (9, 3, 'v2.0', '/files/brand_guidelines_v2.0.pdf',    
+        'Updated logo usage rules.',                   '2026-04-12 10:20:00');
 
 -- ------------------------------------------------------------
 -- ACCESS LOGS  (12 logs — đủ 4 ACTION_TP, nhiều user, span 5 tháng)

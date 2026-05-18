@@ -52,8 +52,8 @@
 	</select>
 
 	<select id="selectAssetsByFolderId" parameterType="int" resultMap="assetMap">
-		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE, OWNER_NM,
-		STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
+		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE,
+		OWNER_NM, STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
 		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_ASSET
 		WHERE FOLDER_ID = #{folderId}
@@ -61,8 +61,8 @@
 	</select>
 
 	<select id="selectAssetById" parameterType="int" resultMap="assetMap">
-		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE, OWNER_NM,
-		STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
+		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE,
+		OWNER_NM, STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
 		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_ASSET
 		WHERE ASSET_ID = #{assetId}
@@ -74,16 +74,15 @@
 			V.ASSET_ID,
 			V.VER_NO,
 			A.FILE_NM,
+			A.OWNER_NM AS OWNER_NM,
 			V.FILE_URL,
-			V.PREVIEW_URL,
+			A.PREVIEW_URL AS PREVIEW_URL,
 			V.CHANGE_LOG,
-			V.OWNER_NM,
 			DATE_FORMAT(V.UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_VERSION V
 		JOIN DAM_ASSET A ON A.ASSET_ID = V.ASSET_ID
 		WHERE V.ASSET_ID = #{assetId}
 		ORDER BY V.VER_ID DESC
-		LIMIT 1
 	</select>
 
 	<select id="selectAccessLogsByAssetId" parameterType="int" resultMap="accessLogMap">
@@ -102,15 +101,18 @@
 	<update id="updateAsset">
 		UPDATE DAM_ASSET
 		SET FILE_NM = #{vo.fileNm},
-		    TAGS    = #{vo.tags},
-		    STATUS  = #{vo.status}
+		     FILE_TYPE = #{vo.fileType},
+		    FILE_SIZE = #{vo.fileSize},
+		    OWNER_NM = COALESCE(#{vo.ownerNm}, OWNER_NM),
+		    TAGS = #{vo.tags},
+		    DESCRIPTION = #{vo.description},
+		    STATUS = #{vo.status}
 		WHERE ASSET_ID = #{vo.assetId}
 	</update>
 
 <update id="updateVersion">
 		UPDATE DAM_VERSION
 		SET VER_NO = #{vo.verNo},
-		    OWNER_NM = #{vo.ownerNm},
 		    CHANGE_LOG = #{vo.changeLog}
 		WHERE ASSET_ID = #{vo.assetId}
 		  AND VER_ID = #{vo.verId}
@@ -121,17 +123,17 @@
 			ASSET_ID,
 			VER_NO,
 			FILE_URL,
-			PREVIEW_URL,
 			CHANGE_LOG,
-			OWNER_NM,
 			UPLOAD_DT
 		) VALUES (
 			#{vo.assetId},
 			#{vo.verNo},
-			COALESCE(#{vo.fileUrl}, ''),
-			#{vo.previewUrl},
+			COALESCE(
+				NULLIF(#{vo.fileUrl}, ''),
+				(SELECT V2.FILE_URL FROM DAM_VERSION V2 WHERE V2.ASSET_ID = #{vo.assetId} ORDER BY V2.VER_ID DESC LIMIT 1),
+				''
+			),
 			#{vo.changeLog},
-			#{vo.ownerNm},
 			NOW()
 		)
 	</insert>

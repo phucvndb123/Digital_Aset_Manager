@@ -20,7 +20,10 @@
 /* Khôi phục tab đang xem từ localStorage khi refresh trang */
 scwin.onpageload = function () {
     var saved = parseInt(localStorage.getItem('dam_active_tab') || '0', 10);
-    scwin._setActive(isNaN(saved) ? 0 : saved);
+    if (isNaN(saved) || saved < 0 || saved > 3) {
+        saved = 0;
+    }
+    scwin._setActive(saved);
 };
 
 /* Đánh dấu nav item active, lưu lựa chọn vào localStorage, chuyển tab tương ứng */
@@ -45,16 +48,32 @@ scwin._setActive = function (idx) {
 scwin._switchTab = function (idx, attempt) {
     var tab = $p.getComponentById("tab_main");
     if (tab && typeof tab.setSelectedTabIndex === "function") {
-        try { tab.setSelectedTabIndex(idx); return; } catch (e) { console.warn("[DAM] setSelectedTabIndex error", e); }
+        try { tab.setSelectedTabIndex(idx); scwin._afterTabSwitch(idx); return; } catch (e) { console.warn("[DAM] setSelectedTabIndex error", e); }
     }
     if (tab && typeof tab.setSelectedTab === "function") {
-        try { tab.setSelectedTab(idx); return; } catch (e) { console.warn("[DAM] setSelectedTab error", e); }
+        try { tab.setSelectedTab(idx); scwin._afterTabSwitch(idx); return; } catch (e) { console.warn("[DAM] setSelectedTab error", e); }
     }
     if (attempt < 15) {
         window.setTimeout(function () { scwin._switchTab(idx, attempt + 1); }, 120);
     } else {
         console.error("[DAM] tab_main not ready after retries");
     }
+};
+
+scwin._afterTabSwitch = function () {
+    var fireResize = function () {
+        try {
+            if (typeof Event === "function") {
+                window.dispatchEvent(new Event("resize"));
+            } else if (document.createEvent) {
+                var evt = document.createEvent("UIEvents");
+                evt.initUIEvent("resize", true, false, window, 0);
+                window.dispatchEvent(evt);
+            }
+        } catch (e) {}
+    };
+    window.setTimeout(fireResize, 80);
+    window.setTimeout(fireResize, 300);
 };
 
 /* Handlers điều hướng sidebar — delegate về _setActive */

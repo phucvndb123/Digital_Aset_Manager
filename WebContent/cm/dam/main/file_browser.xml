@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?xml-stylesheet href="/cm/css/base.css" type="text/css"?>
+<?xml-stylesheet href="/cm/css/common.css" type="text/css"?>
 <?xml-stylesheet href="/cm/dam/css/dam.css" type="text/css"?>
+<?xml-stylesheet href="/cm/dam/css/asset_details.css" type="text/css"?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:w2="http://www.inswave.com/websquare"
 	xmlns:xf="http://www.w3.org/2002/xforms">
 	<head>
@@ -32,12 +34,15 @@
 					</w2:dataList>
 					<w2:dataList id="dlAsset" baseNode="list" repeatNode="map">
 					<w2:columnInfo>
+						<w2:column id="CHK" name="CHK" dataType="text" />
 						<w2:column id="ASSET_ID" name="ASSET_ID" dataType="text" />
 						<w2:column id="ICON" name="ICON" dataType="text" />
 						<w2:column id="FILE_NM" name="FILE_NM" dataType="text" />
 						<w2:column id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
 						<w2:column id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
 						<w2:column id="STATUS" name="STATUS" dataType="text" />
+						<w2:column id="TAGS" name="TAGS" dataType="text" />
+						<w2:column id="DESCRIPTION" name="DESCRIPTION" dataType="text" />
 						<w2:column id="OWNER_NM" name="OWNER_NM" dataType="text" />
 						<w2:column id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
 					</w2:columnInfo>
@@ -48,9 +53,10 @@
 						<w2:key id="DESCRIPTION" name="DESCRIPTION" dataType="text" />
 						<w2:key id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
 						<w2:key id="TAGS" name="TAGS" dataType="text" />
-						<w2:key id="ASSET_DATA" name="ASSET_DATA" dataType="text" />
+						<w2:key id="STATUS" name="STATUS" dataType="text" />
 						<w2:key id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
 						<w2:key id="OWNER_NM" name="OWNER_NM" dataType="text" />
+						<w2:key id="CHANGE_LOG" name="CHANGE_LOG" dataType="text" />
 						<w2:key id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
 					</w2:keyInfo>
 				</w2:dataMap>
@@ -124,6 +130,56 @@
                 if (n >= kb) { return (n / kb).toFixed(2) + " KB"; }
                 return n + " B";
             };
+
+            scwin._FILE_ICON_COLORS = {
+                "PDF": "#f44336", "DOC": "#1e88e5", "DOCX": "#1e88e5",
+                "XLS": "#43a047", "XLSX": "#43a047", "PPT": "#ff7043", "PPTX": "#ff7043",
+                "JPG": "#43a047", "JPEG": "#43a047", "PNG": "#1e88e5",
+                "GIF": "#8e24aa", "SVG": "#00897b", "PSD": "#5e35b1",
+                "MP4": "#fb8c00", "MOV": "#f4511e", "AVI": "#f4511e",
+                "MP3": "#3949ab", "WAV": "#3949ab", "AAC": "#3949ab",
+                "ZIP": "#546e7a", "RAR": "#546e7a", "7Z": "#546e7a"
+            };
+
+            scwin._makeFileIcon = function(ext) {
+                var color = scwin._FILE_ICON_COLORS[ext] || "#546e7a";
+                var lbl = String(ext || "FILE").substring(0, 4);
+                var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40">'
+                    + '<path d="M2,0 L22,0 L32,10 L32,40 L2,40 Z" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>'
+                    + '<path d="M22,0 L22,10 L32,10 Z" fill="#e5e7eb"/>'
+                    + '<rect x="2" y="26" width="30" height="14" fill="' + color + '"/>'
+                    + '<text x="16" y="37" font-family="Arial,sans-serif" font-size="8" font-weight="bold" fill="#ffffff" text-anchor="middle">' + lbl + '</text>'
+                    + '</svg>';
+                return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+            };
+
+            scwin._styleIconBadges = function() {
+                try {
+                    var cells = document.querySelectorAll(".dam-asset-grid-view .dam-cell-icon");
+                    for (var i = 0; i < cells.length; i++) {
+                        var cell = cells[i];
+                        var labelEl = cell.querySelector(".w2grid_label");
+                        var ext = (labelEl ? (labelEl.textContent || labelEl.innerText || "") : (cell.textContent || "")).trim().toUpperCase().replace(".", "");
+                        if (!ext) { ext = "FILE"; }
+                        if (labelEl) { labelEl.style.cssText = "display:none!important;visibility:hidden!important;"; }
+                        var existingImg = cell.querySelector(".dam-icon-img");
+                        if (existingImg) {
+                            if (existingImg.alt === ext) { continue; }
+                            existingImg.parentNode.removeChild(existingImg);
+                        }
+                        var img = document.createElement("img");
+                        img.className = "dam-icon-img";
+                        img.src = scwin._makeFileIcon(ext);
+                        img.alt = ext;
+                        img.style.cssText = "width:28px;height:34px;object-fit:contain;display:block;margin:0 auto;pointer-events:none;";
+                        cell.appendChild(img);
+                    }
+                } catch (e) {}
+            };
+
+            scwin.grdAsset_ondrawendrow = function() {
+                scwin._styleIconBadges();
+            };
             
             scwin._setDetailField = function(compId, key, value) {
                 var val = value == null ? "" : String(value);
@@ -141,9 +197,10 @@
                 scwin._setDetailField("taDescription", "DESCRIPTION", "");
                 scwin._setDetailField("inpFileType", "FILE_TYPE", "");
                 scwin._setDetailField("inpTags", "TAGS", "");
-                scwin._setDetailField("selAssetData", "ASSET_DATA", "Draft");
+                scwin._setDetailField("selAssetData", "STATUS", "Draft");
                 scwin._setDetailField("inpFileSize", "FILE_SIZE", "");
                 scwin._setDetailField("inpOwnerNm", "OWNER_NM", "");
+                 scwin._setDetailField("taChangeLog", "CHANGE_LOG", "");
                 scwin._setDetailField("inpUploadDt", "UPLOAD_DT", "");
             };
 
@@ -165,7 +222,9 @@
                 scwin._setDetailField("inpFileNm", "FILE_NM", rowData.FILE_NM || "");
                 scwin._setDetailField("inpFileType", "FILE_TYPE", rowData.FILE_TYPE || "");
                 scwin._setDetailField("inpFileSize", "FILE_SIZE", rowData.FILE_SIZE || "");
-                scwin._setDetailField("selAssetData", "ASSET_DATA", st);
+                scwin._setDetailField("selAssetData", "STATUS", st);
+                scwin._setDetailField("taDescription", "DESCRIPTION", rowData.DESCRIPTION || "");
+                scwin._setDetailField("inpTags", "TAGS", rowData.TAGS || "");
                 scwin._setDetailField("inpOwnerNm", "OWNER_NM", rowData.OWNER_NM || "");
                 scwin._setDetailField("inpUploadDt", "UPLOAD_DT", rowData.UPLOAD_DT || "");
             };
@@ -179,6 +238,7 @@
                 }
                 if (!rowData || rowData.ASSET_ID == null || rowData.ASSET_ID === "") { return; }
                 scwin._applyDetailFromGridRow(rowData);
+                 scwin._selectedAssetId = rowData.ASSET_ID;
                 scwin.loadAssetDetail(rowData.ASSET_ID, rowData);
                 try {
                     var grd = $p.getComponentById("grdAsset");
@@ -275,6 +335,19 @@
                     }
                 });
             };
+            scwin.loadAssetsByFolder = function() {
+                var folderId = dmFolder.get("FOLDER_ID");
+                if (folderId == null || folderId === "") {
+                    try { folderId = trvFolder.getSelectedValue(); } catch (e) {}
+                }
+                var parsedFolderId = parseInt(folderId, 10);
+                if (isNaN(parsedFolderId)) {
+                    console.warn("[FileBrowser] Cannot reload assets because folderId is missing", folderId);
+                    return;
+                }
+                dmFolder.set("FOLDER_ID", String(parsedFolderId));
+                scwin.loadAssets(parsedFolderId);
+            };
 
             scwin.loadAssets = function(folderId) {
                 scwin.callApi("/api/dam/assets?folderId=" + encodeURIComponent(folderId), function(list) {
@@ -282,18 +355,23 @@
                     for (var i = 0; i < (list || []).length; i++) {
                         var item = list[i];
                         rows.push({
+                            "CHK": "",
                             "ASSET_ID": item.assetId,
                             "ICON": item.fileExt ? String(item.fileExt).toUpperCase() : (item.fileType || ""),
                             "FILE_NM": item.fileNm || "",
                             "FILE_TYPE": item.fileType || "",
                             "FILE_SIZE": scwin._formatFileSize(item.fileSize),
                             "STATUS": item.status || "Draft",
+                            "TAGS": item.tags || "",
+                            "DESCRIPTION": item.description || "",
                             "OWNER_NM": item.ownerNm || "",
                             "UPLOAD_DT": item.uploadDt || ""
                         });
                     }
                     dlAsset.setJSON(rows);
                     if (rows.length > 0) {
+                        window.setTimeout(function() { scwin._styleIconBadges(); }, 100);
+                        window.setTimeout(function() { scwin._styleIconBadges(); }, 500);
                         scwin._applyDetailFromGridRow(rows[0]);
                         scwin.loadAssetDetail(rows[0].ASSET_ID, rows[0]);
                         window.setTimeout(function() {
@@ -374,8 +452,9 @@
                     var base = fallbackRow || {};
                     if (!response || !response.asset) {
                         scwin._applyDetailFromGridRow(base);
-                          scwin._setDetailField("taDescription", "DESCRIPTION", "");
+                        scwin._setDetailField("taDescription", "DESCRIPTION", "");
                         scwin._setDetailField("inpTags", "TAGS", "");
+                        scwin._setDetailField("taChangeLog", "CHANGE_LOG", "");
                         return;
                     }
                     var asset = response.asset;
@@ -383,11 +462,13 @@
                     if (status !== "Draft" && status !== "Published" && status !== "Archived") {
                         status = "Draft";
                     }
+                    var latestVersion = scwin._pickLatestVersion(response.versions || []);
+                    var latestVersionUploadDt = latestVersion && latestVersion.uploadDt ? latestVersion.uploadDt : "";
                     scwin._setDetailField("inpFileNm", "FILE_NM", asset.fileNm || base.FILE_NM || "");
-                    scwin._setDetailField("taDescription", "DESCRIPTION", asset.description || "");
+                    scwin._setDetailField("taDescription", "DESCRIPTION", asset.description || base.DESCRIPTION || "");
                     scwin._setDetailField("inpFileType", "FILE_TYPE", asset.fileType || base.FILE_TYPE || "");
-                    scwin._setDetailField("inpTags", "TAGS", asset.tags || "");
-                    scwin._setDetailField("selAssetData", "ASSET_DATA", status);
+                    scwin._setDetailField("inpTags", "TAGS", asset.tags || base.TAGS || "");
+                    scwin._setDetailField("selAssetData", "STATUS", status);
                     var sz = "";
                     if (asset.fileSize != null && typeof asset.fileSize === "number") {
                         sz = scwin._formatFileSize(asset.fileSize);
@@ -396,7 +477,8 @@
                     }
                     scwin._setDetailField("inpFileSize", "FILE_SIZE", sz);
                     scwin._setDetailField("inpOwnerNm", "OWNER_NM", asset.ownerNm || base.OWNER_NM || "");
-                    scwin._setDetailField("inpUploadDt", "UPLOAD_DT", asset.uploadDt || base.UPLOAD_DT || "");
+                    scwin._setDetailField("taChangeLog", "CHANGE_LOG", "");
+                    scwin._setDetailField("inpUploadDt", "UPLOAD_DT", latestVersionUploadDt || base.UPLOAD_DT || asset.uploadDt || "");
                 });
             };
 
@@ -506,6 +588,105 @@
             };
 
           
+	   scwin._selectedAssetId = null;
+
+            scwin._nextVersionNo = function(currentVerNo) {
+                var raw = String(currentVerNo || "").trim();
+                var m = raw.match(/^(?:v|V)?(\d+)(?:\.(\d+))?$/);
+                var major = 1;
+                var minor = 0;
+                if (m) {
+                    major = parseInt(m[1], 10) || 1;
+                    minor = parseInt(m[2] || "0", 10) || 0;
+                }
+                minor += 1;
+                return "v" + major + "." + minor;
+            };
+
+
+            scwin._getDetailValue = function(compId, key) {
+                try {
+                 var val = null;
+                    var c = $p.getComponentById(compId);
+                    if (c && typeof c.getValue === "function") {
+                         val = c.getValue();
+                    }
+                } catch (e) {}
+                if (val == null) { val = dmAssetDetail.get(key); }
+                return val == null ? "" : String(val);
+            };
+
+            scwin._syncDetailFromForm = function() {
+                var keys = [
+                    ["inpFileNm", "FILE_NM"],
+                    ["taDescription", "DESCRIPTION"],
+                    ["inpFileType", "FILE_TYPE"],
+                    ["inpTags", "TAGS"],
+                    ["selAssetData", "STATUS"],
+                    ["inpFileSize", "FILE_SIZE"],
+                    ["inpOwnerNm", "OWNER_NM"],
+                    ["taChangeLog", "CHANGE_LOG"]
+                ];
+                for (var i = 0; i < keys.length; i++) {
+                    var compId = keys[i][0];
+                    var key = keys[i][1];
+                    dmAssetDetail.set(key, scwin._getDetailValue(compId, key));
+                }
+            };
+
+            scwin.btn_asset_detail_submit_onclick = function() {
+                var assetId = scwin._selectedAssetId;
+                if (!assetId) {
+                    alert("Vui lòng chọn asset trước khi submit.");
+                    return;
+                }
+                scwin._syncDetailFromForm();
+                  var changeLog = scwin._getDetailValue("taChangeLog", "CHANGE_LOG").trim();
+                if (!changeLog) {
+                    alert("Change Log là bắt buộc để tạo version mới.");
+                    return;
+                }
+                var rawFileSize = scwin._getDetailValue("inpFileSize", "FILE_SIZE");
+                var parsedFileSize = parseInt(String(rawFileSize || "").replace(/[^0-9]/g, ""), 10);
+                var assetPayload = {
+                    fileNm: scwin._getDetailValue("inpFileNm", "FILE_NM"),
+                    description: scwin._getDetailValue("taDescription", "DESCRIPTION"),
+                    fileType: scwin._getDetailValue("inpFileType", "FILE_TYPE"),
+                    tags: scwin._getDetailValue("inpTags", "TAGS"),
+                    status: scwin._getDetailValue("selAssetData", "STATUS") || "Draft",
+                    ownerNm: scwin._getDetailValue("inpOwnerNm", "OWNER_NM"),
+                    fileSize: isNaN(parsedFileSize) ? null : parsedFileSize
+                };
+
+                scwin.callApi("/api/dam/assets/" + encodeURIComponent(assetId), function(res) {
+                    var latest = scwin._pickLatestVersion(res && res.versions ? res.versions : []);
+                    var nextVer = scwin._nextVersionNo(latest ? latest.verNo : "v1.0");
+                    if (assetPayload.fileSize == null) { assetPayload.fileSize = (res && res.asset && res.asset.fileSize != null) ? res.asset.fileSize : 0; }
+                    var versionPayload = {
+                        verNo: nextVer,
+                        ownerNm: assetPayload.ownerNm,
+                        changeLog: changeLog,
+                        previewUrl: (latest && latest.previewUrl) || (res && res.asset && res.asset.previewUrl) || "",
+                        fileUrl: assetPayload.fileNm
+                    };
+
+                    scwin.callApiJson("PUT", "/api/dam/assets/" + encodeURIComponent(assetId), assetPayload, function(updateRes) {
+                        if (!updateRes || Number(updateRes.updated || 0) < 1) {
+                            alert("Không cập nhật được thông tin asset trong DB.");
+                            return;
+                        }
+                        scwin.callApiJson("POST", "/api/dam/assets/" + encodeURIComponent(assetId) + "/versions", versionPayload, function(createRes) {
+                            if (!createRes || Number(createRes.created || 0) < 1) {
+                                alert("Không tạo được version mới trong DB.");
+                                return;
+                            }
+                            alert("Submit thành công. Đã cập nhật asset và tạo version mới: " + nextVer);
+                            scwin.loadAssetsByFolder();
+                        });
+                    });
+                });
+            };
+
 
             scwin.btn_fb_cancel_onclick = function() {
                 var bg = document.getElementById("fbPopupBackdrop");
@@ -560,37 +741,54 @@
 					</xf:group>
 
 					<xf:group class="dam-asset-panel dam-asset-files">
-						<xf:group class="dam-asset-files-body" style="height:100%;">
-							<xf:group class="dam-asset-panel-head">
-								<w2:textbox class="dam-asset-panel-title" label="File List" tagname="h3" />
+						<xf:group class="dam-asset-panel-head">
+							<w2:textbox class="dam-asset-panel-title" label="File List" tagname="h3" />
+							<xf:group class="dam-asset-panel-actions">
+								<xf:trigger id="btn_filesSort" class="dam-icon-btn" title="Sort">
+									<xf:label><![CDATA[↑↓]]></xf:label>
+								</xf:trigger>
+								<xf:trigger id="btn_filesFilter" class="dam-icon-btn" title="Filter">
+									<xf:label><![CDATA[▽]]></xf:label>
+								</xf:trigger>
 							</xf:group>
+						</xf:group>
+						<xf:group class="dam-asset-files-body">
 							<w2:gridView id="grdAsset" class="dam-asset-grid-view" dataList="data:dlAsset" autoFit="allColumn" focusMode="row"
-								sortable="false" style="width:100%;flex:1;min-height:240px;" ev:onrowindexchange="scwin.grdAsset_onrowindexchange"
+								sortable="false" style="width:100%;height:calc(100% - 38px);" ev:onrowindexchange="scwin.grdAsset_onrowindexchange"
 								ev:oncellindexchange="scwin.grdAsset_oncellindexchange" ev:oncellclick="scwin.grdAsset_oncellclick"
-								ev:oncelldblclick="scwin.grdAsset_oncelldblclick" oddRowBackgroundColor="#eef6ff" evenRowBackgroundColor="#ffffff">
+								ev:oncelldblclick="scwin.grdAsset_oncelldblclick" ev:ondrawendrow="scwin.grdAsset_ondrawendrow"
+								oddRowBackgroundColor="#eef6ff" evenRowBackgroundColor="#ffffff">
 								<w2:header>
 									<w2:row>
-										<w2:column id="hdIcon" inputType="text" width="60" value="Icon" />
+										<w2:column id="hdChk" inputType="checkbox" width="40" value="" />
+										<w2:column id="hdIcon" inputType="text" width="70" value="Icon" />
 										<w2:column id="hdFileNm" inputType="text" width="240" value="Name" />
 										<w2:column id="hdType" inputType="text" width="140" value="Type" />
-										<w2:column id="hdSize" inputType="text" width="120" value="Size" />
-										<w2:column id="hdStatus" inputType="text" width="100" value="Status" />
-										<w2:column id="hdOwner" inputType="text" width="110" value="Owner" />
-										<w2:column id="hdUploaded" inputType="text" width="140" value="Uploaded" />
+										<w2:column id="hdSize" inputType="text" width="100" value="Size" />
+										<w2:column id="hdStatus" inputType="text" width="120" value="Status" />
 									</w2:row>
 								</w2:header>
 								<w2:gBody>
 									<w2:row>
-										<w2:column id="ICON" inputType="text" width="60" displayMode="label" class="dam-cell-icon" />
-										<w2:column id="FILE_NM" inputType="text" width="200" displayMode="label" />
-										<w2:column id="FILE_TYPE" inputType="text" width="110" displayMode="label" />
+										<w2:column id="CHK" inputType="checkbox" width="40" displayMode="always" />
+										<w2:column id="ICON" inputType="text" width="70" displayMode="label" class="dam-cell-icon" />
+										<w2:column id="FILE_NM" inputType="text" width="240" displayMode="label" />
+										<w2:column id="FILE_TYPE" inputType="text" width="140" displayMode="label" />
 										<w2:column id="FILE_SIZE" inputType="text" width="100" displayMode="label" />
-										<w2:column id="STATUS" inputType="text" width="100" displayMode="label" class="dam-cell-status" />
-										<w2:column id="OWNER_NM" inputType="text" width="110" displayMode="label" />
-										<w2:column id="UPLOAD_DT" inputType="text" width="140" displayMode="label" />
+										<w2:column id="STATUS" inputType="text" width="120" displayMode="label" class="dam-cell-status" />
 									</w2:row>
 								</w2:gBody>
 							</w2:gridView>
+							<xf:group class="dam-asset-pagination">
+								<w2:textbox class="dam-pagi-label" label="Pagination" />
+								<xf:group class="dam-pagi-controls">
+									<xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[|<]]></xf:label></xf:trigger>
+									<xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[<]]></xf:label></xf:trigger>
+									<xf:trigger class="dam-pagi-btn dam-pagi-active"><xf:label><![CDATA[1]]></xf:label></xf:trigger>
+									<xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[>]]></xf:label></xf:trigger>
+									<xf:trigger class="dam-pagi-btn"><xf:label><![CDATA[>|]]></xf:label></xf:trigger>
+								</xf:group>
+							</xf:group>
 						</xf:group>
 					</xf:group>
 				</xf:group>
@@ -601,36 +799,45 @@
 							<w2:textbox class="dam-asset-panel-title" label="Asset Details" tagname="h3" />
 						</xf:group>
 						<xf:group class="dam-form-row">
-							<w2:textbox class="dam-form-label" label="Name" />
-							<xf:input id="inpFileNm" ref="data:dmAssetDetail/FILE_NM" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpFileNm" ref="data:dmAssetDetail/FILE_NM" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Description" />
-							<xf:input id="taDescription" ref="data:dmAssetDetail/DESCRIPTION" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:textarea id="taDescription" ref="data:dmAssetDetail/DESCRIPTION" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Asset Type" />
-							<xf:input id="inpFileType" ref="data:dmAssetDetail/FILE_TYPE" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpFileType" ref="data:dmAssetDetail/FILE_TYPE" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Tags" />
-							<xf:input id="inpTags" ref="data:dmAssetDetail/TAGS" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpTags" ref="data:dmAssetDetail/TAGS" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Asset Data" />
-							<xf:input id="selAssetData" ref="data:dmAssetDetail/ASSET_DATA" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="selAssetData" ref="data:dmAssetDetail/STATUS" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="File Size" />
-							<xf:input id="inpFileSize" ref="data:dmAssetDetail/FILE_SIZE" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpFileSize" ref="data:dmAssetDetail/FILE_SIZE" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Owner" />
-							<xf:input id="inpOwnerNm" ref="data:dmAssetDetail/OWNER_NM" readOnly="true" class="dam-form-input" style="width:100%;" />
+							<xf:input id="inpOwnerNm" ref="data:dmAssetDetail/OWNER_NM" class="dam-form-input" style="width:100%;" />
+							
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Change Log *" />
+							<xf:textarea id="taChangeLog" ref="data:dmAssetDetail/CHANGE_LOG" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Uploaded" />
 							<xf:input id="inpUploadDt" ref="data:dmAssetDetail/UPLOAD_DT" readOnly="true" class="dam-form-input" style="width:100%;" />
+						<xf:group style="display:flex;justify-content:flex-end;margin-top:10px;">
+							<xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_asset_detail_submit_onclick" style="background-color:#16a34a;border:1px solid #15803d;width:7em;">
+								<xf:label>Submit</xf:label>
+							</xf:trigger>
+						</xf:group>
 						</xf:group>
 					</xf:group>
 				</xf:group>
