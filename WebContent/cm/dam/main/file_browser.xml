@@ -276,6 +276,19 @@
                     }
                 });
             };
+            scwin.loadAssetsByFolder = function() {
+                var folderId = dmFolder.get("FOLDER_ID");
+                if (folderId == null || folderId === "") {
+                    try { folderId = trvFolder.getSelectedValue(); } catch (e) {}
+                }
+                var parsedFolderId = parseInt(folderId, 10);
+                if (isNaN(parsedFolderId)) {
+                    console.warn("[FileBrowser] Cannot reload assets because folderId is missing", folderId);
+                    return;
+                }
+                dmFolder.set("FOLDER_ID", String(parsedFolderId));
+                scwin.loadAssets(parsedFolderId);
+            };
 
             scwin.loadAssets = function(folderId) {
                 scwin.callApi("/api/dam/assets?folderId=" + encodeURIComponent(folderId), function(list) {
