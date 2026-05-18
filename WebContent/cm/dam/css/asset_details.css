@@ -563,3 +563,311 @@
    border-color: #e2e8f0 !important;
    cursor: default !important;
 }
+
+/* ----- Version Control: selected asset version history ----- */
+.dam-version-panel {
+   flex: 1 !important;
+   min-height: 520px !important;
+   overflow: hidden !important;
+   gap: 0.9rem !important;
+}
+
+.dam-version-head {
+   margin-bottom: 0 !important;
+   padding-bottom: 0.85rem !important;
+   border-bottom: 1px solid #e5e7eb !important;
+}
+
+.dam-version-title-wrap {
+   display: flex !important;
+   flex-direction: column !important;
+   gap: 0.2rem !important;
+}
+
+.dam-version-subtitle {
+   display: block !important;
+   font-size: 0.78rem !important;
+   color: #64748b !important;
+   line-height: 1.35 !important;
+}
+
+.dam-version-summary {
+   display: grid !important;
+   grid-template-columns: 48px minmax(0, 1fr) !important;
+   gap: 0.85rem !important;
+   align-items: center !important;
+   padding: 0.85rem !important;
+   border: 1px solid #e2e8f0 !important;
+   border-radius: 0.5rem !important;
+   background: #f8fafc !important;
+}
+
+.dam-version-file-icon {
+   width: 48px !important;
+   height: 56px !important;
+   border: 1px solid #cbd5e1 !important;
+   border-radius: 0.35rem !important;
+   background: linear-gradient(180deg, #ffffff 0%, #edf2f7 100%) !important;
+   display: flex !important;
+   align-items: flex-end !important;
+   justify-content: center !important;
+   overflow: hidden !important;
+   position: relative !important;
+}
+
+.dam-version-file-icon:after {
+   content: "" !important;
+   position: absolute !important;
+   left: 0 !important;
+   right: 0 !important;
+   bottom: 0 !important;
+   height: 18px !important;
+   background: #2563eb !important;
+}
+
+.dam-version-ext {
+   position: relative !important;
+   z-index: 1 !important;
+   display: block !important;
+   width: 100% !important;
+   text-align: center !important;
+   color: #ffffff !important;
+   font-size: 0.62rem !important;
+   font-weight: 800 !important;
+   line-height: 18px !important;
+}
+
+.dam-version-file-meta {
+   min-width: 0 !important;
+   display: flex !important;
+   flex-direction: column !important;
+   gap: 0.25rem !important;
+}
+
+.dam-version-file-name {
+   display: block !important;
+   color: #0f172a !important;
+   font-size: 0.95rem !important;
+   font-weight: 700 !important;
+   line-height: 1.35 !important;
+   overflow: hidden !important;
+   text-overflow: ellipsis !important;
+   white-space: nowrap !important;
+}
+
+.dam-version-file-detail {
+   display: block !important;
+   color: #64748b !important;
+   font-size: 0.78rem !important;
+   line-height: 1.35 !important;
+   overflow: hidden !important;
+   text-overflow: ellipsis !important;
+   white-space: nowrap !important;
+}
+
+.dam-version-stats {
+   display: grid !important;
+   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+   gap: 0.65rem !important;
+}
+
+.dam-version-stat {
+   min-width: 0 !important;
+   border: 1px solid #e2e8f0 !important;
+   border-radius: 0.45rem !important;
+   background: #ffffff !important;
+   padding: 0.65rem 0.7rem !important;
+}
+
+.dam-version-stat-label {
+   display: block !important;
+   color: #64748b !important;
+   font-size: 0.72rem !important;
+   line-height: 1.2 !important;
+   margin-bottom: 0.25rem !important;
+}
+
+.dam-version-stat-value {
+   display: block !important;
+   color: #0f172a !important;
+   font-size: 0.9rem !important;
+   font-weight: 700 !important;
+   line-height: 1.25 !important;
+   overflow: hidden !important;
+   text-overflow: ellipsis !important;
+   white-space: nowrap !important;
+}
+
+.dam-version-list {
+   flex: 1 !important;
+   min-height: 0 !important;
+   display: flex !important;
+   flex-direction: column !important;
+   gap: 0.7rem !important;
+   overflow-y: auto !important;
+   padding-right: 0.25rem !important;
+}
+
+.dam-version-card {
+   border: 1px solid #e2e8f0 !important;
+   border-radius: 0.5rem !important;
+   background: #ffffff !important;
+   padding: 0.85rem !important;
+   display: flex !important;
+   flex-direction: column !important;
+   gap: 0.65rem !important;
+   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+.dam-version-card.is-latest {
+   border-color: #93c5fd !important;
+   background: #eff6ff !important;
+}
+
+.dam-version-card-head {
+   display: flex !important;
+   align-items: center !important;
+   gap: 0.45rem !important;
+   min-width: 0 !important;
+}
+
+.dam-version-badge {
+   flex: 0 0 auto !important;
+   min-width: 2.3rem !important;
+   height: 1.55rem !important;
+   padding: 0 0.45rem !important;
+   border-radius: 999px !important;
+   background: #1d4ed8 !important;
+   color: #ffffff !important;
+   display: inline-flex !important;
+   align-items: center !important;
+   justify-content: center !important;
+   font-size: 0.78rem !important;
+   font-weight: 800 !important;
+   box-sizing: border-box !important;
+}
+
+.dam-version-latest {
+   flex: 0 0 auto !important;
+   color: #1d4ed8 !important;
+   background: #dbeafe !important;
+   border: 1px solid #bfdbfe !important;
+   border-radius: 999px !important;
+   padding: 0.18rem 0.45rem !important;
+   font-size: 0.72rem !important;
+   font-weight: 700 !important;
+   line-height: 1 !important;
+}
+
+.dam-version-date {
+   margin-left: auto !important;
+   min-width: 0 !important;
+   color: #64748b !important;
+   font-size: 0.75rem !important;
+   text-align: right !important;
+   overflow: hidden !important;
+   text-overflow: ellipsis !important;
+   white-space: nowrap !important;
+}
+
+.dam-version-log {
+   color: #334155 !important;
+   font-size: 0.83rem !important;
+   line-height: 1.45 !important;
+   word-break: break-word !important;
+}
+
+.dam-version-card-foot {
+   display: flex !important;
+   align-items: center !important;
+   justify-content: space-between !important;
+   gap: 0.75rem !important;
+   color: #64748b !important;
+   font-size: 0.75rem !important;
+   border-top: 1px solid rgba(148, 163, 184, 0.28) !important;
+   padding-top: 0.6rem !important;
+}
+
+.dam-version-link {
+   color: #1d4ed8 !important;
+   font-size: 0.78rem !important;
+   font-weight: 700 !important;
+   text-decoration: none !important;
+   white-space: nowrap !important;
+}
+
+.dam-version-link:hover {
+   text-decoration: underline !important;
+}
+
+.dam-version-link.is-disabled {
+   color: #94a3b8 !important;
+   pointer-events: none !important;
+}
+
+.dam-version-state {
+   flex: 1 !important;
+   min-height: 260px !important;
+   border: 1px dashed #cbd5e1 !important;
+   border-radius: 0.5rem !important;
+   background: #f8fafc !important;
+   display: flex !important;
+   flex-direction: column !important;
+   align-items: center !important;
+   justify-content: center !important;
+   text-align: center !important;
+   padding: 1.25rem !important;
+}
+
+.dam-version-state-icon {
+   width: 38px !important;
+   height: 38px !important;
+   border: 2px solid #94a3b8 !important;
+   border-radius: 50% !important;
+   margin-bottom: 0.75rem !important;
+   position: relative !important;
+}
+
+.dam-version-state-icon:before {
+   content: "" !important;
+   position: absolute !important;
+   width: 10px !important;
+   height: 2px !important;
+   background: #94a3b8 !important;
+   left: 17px !important;
+   top: 17px !important;
+   transform-origin: left center !important;
+   transform: rotate(35deg) !important;
+}
+
+.dam-version-state-icon:after {
+   content: "" !important;
+   position: absolute !important;
+   width: 2px !important;
+   height: 12px !important;
+   background: #94a3b8 !important;
+   left: 17px !important;
+   top: 9px !important;
+}
+
+.dam-version-state-title {
+   display: block !important;
+   color: #0f172a !important;
+   font-size: 0.95rem !important;
+   font-weight: 700 !important;
+   line-height: 1.35 !important;
+   margin-bottom: 0.25rem !important;
+}
+
+.dam-version-state-detail {
+   display: block !important;
+   color: #64748b !important;
+   font-size: 0.8rem !important;
+   line-height: 1.45 !important;
+   max-width: 20rem !important;
+}
+
+.dam-version-state.is-error {
+   border-color: #fecaca !important;
+   background: #fef2f2 !important;
+}

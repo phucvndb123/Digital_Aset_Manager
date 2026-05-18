@@ -16,9 +16,11 @@
 		<result property="fileType" column="FILE_TYPE" />
 		<result property="fileExt" column="FILE_EXT" />
 		<result property="fileSize" column="FILE_SIZE" />
+		<result property="ownerNm" column="OWNER_NM" />
 		<result property="status" column="STATUS" />
 		<result property="tags" column="TAGS" />
 		<result property="description" column="DESCRIPTION" />
+		<result property="previewUrl" column="PREVIEW_URL" />
 		<result property="resolution" column="RESOLUTION" />
 		<result property="uploadDt" column="UPLOAD_DT" />
 	</resultMap>
@@ -29,7 +31,9 @@
 		<result property="verNo" column="VER_NO" />
 		<result property="fileNm" column="FILE_NM" />
 		<result property="fileUrl" column="FILE_URL" />
+		<result property="previewUrl" column="PREVIEW_URL" />
 		<result property="changeLog" column="CHANGE_LOG" />
+		<result property="ownerNm" column="OWNER_NM" />
 		<result property="uploadDt" column="UPLOAD_DT" />
 	</resultMap>
 
@@ -49,7 +53,7 @@
 
 	<select id="selectAssetsByFolderId" parameterType="int" resultMap="assetMap">
 		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE,
-		STATUS, TAGS, DESCRIPTION, RESOLUTION,
+		OWNER_NM, STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
 		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_ASSET
 		WHERE FOLDER_ID = #{folderId}
@@ -58,7 +62,7 @@
 
 	<select id="selectAssetById" parameterType="int" resultMap="assetMap">
 		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE,
-		STATUS, TAGS, DESCRIPTION, RESOLUTION,
+		OWNER_NM, STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
 		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_ASSET
 		WHERE ASSET_ID = #{assetId}
@@ -69,15 +73,16 @@
 			V.VER_ID,
 			V.ASSET_ID,
 			V.VER_NO,
-			A.FILE_NM,			
-			V.PREVIEW_URL,
+			A.FILE_NM,
+			A.OWNER_NM AS OWNER_NM,
+			V.FILE_URL,
+			A.PREVIEW_URL AS PREVIEW_URL,
 			V.CHANGE_LOG,
 			DATE_FORMAT(V.UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_VERSION V
 		JOIN DAM_ASSET A ON A.ASSET_ID = V.ASSET_ID
 		WHERE V.ASSET_ID = #{assetId}
 		ORDER BY V.VER_ID DESC
-		LIMIT 1
 	</select>
 
 	<select id="selectAccessLogsByAssetId" parameterType="int" resultMap="accessLogMap">
@@ -98,6 +103,7 @@
 		SET FILE_NM = #{vo.fileNm},
 		     FILE_TYPE = #{vo.fileType},
 		    FILE_SIZE = #{vo.fileSize},
+		    OWNER_NM = COALESCE(#{vo.ownerNm}, OWNER_NM),
 		    TAGS = #{vo.tags},
 		    DESCRIPTION = #{vo.description},
 		    STATUS = #{vo.status}
@@ -122,7 +128,11 @@
 		) VALUES (
 			#{vo.assetId},
 			#{vo.verNo},
-			COALESCE(NULLIF(#{vo.previewUrl}, ''), (SELECT V2.PREVIEW_URL FROM DAM_VERSION V2 WHERE V2.ASSET_ID = #{vo.assetId} ORDER BY V2.VER_ID DESC LIMIT 1), ''),
+			COALESCE(
+				NULLIF(#{vo.fileUrl}, ''),
+				(SELECT V2.FILE_URL FROM DAM_VERSION V2 WHERE V2.ASSET_ID = #{vo.assetId} ORDER BY V2.VER_ID DESC LIMIT 1),
+				''
+			),
 			#{vo.changeLog},
 			NOW()
 		)

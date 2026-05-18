@@ -62,30 +62,38 @@
         <w2:layoutInfo/>
         <w2:publicInfo method=""/>
         <script lazy="false" type="text/javascript"><![CDATA[
-/* Khởi động tải dữ liệu một lần; guard bằng _loaded flag tránh gọi nhiều lần */
+/* Load once after WebSquare has created the dashboard components. */
 scwin._triggerLoad = function () {
-    if (scwin._loaded) {
+    if (scwin._loaded || scwin._loading) {
         return;
     }
-    scwin._loaded = true;
+    scwin._loading = true;
     scwin._tryLoad(0);
 };
 
-/* Fire 4 API submissions; retry tối đa 5 lần nếu submissions chưa sẵn sàng */
+/* Fire 4 API submissions; retry while submissions/components are still mounting. */
 scwin._tryLoad = function (attempt) {
     var sbmStats = (typeof sbm_getStats !== "undefined") ? sbm_getStats : $p.getSubmission("sbm_getStats");
     var sbmDist = (typeof sbm_getDistribution !== "undefined") ? sbm_getDistribution : $p.getSubmission("sbm_getDistribution");
     var sbmTrend = (typeof sbm_getStorageTrend !== "undefined") ? sbm_getStorageTrend : $p.getSubmission("sbm_getStorageTrend");
     var sbmRecent = (typeof sbm_getRecentUploads !== "undefined") ? sbm_getRecentUploads : $p.getSubmission("sbm_getRecentUploads");
 
-    if (!sbmStats && !sbmDist && !sbmTrend && !sbmRecent) {
-        if (attempt < 5) {
+    if (!sbmStats || !sbmDist || !sbmTrend || !sbmRecent ||
+        typeof txt_totalFiles === "undefined" || typeof chart_distribution === "undefined" ||
+        typeof chart_trend === "undefined" || typeof gen_recent === "undefined") {
+        if (attempt < 30) {
             setTimeout(function () {
                 scwin._tryLoad(attempt + 1);
-            }, 200);
+            }, 150);
+        } else {
+            scwin._loading = false;
+            console.warn("[Dashboard] components or submissions were not ready for initial load");
         }
         return;
     }
+
+    scwin._loaded = true;
+    scwin._loading = false;
 
     if (window.com && com.sbm && com.sbm.execute) {
         if (sbmStats) com.sbm.execute(sbmStats);
