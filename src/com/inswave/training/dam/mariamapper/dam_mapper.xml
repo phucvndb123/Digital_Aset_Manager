@@ -16,11 +16,9 @@
 		<result property="fileType" column="FILE_TYPE" />
 		<result property="fileExt" column="FILE_EXT" />
 		<result property="fileSize" column="FILE_SIZE" />
-		<result property="ownerNm" column="OWNER_NM" />
 		<result property="status" column="STATUS" />
 		<result property="tags" column="TAGS" />
 		<result property="description" column="DESCRIPTION" />
-		<result property="previewUrl" column="PREVIEW_URL" />
 		<result property="resolution" column="RESOLUTION" />
 		<result property="uploadDt" column="UPLOAD_DT" />
 	</resultMap>
@@ -31,9 +29,7 @@
 		<result property="verNo" column="VER_NO" />
 		<result property="fileNm" column="FILE_NM" />
 		<result property="fileUrl" column="FILE_URL" />
-		<result property="previewUrl" column="PREVIEW_URL" />
 		<result property="changeLog" column="CHANGE_LOG" />
-		<result property="ownerNm" column="OWNER_NM" />
 		<result property="uploadDt" column="UPLOAD_DT" />
 	</resultMap>
 
@@ -52,8 +48,8 @@
 	</select>
 
 	<select id="selectAssetsByFolderId" parameterType="int" resultMap="assetMap">
-		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE, OWNER_NM,
-		STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
+		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE,
+		STATUS, TAGS, DESCRIPTION, RESOLUTION,
 		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_ASSET
 		WHERE FOLDER_ID = #{folderId}
@@ -61,8 +57,8 @@
 	</select>
 
 	<select id="selectAssetById" parameterType="int" resultMap="assetMap">
-		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE, OWNER_NM,
-		STATUS, TAGS, DESCRIPTION, PREVIEW_URL, RESOLUTION,
+		SELECT ASSET_ID, FILE_NM, FOLDER_ID, FILE_TYPE, FILE_EXT, FILE_SIZE,
+		STATUS, TAGS, DESCRIPTION, RESOLUTION,
 		DATE_FORMAT(UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_ASSET
 		WHERE ASSET_ID = #{assetId}
@@ -73,11 +69,9 @@
 			V.VER_ID,
 			V.ASSET_ID,
 			V.VER_NO,
-			A.FILE_NM,
-			V.FILE_URL,
+			A.FILE_NM,			
 			V.PREVIEW_URL,
 			V.CHANGE_LOG,
-			V.OWNER_NM,
 			DATE_FORMAT(V.UPLOAD_DT, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DT
 		FROM DAM_VERSION V
 		JOIN DAM_ASSET A ON A.ASSET_ID = V.ASSET_ID
@@ -104,7 +98,6 @@
 		SET FILE_NM = #{vo.fileNm},
 		     FILE_TYPE = #{vo.fileType},
 		    FILE_SIZE = #{vo.fileSize},
-		    OWNER_NM = #{vo.ownerNm},
 		    TAGS = #{vo.tags},
 		    DESCRIPTION = #{vo.description},
 		    STATUS = #{vo.status}
@@ -114,7 +107,6 @@
 <update id="updateVersion">
 		UPDATE DAM_VERSION
 		SET VER_NO = #{vo.verNo},
-		    OWNER_NM = #{vo.ownerNm},
 		    CHANGE_LOG = #{vo.changeLog}
 		WHERE ASSET_ID = #{vo.assetId}
 		  AND VER_ID = #{vo.verId}
@@ -125,17 +117,13 @@
 			ASSET_ID,
 			VER_NO,
 			FILE_URL,
-			PREVIEW_URL,
 			CHANGE_LOG,
-			OWNER_NM,
 			UPLOAD_DT
 		) VALUES (
 			#{vo.assetId},
 			#{vo.verNo},
-			COALESCE(NULLIF(#{vo.fileUrl}, ''), (SELECT V2.FILE_URL FROM DAM_VERSION V2 WHERE V2.ASSET_ID = #{vo.assetId} ORDER BY V2.VER_ID DESC LIMIT 1), ''),
 			COALESCE(NULLIF(#{vo.previewUrl}, ''), (SELECT V2.PREVIEW_URL FROM DAM_VERSION V2 WHERE V2.ASSET_ID = #{vo.assetId} ORDER BY V2.VER_ID DESC LIMIT 1), ''),
 			#{vo.changeLog},
-			#{vo.ownerNm},
 			NOW()
 		)
 	</insert>

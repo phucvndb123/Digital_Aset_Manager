@@ -51,6 +51,7 @@
 						<w2:key id="STATUS" name="STATUS" dataType="text" />
 						<w2:key id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
 						<w2:key id="OWNER_NM" name="OWNER_NM" dataType="text" />
+						<w2:key id="CHANGE_LOG" name="CHANGE_LOG" dataType="text" />
 						<w2:key id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
 					</w2:keyInfo>
 				</w2:dataMap>
@@ -144,6 +145,7 @@
                 scwin._setDetailField("selAssetData", "STATUS", "Draft");
                 scwin._setDetailField("inpFileSize", "FILE_SIZE", "");
                 scwin._setDetailField("inpOwnerNm", "OWNER_NM", "");
+                 scwin._setDetailField("taChangeLog", "CHANGE_LOG", "");
                 scwin._setDetailField("inpUploadDt", "UPLOAD_DT", "");
             };
 
@@ -388,8 +390,9 @@
                     var base = fallbackRow || {};
                     if (!response || !response.asset) {
                         scwin._applyDetailFromGridRow(base);
-                          scwin._setDetailField("taDescription", "DESCRIPTION", "");
+                        scwin._setDetailField("taDescription", "DESCRIPTION", "");
                         scwin._setDetailField("inpTags", "TAGS", "");
+                        scwin._setDetailField("taChangeLog", "CHANGE_LOG", "");
                         return;
                     }
                     var asset = response.asset;
@@ -410,6 +413,7 @@
                     }
                     scwin._setDetailField("inpFileSize", "FILE_SIZE", sz);
                     scwin._setDetailField("inpOwnerNm", "OWNER_NM", asset.ownerNm || base.OWNER_NM || "");
+                    scwin._setDetailField("taChangeLog", "CHANGE_LOG", "");
                     scwin._setDetailField("inpUploadDt", "UPLOAD_DT", asset.uploadDt || base.UPLOAD_DT || "");
                 });
             };
@@ -556,7 +560,8 @@
                     ["inpTags", "TAGS"],
                     ["selAssetData", "STATUS"],
                     ["inpFileSize", "FILE_SIZE"],
-                    ["inpOwnerNm", "OWNER_NM"]
+                    ["inpOwnerNm", "OWNER_NM"],
+                    ["taChangeLog", "CHANGE_LOG"]
                 ];
                 for (var i = 0; i < keys.length; i++) {
                     var compId = keys[i][0];
@@ -572,6 +577,11 @@
                     return;
                 }
                 scwin._syncDetailFromForm();
+                  var changeLog = scwin._getDetailValue("taChangeLog", "CHANGE_LOG").trim();
+                if (!changeLog) {
+                    alert("Change Log là bắt buộc để tạo version mới.");
+                    return;
+                }
                 var rawFileSize = scwin._getDetailValue("inpFileSize", "FILE_SIZE");
                 var parsedFileSize = parseInt(String(rawFileSize || "").replace(/[^0-9]/g, ""), 10);
                 var assetPayload = {
@@ -591,7 +601,7 @@
                     var versionPayload = {
                         verNo: nextVer,
                         ownerNm: assetPayload.ownerNm,
-                        changeLog: assetPayload.description,
+                        changeLog: changeLog,
                         previewUrl: (latest && latest.previewUrl) || (res && res.asset && res.asset.previewUrl) || "",
                         fileUrl: assetPayload.fileNm
                     };
@@ -734,6 +744,10 @@
 							<w2:textbox class="dam-form-label" label="Owner" />
 							<xf:input id="inpOwnerNm" ref="data:dmAssetDetail/OWNER_NM" class="dam-form-input" style="width:100%;" />
 							
+						</xf:group>
+						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="Change Log *" />
+							<xf:textarea id="taChangeLog" ref="data:dmAssetDetail/CHANGE_LOG" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Uploaded" />
