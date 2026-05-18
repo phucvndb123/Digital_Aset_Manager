@@ -48,7 +48,7 @@
 						<w2:key id="DESCRIPTION" name="DESCRIPTION" dataType="text" />
 						<w2:key id="FILE_TYPE" name="FILE_TYPE" dataType="text" />
 						<w2:key id="TAGS" name="TAGS" dataType="text" />
-						<w2:key id="ASSET_DATA" name="ASSET_DATA" dataType="text" />
+						<w2:key id="STATUS" name="STATUS" dataType="text" />
 						<w2:key id="FILE_SIZE" name="FILE_SIZE" dataType="text" />
 						<w2:key id="OWNER_NM" name="OWNER_NM" dataType="text" />
 						<w2:key id="UPLOAD_DT" name="UPLOAD_DT" dataType="text" />
@@ -141,7 +141,7 @@
                 scwin._setDetailField("taDescription", "DESCRIPTION", "");
                 scwin._setDetailField("inpFileType", "FILE_TYPE", "");
                 scwin._setDetailField("inpTags", "TAGS", "");
-                scwin._setDetailField("selAssetData", "ASSET_DATA", "Draft");
+                scwin._setDetailField("selAssetData", "STATUS", "Draft");
                 scwin._setDetailField("inpFileSize", "FILE_SIZE", "");
                 scwin._setDetailField("inpOwnerNm", "OWNER_NM", "");
                 scwin._setDetailField("inpUploadDt", "UPLOAD_DT", "");
@@ -165,7 +165,7 @@
                 scwin._setDetailField("inpFileNm", "FILE_NM", rowData.FILE_NM || "");
                 scwin._setDetailField("inpFileType", "FILE_TYPE", rowData.FILE_TYPE || "");
                 scwin._setDetailField("inpFileSize", "FILE_SIZE", rowData.FILE_SIZE || "");
-                scwin._setDetailField("selAssetData", "ASSET_DATA", st);
+                scwin._setDetailField("selAssetData", "STATUS", st);
                 scwin._setDetailField("inpOwnerNm", "OWNER_NM", rowData.OWNER_NM || "");
                 scwin._setDetailField("inpUploadDt", "UPLOAD_DT", rowData.UPLOAD_DT || "");
             };
@@ -388,7 +388,7 @@
                     scwin._setDetailField("taDescription", "DESCRIPTION", asset.description || "");
                     scwin._setDetailField("inpFileType", "FILE_TYPE", asset.fileType || base.FILE_TYPE || "");
                     scwin._setDetailField("inpTags", "TAGS", asset.tags || "");
-                    scwin._setDetailField("selAssetData", "ASSET_DATA", status);
+                    scwin._setDetailField("selAssetData", "STATUS", status);
                     var sz = "";
                     if (asset.fileSize != null && typeof asset.fileSize === "number") {
                         sz = scwin._formatFileSize(asset.fileSize);
@@ -525,14 +525,31 @@
 
             scwin._getDetailValue = function(compId, key) {
                 try {
+                 var val = null;
                     var c = $p.getComponentById(compId);
                     if (c && typeof c.getValue === "function") {
-                        var v = c.getValue();
-                        if (v != null) { return String(v); }
+                         val = c.getValue();
                     }
                 } catch (e) {}
-                var fromDm = dmAssetDetail.get(key);
-                return fromDm == null ? "" : String(fromDm);
+                if (val == null) { val = dmAssetDetail.get(key); }
+                return val == null ? "" : String(val);
+            };
+
+            scwin._syncDetailFromForm = function() {
+                var keys = [
+                    ["inpFileNm", "FILE_NM"],
+                    ["taDescription", "DESCRIPTION"],
+                    ["inpFileType", "FILE_TYPE"],
+                    ["inpTags", "TAGS"],
+                    ["selAssetData", "STATUS"],
+                    ["inpFileSize", "FILE_SIZE"],
+                    ["inpOwnerNm", "OWNER_NM"]
+                ];
+                for (var i = 0; i < keys.length; i++) {
+                    var compId = keys[i][0];
+                    var key = keys[i][1];
+                    dmAssetDetail.set(key, scwin._getDetailValue(compId, key));
+                }
             };
 
             scwin.btn_asset_detail_submit_onclick = function() {
@@ -541,6 +558,7 @@
                     alert("Vui lòng chọn asset trước khi submit.");
                     return;
                 }
+                scwin._syncDetailFromForm();
                 var rawFileSize = scwin._getDetailValue("inpFileSize", "FILE_SIZE");
                 var parsedFileSize = parseInt(String(rawFileSize || "").replace(/[^0-9]/g, ""), 10);
                 var assetPayload = {
@@ -548,7 +566,7 @@
                     description: scwin._getDetailValue("taDescription", "DESCRIPTION"),
                     fileType: scwin._getDetailValue("inpFileType", "FILE_TYPE"),
                     tags: scwin._getDetailValue("inpTags", "TAGS"),
-                    status: scwin._getDetailValue("selAssetData", "ASSET_DATA") || "Draft",
+                    status: scwin._getDetailValue("selAssetData", "STATUS") || "Draft",
                     ownerNm: scwin._getDetailValue("inpOwnerNm", "OWNER_NM"),
                     fileSize: isNaN(parsedFileSize) ? null : parsedFileSize
                 };
@@ -681,7 +699,7 @@
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Description" />
-							<xf:input id="taDescription" ref="data:dmAssetDetail/DESCRIPTION" class="dam-form-input" style="width:100%;" />
+							<xf:textarea id="taDescription" ref="data:dmAssetDetail/DESCRIPTION" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Asset Type" />
@@ -693,7 +711,7 @@
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Asset Data" />
-							<xf:input id="selAssetData" ref="data:dmAssetDetail/ASSET_DATA" class="dam-form-input" style="width:100%;" />
+							<xf:input id="selAssetData" ref="data:dmAssetDetail/STATUS" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="File Size" />
