@@ -102,8 +102,12 @@
 	<update id="updateAsset">
 		UPDATE DAM_ASSET
 		SET FILE_NM = #{vo.fileNm},
-		    TAGS    = #{vo.tags},
-		    STATUS  = #{vo.status}
+		     FILE_TYPE = #{vo.fileType},
+		    FILE_SIZE = #{vo.fileSize},
+		    OWNER_NM = #{vo.ownerNm},
+		    TAGS = #{vo.tags},
+		    DESCRIPTION = #{vo.description},
+		    STATUS = #{vo.status}
 		WHERE ASSET_ID = #{vo.assetId}
 	</update>
 
@@ -128,8 +132,8 @@
 		) VALUES (
 			#{vo.assetId},
 			#{vo.verNo},
-			COALESCE(#{vo.fileUrl}, ''),
-			#{vo.previewUrl},
+			COALESCE(NULLIF(#{vo.fileUrl}, ''), (SELECT V2.FILE_URL FROM DAM_VERSION V2 WHERE V2.ASSET_ID = #{vo.assetId} ORDER BY V2.VER_ID DESC LIMIT 1), ''),
+			COALESCE(NULLIF(#{vo.previewUrl}, ''), (SELECT V2.PREVIEW_URL FROM DAM_VERSION V2 WHERE V2.ASSET_ID = #{vo.assetId} ORDER BY V2.VER_ID DESC LIMIT 1), ''),
 			#{vo.changeLog},
 			#{vo.ownerNm},
 			NOW()
