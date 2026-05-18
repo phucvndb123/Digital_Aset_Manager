@@ -83,6 +83,7 @@
 		JOIN DAM_ASSET A ON A.ASSET_ID = V.ASSET_ID
 		WHERE V.ASSET_ID = #{assetId}
 		ORDER BY V.VER_ID DESC
+		LIMIT 1
 	</select>
 
 	<select id="selectAccessLogsByAssetId" parameterType="int" resultMap="accessLogMap">

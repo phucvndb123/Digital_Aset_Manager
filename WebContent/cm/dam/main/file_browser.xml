@@ -651,7 +651,7 @@
 						<w2:textbox id="txt_fb_popup_title" class="dam-fb-upload-modal-title" label="Upload New Version" tagname="h2" style=";margin-left:3%;padding-bottom:2%;padding-top:2%;"/>
 					</xf:group>
 					<xf:group class="dam-fb-upload-modal-body" style="padding:16px 20px;">
-						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="New Version Number" /><xf:input ref="data:dmPopup/NEW_VER_NO" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Version Number" /><xf:input ref="data:dmPopup/NEW_VER_NO" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="File Type" /><xf:input ref="data:dmPopup/POPUP_FILE_TYPE" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="File Extension" /><xf:input ref="data:dmPopup/POPUP_FILE_EXT" readOnly="true" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Contributors" /><xf:input ref="data:dmPopup/CONTRIBUTORS" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
