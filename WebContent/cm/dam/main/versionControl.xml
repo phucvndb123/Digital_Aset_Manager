@@ -379,13 +379,29 @@ scwin._setVersionSummary = function (row, asset, versionCount) {
     var size = row.FILE_SIZE || scwin._formatFileSize(asset.fileSize) || "-";
     var status = asset.status || row.STATUS || "-";
     var owner = asset.ownerNm || row.CREATOR || "-";
+    var previewUrl = asset.previewUrl || row.PREVIEW_URL || "";
 
     try { txt_versionExt.setValue(ext.substring(0, 4)); } catch (e) {}
+    scwin._setVersionThumbnail(previewUrl);
     try { txt_versionFileNm.setValue(fileName); } catch (e) {}
     try { txt_versionFileMeta.setValue(type + " / " + size + " / Owner: " + owner); } catch (e) {}
     try { txt_versionCount.setValue(String(versionCount == null ? 0 : versionCount)); } catch (e) {}
     try { txt_versionLatest.setValue("-"); } catch (e) {}
     try { txt_versionStatus.setValue(status); } catch (e) {}
+};
+
+scwin._setVersionThumbnail = function (previewUrl) {
+    var iconEl = document.querySelector(".dam-version-file-icon");
+    if (!iconEl) { return; }
+    var url = previewUrl || "";
+    if (!url) {
+        iconEl.classList.remove("has-preview");
+        iconEl.style.removeProperty("--dam-version-preview");
+        return;
+    }
+    var safeUrl = String(url).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    iconEl.classList.add("has-preview");
+    iconEl.style.setProperty("--dam-version-preview", 'url("' + safeUrl + '")');
 };
 
 scwin._renderVersionState = function (title, detail, stateClass) {
@@ -403,6 +419,11 @@ scwin._renderVersions = function (row, asset, versions) {
     var el = scwin._getVersionListEl();
     if (!el) { return; }
     versions = versions || [];
+    scwin._versionDetailContext = {
+        row: row || {},
+        asset: asset || {},
+        versions: versions
+    };
     if (!versions.length) {
         scwin._renderVersionState("No versions found", "This asset has no version history yet.", "is-empty");
         return;
@@ -416,10 +437,7 @@ scwin._renderVersions = function (row, asset, versions) {
         var isLatest = i === 0;
         var uploadDt = v.uploadDt || "-";
         var changeLog = v.changeLog || (isLatest ? "Latest uploaded version." : "Version snapshot.");
-        var fileUrl = v.fileUrl || "";
-        var link = fileUrl
-            ? '<a class="dam-version-link" href="' + scwin._escapeHtml(fileUrl) + '" target="_blank" rel="noopener">Open file</a>'
-            : '<span class="dam-version-link is-disabled">No file URL</span>';
+        var detailBtn = '<button type="button" class="dam-version-detail-btn" data-version-index="' + i + '">View Detail</button>';
 
         html.push(
             '<div class="dam-version-card' + (isLatest ? ' is-latest' : '') + '">' +
@@ -431,17 +449,132 @@ scwin._renderVersions = function (row, asset, versions) {
                 '<div class="dam-version-log">' + scwin._escapeHtml(changeLog) + '</div>' +
                 '<div class="dam-version-card-foot">' +
                     '<span>Version ID: ' + scwin._escapeHtml(v.verId || "-") + '</span>' +
-                    link +
+                    detailBtn +
                 '</div>' +
             '</div>'
         );
     }
     el.innerHTML = html.join("");
+    scwin._bindVersionDetailButtons();
 
     try {
         var latestNo = versions[0].verNo || versions[0].verId || "-";
         txt_versionLatest.setValue(latestNo === "-" ? "-" : (/^v/i.test(String(latestNo)) ? String(latestNo) : "v" + latestNo));
     } catch (e) {}
+};
+
+scwin._versionDetailContext = { row: {}, asset: {}, versions: [] };
+
+scwin._bindVersionDetailButtons = function () {
+    var el = scwin._getVersionListEl();
+    if (!el || el._damVersionDetailBound) { return; }
+    el._damVersionDetailBound = true;
+    el.addEventListener("click", function (event) {
+        var target = event.target;
+        var btn = target && target.closest ? target.closest(".dam-version-detail-btn") : null;
+        if (!btn) { return; }
+        event.preventDefault();
+        event.stopPropagation();
+        scwin._showVersionDetail(parseInt(btn.getAttribute("data-version-index"), 10));
+    });
+};
+
+scwin._getVersionDetailModal = function () {
+    var modal = document.querySelector(".dam-version-modal");
+    if (modal) { return modal; }
+    modal = document.createElement("div");
+    modal.className = "dam-version-modal";
+    modal.style.display = "none";
+    modal.innerHTML =
+        '<div class="dam-version-modal-dialog" role="dialog" aria-modal="true">' +
+            '<div class="dam-version-modal-head">' +
+                '<div>' +
+                    '<div class="dam-version-modal-eyebrow">Version Detail</div>' +
+                    '<div class="dam-version-modal-title"></div>' +
+                '</div>' +
+                '<button type="button" class="dam-version-modal-close" aria-label="Close">x</button>' +
+            '</div>' +
+            '<div class="dam-version-modal-body"></div>' +
+        '</div>';
+    document.body.appendChild(modal);
+    modal.addEventListener("click", function (event) {
+        var target = event.target;
+        if (target === modal || (target.closest && target.closest(".dam-version-modal-close"))) {
+            scwin._closeVersionDetail();
+        }
+    });
+    return modal;
+};
+
+scwin._detailFieldHtml = function (label, value, isUrl) {
+    var val = value == null || value === "" ? "-" : String(value);
+    var renderedValue = scwin._escapeHtml(val);
+    if (isUrl && val !== "-") {
+        renderedValue = '<a class="dam-version-detail-link" href="' + scwin._escapeHtml(val) + '" target="_blank" rel="noopener">' + scwin._escapeHtml(val) + '</a>';
+    }
+    return '<div class="dam-version-detail-field">' +
+        '<div class="dam-version-detail-label">' + scwin._escapeHtml(label) + '</div>' +
+        '<div class="dam-version-detail-value">' + renderedValue + '</div>' +
+    '</div>';
+};
+
+scwin._detailSectionHtml = function (title, fields) {
+    var html = '<div class="dam-version-detail-section">' +
+        '<div class="dam-version-detail-section-title">' + scwin._escapeHtml(title) + '</div>' +
+        '<div class="dam-version-detail-grid">';
+    for (var i = 0; i < fields.length; i++) {
+        html += scwin._detailFieldHtml(fields[i][0], fields[i][1], fields[i][2]);
+    }
+    html += '</div></div>';
+    return html;
+};
+
+scwin._showVersionDetail = function (versionIndex) {
+    var ctx = scwin._versionDetailContext || {};
+    var versions = ctx.versions || [];
+    if (isNaN(versionIndex) || versionIndex < 0 || versionIndex >= versions.length) { return; }
+    var version = versions[versionIndex] || {};
+    var asset = ctx.asset || {};
+    var row = ctx.row || {};
+    var verNo = version.verNo || version.versionNo || version.verId || "-";
+    var versionLabel = verNo === "-" ? "-" : (/^v/i.test(String(verNo)) ? String(verNo) : "v" + verNo);
+    var fileName = version.fileNm || asset.fileNm || row.FILE_NM || "-";
+    var fileSize = asset.fileSize != null ? scwin._formatFileSize(asset.fileSize) : (row.FILE_SIZE || "-");
+
+    var modal = scwin._getVersionDetailModal();
+    var titleEl = modal.querySelector(".dam-version-modal-title");
+    var bodyEl = modal.querySelector(".dam-version-modal-body");
+    if (titleEl) { titleEl.textContent = fileName + " / " + versionLabel; }
+    if (bodyEl) {
+        bodyEl.innerHTML =
+            scwin._detailSectionHtml("Version Information", [
+                ["Version No", versionLabel],
+                ["Version ID", version.verId],
+                ["Asset ID", version.assetId || asset.assetId || row.ASSET_ID],
+                ["File Name", fileName],
+                ["Owner", version.ownerNm || asset.ownerNm || row.CREATOR],
+                ["Uploaded Date", version.uploadDt],
+                ["Change Log", version.changeLog],
+                ["File URL", version.fileUrl, true],
+                ["Preview URL", version.previewUrl || asset.previewUrl || row.PREVIEW_URL, true]
+            ]) +
+            scwin._detailSectionHtml("Asset Information", [
+                ["Asset Name", asset.fileNm || row.FILE_NM],
+                ["Type", asset.fileType || row.FILE_TYPE],
+                ["Extension", asset.fileExt || row.ICON],
+                ["Size", fileSize],
+                ["Status", asset.status || row.STATUS],
+                ["Tags", asset.tags || row.TAGS],
+                ["Resolution", asset.resolution || row.RESOLUTION],
+                ["Asset Uploaded", asset.uploadDt || row.UPLOAD_DT]
+            ]);
+    }
+    modal.classList.add("is-open");
+};
+
+scwin._closeVersionDetail = function () {
+    var modal = document.querySelector(".dam-version-modal");
+    if (modal) { modal.classList.remove("is-open"); }
 };
 
 scwin._clearDetail = function () {
