@@ -180,16 +180,87 @@
             scwin.grdAsset_ondrawendrow = function() {
                 scwin._styleIconBadges();
             };
+
+            scwin._ASSET_TYPE_VALUES = {
+                "Documents": true,
+                "Images": true,
+                "Videos": true,
+                "Audio": true
+            };
+
+            scwin._STATUS_VALUES = {
+                "Draft": true,
+                "Published": true,
+                "Archived": true
+            };
+
+            scwin._normalizeEnumValue = function(value, allowed, fallback) {
+                var val = value == null ? "" : String(value);
+                return allowed[val] ? val : (fallback || "");
+            };
+
+            scwin._inferAssetType = function(fileType, fileExt) {
+                var normalized = scwin._normalizeEnumValue(fileType, scwin._ASSET_TYPE_VALUES, "");
+                if (normalized) { return normalized; }
+                var ext = String(fileExt || "").toLowerCase().replace(".", "");
+                var documents = { pdf: true, doc: true, docx: true, xls: true, xlsx: true, ppt: true, pptx: true };
+                var images = { jpg: true, jpeg: true, png: true, gif: true, svg: true, psd: true };
+                var videos = { mp4: true, mov: true, avi: true };
+                var audio = { mp3: true, wav: true, aac: true };
+                if (documents[ext]) { return "Documents"; }
+                if (images[ext]) { return "Images"; }
+                if (videos[ext]) { return "Videos"; }
+                if (audio[ext]) { return "Audio"; }
+                return "";
+            };
+
+            scwin._forceSelectValue = function(compId, value) {
+                var val = value == null ? "" : String(value);
+                try {
+                    var roots = [];
+                    var exact = document.getElementById(compId);
+                    if (exact) { roots.push(exact); }
+                    var prefixed = document.querySelectorAll('[id^="' + compId + '"]');
+                    for (var i = 0; i < prefixed.length; i++) { roots.push(prefixed[i]); }
+                    for (var r = 0; r < roots.length; r++) {
+                        var root = roots[r];
+                        var selects = root.tagName && root.tagName.toLowerCase() === "select"
+                            ? [root]
+                            : root.querySelectorAll ? root.querySelectorAll("select") : [];
+                        for (var s = 0; s < selects.length; s++) {
+                            selects[s].value = val;
+                            if (selects[s].value !== val) {
+                                for (var o = 0; o < selects[s].options.length; o++) {
+                                    if (selects[s].options[o].value === val || selects[s].options[o].text === val) {
+                                        selects[s].selectedIndex = o;
+                                        break;
+                                    }
+                                }
+                            }
+                            selects[s].dispatchEvent(new Event("change", { bubbles: true }));
+                            selects[s].dispatchEvent(new Event("input", { bubbles: true }));
+                        }
+                    }
+                } catch (e) {}
+            };
             
             scwin._setDetailField = function(compId, key, value) {
                 var val = value == null ? "" : String(value);
                 dmAssetDetail.set(key, val);
+                try {
+                    var el = document.getElementById(compId);
+                    if (el && ("value" in el)) { el.value = val; }
+                } catch (e) {}
                 try {
                     var comp = $p.getComponentById(compId);
                     if (comp && typeof comp.setValue === "function") {
                         comp.setValue(val);
                     }
                 } catch (e) {}
+                if (compId === "inpFileType" || compId === "selAssetData") {
+                    scwin._forceSelectValue(compId, val);
+                    window.setTimeout(function() { scwin._forceSelectValue(compId, val); }, 80);
+                }
             };
 
             scwin._clearAssetDetail = function() {
@@ -217,10 +288,10 @@
 
             scwin._applyDetailFromGridRow = function(rowData) {
                 if (!rowData) { return; }
-                var st = rowData.STATUS || "Draft";
-                if (st !== "Draft" && st !== "Published" && st !== "Archived") { st = "Draft"; }
+                var fileType = scwin._inferAssetType(rowData.FILE_TYPE, rowData.ICON || rowData.FILE_EXT);
+                var st = scwin._normalizeEnumValue(rowData.STATUS, scwin._STATUS_VALUES, "Draft");
                 scwin._setDetailField("inpFileNm", "FILE_NM", rowData.FILE_NM || "");
-                scwin._setDetailField("inpFileType", "FILE_TYPE", rowData.FILE_TYPE || "");
+                scwin._setDetailField("inpFileType", "FILE_TYPE", fileType);
                 scwin._setDetailField("inpFileSize", "FILE_SIZE", rowData.FILE_SIZE || "");
                 scwin._setDetailField("selAssetData", "STATUS", st);
                 scwin._setDetailField("taDescription", "DESCRIPTION", rowData.DESCRIPTION || "");
@@ -458,15 +529,13 @@
                         return;
                     }
                     var asset = response.asset;
-                    var status = asset.status || base.STATUS || "Draft";
-                    if (status !== "Draft" && status !== "Published" && status !== "Archived") {
-                        status = "Draft";
-                    }
+                    var fileType = scwin._inferAssetType(asset.fileType || base.FILE_TYPE, asset.fileExt || base.ICON || base.FILE_EXT);
+                    var status = scwin._normalizeEnumValue(asset.status || base.STATUS, scwin._STATUS_VALUES, "Draft");
                     var latestVersion = scwin._pickLatestVersion(response.versions || []);
                     var latestVersionUploadDt = latestVersion && latestVersion.uploadDt ? latestVersion.uploadDt : "";
                     scwin._setDetailField("inpFileNm", "FILE_NM", asset.fileNm || base.FILE_NM || "");
                     scwin._setDetailField("taDescription", "DESCRIPTION", asset.description || base.DESCRIPTION || "");
-                    scwin._setDetailField("inpFileType", "FILE_TYPE", asset.fileType || base.FILE_TYPE || "");
+                    scwin._setDetailField("inpFileType", "FILE_TYPE", fileType);
                     scwin._setDetailField("inpTags", "TAGS", asset.tags || base.TAGS || "");
                     scwin._setDetailField("selAssetData", "STATUS", status);
                     var sz = "";
@@ -612,6 +681,12 @@
                          val = c.getValue();
                     }
                 } catch (e) {}
+                if (val == null || val === "") {
+                    try {
+                        var el = document.getElementById(compId);
+                        if (el && ("value" in el)) { val = el.value; }
+                    } catch (e) {}
+                }
                 if (val == null) { val = dmAssetDetail.get(key); }
                 return val == null ? "" : String(val);
             };
@@ -651,7 +726,7 @@
                 var assetPayload = {
                     fileNm: scwin._getDetailValue("inpFileNm", "FILE_NM"),
                     description: scwin._getDetailValue("taDescription", "DESCRIPTION"),
-                    fileType: scwin._getDetailValue("inpFileType", "FILE_TYPE"),
+                    fileType: scwin._getDetailValue("inpFileType", "FILE_TYPE") || "Documents",
                     tags: scwin._getDetailValue("inpTags", "TAGS"),
                     status: scwin._getDetailValue("selAssetData", "STATUS") || "Draft",
                     ownerNm: scwin._getDetailValue("inpOwnerNm", "OWNER_NM"),
@@ -799,6 +874,7 @@
 							<w2:textbox class="dam-asset-panel-title" label="Asset Details" tagname="h3" />
 						</xf:group>
 						<xf:group class="dam-form-row">
+							<w2:textbox class="dam-form-label" label="File Name" />
 							<xf:input id="inpFileNm" ref="data:dmAssetDetail/FILE_NM" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
@@ -807,15 +883,25 @@
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Asset Type" />
-							<xf:input id="inpFileType" ref="data:dmAssetDetail/FILE_TYPE" class="dam-form-input" style="width:100%;" />
+							<select id="inpFileType" class="dam-form-input dam-native-select" style="width:100%;">
+								<option value=""></option>
+								<option value="Documents">Documents</option>
+								<option value="Images">Images</option>
+								<option value="Videos">Videos</option>
+								<option value="Audio">Audio</option>
+							</select>
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Tags" />
 							<xf:input id="inpTags" ref="data:dmAssetDetail/TAGS" class="dam-form-input" style="width:100%;" />
 						</xf:group>
 						<xf:group class="dam-form-row">
-							<w2:textbox class="dam-form-label" label="Asset Data" />
-							<xf:input id="selAssetData" ref="data:dmAssetDetail/STATUS" class="dam-form-input" style="width:100%;" />
+							<w2:textbox class="dam-form-label" label="Status" />
+							<select id="selAssetData" class="dam-form-input dam-native-select" style="width:100%;">
+								<option value="Draft">Draft</option>
+								<option value="Published">Published</option>
+								<option value="Archived">Archived</option>
+							</select>
 						</xf:group>
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="File Size" />
@@ -833,11 +919,11 @@
 						<xf:group class="dam-form-row">
 							<w2:textbox class="dam-form-label" label="Uploaded" />
 							<xf:input id="inpUploadDt" ref="data:dmAssetDetail/UPLOAD_DT" readOnly="true" class="dam-form-input" style="width:100%;" />
+						</xf:group>
 						<xf:group style="display:flex;justify-content:flex-end;margin-top:10px;">
 							<xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_asset_detail_submit_onclick" style="background-color:#16a34a;border:1px solid #15803d;width:7em;">
 								<xf:label>Submit</xf:label>
 							</xf:trigger>
-						</xf:group>
 						</xf:group>
 					</xf:group>
 				</xf:group>

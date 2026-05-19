@@ -536,7 +536,10 @@
 /* ----- Editable Status / Tags select fields ----- */
 /* xf:select1 renderType="select" renders the <select> directly on the ID */
 #inp_assetTags,
-#inp_status {
+#inp_status,
+#inpFileType,
+#selAssetData,
+.dam-native-select {
    display: block !important;
    width: 100% !important;
    max-width: 100% !important;
@@ -548,7 +551,10 @@
 }
 
 #inp_assetTags:focus,
-#inp_status:focus {
+#inp_status:focus,
+#inpFileType:focus,
+#selAssetData:focus,
+.dam-native-select:focus {
    outline: none !important;
    border-color: #94a3b8 !important;
    box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1) !important;
@@ -593,7 +599,7 @@
 
 .dam-version-summary {
    display: grid !important;
-   grid-template-columns: 48px minmax(0, 1fr) !important;
+   grid-template-columns: 64px minmax(0, 1fr) !important;
    gap: 0.85rem !important;
    align-items: center !important;
    padding: 0.85rem !important;
@@ -603,11 +609,15 @@
 }
 
 .dam-version-file-icon {
-   width: 48px !important;
-   height: 56px !important;
+   width: 64px !important;
+   height: 64px !important;
    border: 1px solid #cbd5e1 !important;
-   border-radius: 0.35rem !important;
-   background: linear-gradient(180deg, #ffffff 0%, #edf2f7 100%) !important;
+   border-radius: 0.45rem !important;
+   background-color: #ffffff !important;
+   background-image: var(--dam-version-preview, linear-gradient(180deg, #ffffff 0%, #edf2f7 100%)) !important;
+   background-position: center !important;
+   background-repeat: no-repeat !important;
+   background-size: cover !important;
    display: flex !important;
    align-items: flex-end !important;
    justify-content: center !important;
@@ -622,7 +632,14 @@
    right: 0 !important;
    bottom: 0 !important;
    height: 18px !important;
-   background: #2563eb !important;
+   background: rgba(37, 99, 235, 0.94) !important;
+}
+
+.dam-version-file-icon.has-preview:before {
+   content: "" !important;
+   position: absolute !important;
+   inset: 0 !important;
+   background: linear-gradient(180deg, rgba(15, 23, 42, 0) 45%, rgba(15, 23, 42, 0.18) 100%) !important;
 }
 
 .dam-version-ext {
@@ -788,6 +805,24 @@
    padding-top: 0.6rem !important;
 }
 
+.dam-version-detail-btn {
+   border: 1px solid #bfdbfe !important;
+   border-radius: 0.375rem !important;
+   background: #ffffff !important;
+   color: #1d4ed8 !important;
+   cursor: pointer !important;
+   font-size: 0.78rem !important;
+   font-weight: 700 !important;
+   line-height: 1 !important;
+   padding: 0.45rem 0.65rem !important;
+   white-space: nowrap !important;
+}
+
+.dam-version-detail-btn:hover {
+   background: #dbeafe !important;
+   border-color: #93c5fd !important;
+}
+
 .dam-version-link {
    color: #1d4ed8 !important;
    font-size: 0.78rem !important;
@@ -870,4 +905,140 @@
 .dam-version-state.is-error {
    border-color: #fecaca !important;
    background: #fef2f2 !important;
+}
+
+.dam-version-modal {
+   position: fixed !important;
+   inset: 0 !important;
+   z-index: 9999 !important;
+   display: none !important;
+   align-items: center !important;
+   justify-content: center !important;
+   padding: 1.5rem !important;
+   background: rgba(15, 23, 42, 0.42) !important;
+   box-sizing: border-box !important;
+}
+
+.dam-version-modal.is-open {
+   display: flex !important;
+}
+
+.dam-version-modal-dialog {
+   width: min(760px, 100%) !important;
+   max-height: min(760px, 92vh) !important;
+   overflow: hidden !important;
+   border-radius: 0.5rem !important;
+   border: 1px solid #dbe3ef !important;
+   background: #ffffff !important;
+   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24) !important;
+   display: flex !important;
+   flex-direction: column !important;
+}
+
+.dam-version-modal-head {
+   display: flex !important;
+   align-items: flex-start !important;
+   justify-content: space-between !important;
+   gap: 1rem !important;
+   border-bottom: 1px solid #e2e8f0 !important;
+   padding: 1rem 1.1rem !important;
+   background: #f8fafc !important;
+}
+
+.dam-version-modal-eyebrow {
+   color: #64748b !important;
+   font-size: 0.72rem !important;
+   font-weight: 700 !important;
+   line-height: 1.2 !important;
+   margin-bottom: 0.25rem !important;
+   text-transform: uppercase !important;
+}
+
+.dam-version-modal-title {
+   color: #0f172a !important;
+   font-size: 1rem !important;
+   font-weight: 800 !important;
+   line-height: 1.35 !important;
+   word-break: break-word !important;
+}
+
+.dam-version-modal-close {
+   width: 2rem !important;
+   height: 2rem !important;
+   border: 1px solid #cbd5e1 !important;
+   border-radius: 0.375rem !important;
+   background: #ffffff !important;
+   color: #334155 !important;
+   cursor: pointer !important;
+   font-size: 1rem !important;
+   font-weight: 800 !important;
+   line-height: 1 !important;
+}
+
+.dam-version-modal-close:hover {
+   background: #e2e8f0 !important;
+}
+
+.dam-version-modal-body {
+   overflow: auto !important;
+   padding: 1rem 1.1rem 1.2rem !important;
+}
+
+.dam-version-detail-section {
+   border: 1px solid #e2e8f0 !important;
+   border-radius: 0.5rem !important;
+   background: #ffffff !important;
+   margin-bottom: 0.9rem !important;
+   overflow: hidden !important;
+}
+
+.dam-version-detail-section-title {
+   border-bottom: 1px solid #e2e8f0 !important;
+   background: #f8fafc !important;
+   color: #0f172a !important;
+   font-size: 0.85rem !important;
+   font-weight: 800 !important;
+   line-height: 1.3 !important;
+   padding: 0.65rem 0.8rem !important;
+}
+
+.dam-version-detail-grid {
+   display: grid !important;
+   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.dam-version-detail-field {
+   min-width: 0 !important;
+   border-bottom: 1px solid #f1f5f9 !important;
+   padding: 0.65rem 0.8rem !important;
+}
+
+.dam-version-detail-field:nth-child(odd) {
+   border-right: 1px solid #f1f5f9 !important;
+}
+
+.dam-version-detail-label {
+   color: #64748b !important;
+   font-size: 0.72rem !important;
+   font-weight: 700 !important;
+   line-height: 1.2 !important;
+   margin-bottom: 0.25rem !important;
+}
+
+.dam-version-detail-value {
+   color: #0f172a !important;
+   font-size: 0.82rem !important;
+   font-weight: 500 !important;
+   line-height: 1.4 !important;
+   overflow-wrap: anywhere !important;
+}
+
+.dam-version-detail-link {
+   color: #1d4ed8 !important;
+   font-weight: 700 !important;
+   text-decoration: none !important;
+}
+
+.dam-version-detail-link:hover {
+   text-decoration: underline !important;
 }
