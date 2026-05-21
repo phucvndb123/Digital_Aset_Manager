@@ -141,8 +141,17 @@ scwin._loadAssets = function (folderId) {
                     PREVIEW_URL: d.previewUrl || '/cm/dam/images/preview/document.svg'
                 });
             }
+            /* Lưu full dataset, reset sort/filter về mặc định khi đổi folder */
+            scwin._allAssets     = rows;
+            scwin._sortCycleIdx  = 0;
+            scwin._filterState   = { types: {}, statuses: {} };
+            var oldPanel = document.getElementById('dam_filter_panel');
+            if (oldPanel && oldPanel.parentNode) { oldPanel.parentNode.removeChild(oldPanel); }
+
             try { dlAsset.setJSON(rows); } catch (e) { console.warn('[Asset] setJSON failed', e); }
             scwin._clearDetail();
+            scwin._updateSortBtn();
+            scwin._updateFilterBtn();
             if (rows.length > 0) {
                 window.setTimeout(function () { scwin._styleIconBadges(); }, 100);
                 window.setTimeout(function () { scwin._styleIconBadges(); }, 500);
@@ -239,6 +248,158 @@ scwin.grdAsset_onsort = function () {
 
 /* Trạng thái sort hiện tại: { colId: 'asc' | 'desc' } */
 scwin._sortState = {};
+
+/* ─── Sort button ──────────────────────────────────────────────────── */
+
+/* Toàn bộ dataset chưa lọc — nguồn gốc để _applyFiltersAndSort làm việc */
+scwin._allAssets = [];
+
+/* Danh sách preset sort; null = không sort (thứ tự load gốc) */
+scwin._sortCycle = [
+    null,
+    { col: 'FILE_NM',   dir: 'asc',  lbl: 'Name ↑' },
+    { col: 'FILE_NM',   dir: 'desc', lbl: 'Name ↓' },
+    { col: 'FILE_TYPE', dir: 'asc',  lbl: 'Type ↑' },
+    { col: 'FILE_TYPE', dir: 'desc', lbl: 'Type ↓' },
+    { col: 'FILE_SIZE', dir: 'asc',  lbl: 'Size ↑' },
+    { col: 'FILE_SIZE', dir: 'desc', lbl: 'Size ↓' },
+    { col: 'STATUS',    dir: 'asc',  lbl: 'Status ↑' },
+    { col: 'UPLOAD_DT', dir: 'desc', lbl: 'Date ↓' }
+];
+scwin._sortCycleIdx = 0;
+
+/* ─── Filter state ─────────────────────────────────────────────────── */
+scwin._filterState = { types: {}, statuses: {} };
+
+/* Áp filter + sort lên _allAssets rồi đẩy vào dlAsset */
+scwin._applyFiltersAndSort = function () {
+    var actTypes = Object.keys(scwin._filterState.types).filter(function (k) { return scwin._filterState.types[k]; });
+    var actSts   = Object.keys(scwin._filterState.statuses).filter(function (k) { return scwin._filterState.statuses[k]; });
+
+    var rows = scwin._allAssets.filter(function (r) {
+        if (actTypes.length && actTypes.indexOf(r.FILE_TYPE) === -1) { return false; }
+        if (actSts.length   && actSts.indexOf(r.STATUS)    === -1) { return false; }
+        return true;
+    });
+
+    var preset = scwin._sortCycle[scwin._sortCycleIdx];
+    if (preset) {
+        rows = rows.slice().sort(function (a, b) {
+            var va = String(a[preset.col] || ''), vb = String(b[preset.col] || '');
+            var cmp = va.localeCompare(vb, undefined, { numeric: true });
+            return preset.dir === 'asc' ? cmp : -cmp;
+        });
+    }
+
+    try { dlAsset.setJSON(rows); } catch (e) {}
+    scwin._clearDetail();
+    if (rows.length > 0) {
+        window.setTimeout(scwin._styleIconBadges, 100);
+        window.setTimeout(scwin._styleIconBadges, 450);
+    }
+    scwin._updateSortBtn();
+    scwin._updateFilterBtn();
+};
+
+/* Cập nhật label nút sort theo preset hiện tại */
+scwin._updateSortBtn = function () {
+    var preset = scwin._sortCycle[scwin._sortCycleIdx];
+    var lbl = preset ? preset.lbl : '↑↓';
+    try { btn_filesSort.setLabel(lbl); } catch (e) {}
+    try {
+        var el = document.getElementById('btn_filesSort');
+        if (el) {
+            var w = el.querySelector('.w2trigger_label, button, span');
+            if (w) { w.textContent = lbl; }
+            el.title = preset ? ('Sort: ' + lbl) : 'Sort';
+            el.style.color    = preset ? '#1d4ed8' : '';
+            el.style.fontWeight = preset ? '700' : '';
+        }
+    } catch (e) {}
+};
+
+/* Tô màu nút filter khi có filter đang bật */
+scwin._updateFilterBtn = function () {
+    var actTypes = Object.keys(scwin._filterState.types).filter(function (k) { return scwin._filterState.types[k]; });
+    var actSts   = Object.keys(scwin._filterState.statuses).filter(function (k) { return scwin._filterState.statuses[k]; });
+    var active   = actTypes.length > 0 || actSts.length > 0;
+    try {
+        var el = document.getElementById('btn_filesFilter');
+        if (el) {
+            el.style.background   = active ? '#dbeafe' : '';
+            el.style.color        = active ? '#1d4ed8' : '';
+            el.style.borderColor  = active ? '#93c5fd' : '';
+            el.style.fontWeight   = active ? '700' : '';
+        }
+    } catch (e) {}
+};
+
+/* Sort button — cycle preset mỗi lần bấm */
+scwin.btn_filesSort_onclick = function () {
+    scwin._sortCycleIdx = (scwin._sortCycleIdx + 1) % scwin._sortCycle.length;
+    scwin._applyFiltersAndSort();
+};
+
+/* Filter button — toggle inline filter panel */
+scwin.btn_filesFilter_onclick = function () {
+    var panel = document.getElementById('dam_filter_panel');
+    if (!panel) { scwin._buildFilterPanel(); return; }
+    panel.style.display = panel.style.display === 'none' ? '' : 'none';
+};
+
+/* Xây filter panel động dựa trên giá trị thực tế trong _allAssets */
+scwin._buildFilterPanel = function () {
+    var body = document.querySelector('.dam-asset-files-body');
+    if (!body) { return; }
+
+    var types = {}, statuses = {};
+    for (var i = 0; i < scwin._allAssets.length; i++) {
+        var r = scwin._allAssets[i];
+        if (r.FILE_TYPE) { types[r.FILE_TYPE]   = true; }
+        if (r.STATUS)    { statuses[r.STATUS] = true; }
+    }
+
+    var html = '<div class="dam-filter-inner">';
+
+    html += '<div class="dam-filter-col"><span class="dam-filter-col-title">File Type</span>';
+    Object.keys(types).sort().forEach(function (t) {
+        var chk = scwin._filterState.types[t] ? ' checked' : '';
+        html += '<label class="dam-filter-item"><input type="checkbox" data-dim="types" data-val="' + t + '"' + chk + '> ' + t + '</label>';
+    });
+    html += '</div>';
+
+    html += '<div class="dam-filter-col"><span class="dam-filter-col-title">Status</span>';
+    Object.keys(statuses).sort().forEach(function (s) {
+        var chk = scwin._filterState.statuses[s] ? ' checked' : '';
+        html += '<label class="dam-filter-item"><input type="checkbox" data-dim="statuses" data-val="' + s + '"' + chk + '> ' + s + '</label>';
+    });
+    html += '</div>';
+
+    html += '<button class="dam-filter-clear-btn" id="dam_filter_clear_btn">Clear all</button>';
+    html += '</div>';
+
+    var panel = document.createElement('div');
+    panel.id = 'dam_filter_panel';
+    panel.className = 'dam-filter-panel';
+    panel.innerHTML = html;
+    body.insertBefore(panel, body.firstChild);
+
+    panel.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            scwin._filterState[cb.getAttribute('data-dim')][cb.getAttribute('data-val')] = cb.checked;
+            scwin._applyFiltersAndSort();
+        });
+    });
+
+    var clearBtn = document.getElementById('dam_filter_clear_btn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            scwin._filterState = { types: {}, statuses: {} };
+            panel.querySelectorAll('input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
+            scwin._applyFiltersAndSort();
+        });
+    }
+};
 
 /* mousedown capture — fires before focus-transfer, so works on first click */
 scwin._attachSortOnMousedown = function () {
@@ -416,6 +577,94 @@ scwin.btn_download_onclick = function () {
 /* Flag trạng thái edit: true = đang chỉnh sửa, false = chỉ xem */
 scwin._editMode = false;
 
+/* ─── Validation ───────────────────────────────────────────────────── */
+
+/* Danh sách status hợp lệ — khớp với xf:choices trong XML */
+scwin._VALID_STATUSES = ['Draft', 'Published', 'Archived', 'Review', 'Inactive'];
+
+/* File Name: required, tối đa 200 ký tự, không chứa ký tự path nguy hiểm */
+scwin._validateFileName = function (name) {
+    if (!name || name.trim() === '')     { return { ok: false, msg: 'File Name không được để trống.' }; }
+    if (name.trim().length > 200)        { return { ok: false, msg: 'File Name tối đa 200 ký tự.' }; }
+    if (/[\/\\:*?"<>|]/.test(name))      { return { ok: false, msg: 'File Name không được chứa: / \\ : * ? " < > |' }; }
+    return { ok: true };
+};
+
+/* Status: bắt buộc chọn, phải thuộc danh sách hợp lệ */
+scwin._validateStatus = function (status) {
+    if (!status || status.trim() === '')                  { return { ok: false, msg: 'Vui lòng chọn Status.' }; }
+    if (scwin._VALID_STATUSES.indexOf(status) === -1)    { return { ok: false, msg: 'Status không hợp lệ.' }; }
+    return { ok: true };
+};
+
+/* Tags: tùy chọn, tối đa 10 tag, mỗi tag ≤ 50 ký tự */
+scwin._validateTags = function (tagStr) {
+    if (!tagStr || tagStr.trim() === '') { return { ok: true }; }
+    var tags = tagStr.split(',').map(function (t) { return t.trim(); }).filter(function (t) { return t !== ''; });
+    if (tags.length > 10)               { return { ok: false, msg: 'Tối đa 10 tags.' }; }
+    for (var i = 0; i < tags.length; i++) {
+        if (tags[i].length > 50)        { return { ok: false, msg: 'Mỗi tag tối đa 50 ký tự.' }; }
+    }
+    return { ok: true };
+};
+
+/* Hiển thị lỗi inline dưới field; tái dùng span nếu đã tồn tại */
+scwin._showFieldError = function (fieldId, msg) {
+    var errorId = 'err_' + fieldId;
+    var existing = document.getElementById(errorId);
+    if (existing) { existing.textContent = msg; existing.style.display = 'block'; return; }
+    var field = document.getElementById(fieldId);
+    if (!field) { return; }
+    var row = field.closest ? field.closest('.dam-form-row') : field.parentNode;
+    var span = document.createElement('span');
+    span.id = errorId;
+    span.className = 'dam-field-error';
+    span.textContent = msg;
+    row.appendChild(span);
+};
+
+/* Xóa tất cả error messages đang hiển thị */
+scwin._clearFieldErrors = function () {
+    var errors = document.querySelectorAll('.dam-field-error');
+    for (var i = 0; i < errors.length; i++) { errors[i].style.display = 'none'; errors[i].textContent = ''; }
+};
+
+/* Xóa error của riêng một field */
+scwin._clearFieldError = function (fieldId) {
+    var el = document.getElementById('err_' + fieldId);
+    if (el) { el.style.display = 'none'; el.textContent = ''; }
+};
+
+/* Gắn real-time validation: File Name blur + Status change + Tags qua popup */
+scwin._attachLiveValidation = function () {
+    /* File Name — xóa error khi user bắt đầu nhập, kiểm tra khi rời field */
+    try {
+        var fnWrap  = document.getElementById('inp_fileName');
+        var fnInput = fnWrap ? fnWrap.querySelector('input, textarea') : null;
+        if (fnInput && !fnInput._damLive) {
+            fnInput._damLive = true;
+            fnInput.addEventListener('input', function () { scwin._clearFieldError('inp_fileName'); });
+            fnInput.addEventListener('blur',  function () {
+                var v = scwin._validateFileName(fnInput.value);
+                if (!v.ok) { scwin._showFieldError('inp_fileName', v.msg); }
+            });
+        }
+    } catch(e) {}
+
+    /* Status — kiểm tra ngay khi chọn */
+    try {
+        var selEl = document.getElementById('inp_status');
+        if (selEl && !selEl._damLive) {
+            selEl._damLive = true;
+            selEl.addEventListener('change', function () {
+                var v = scwin._validateStatus(selEl.value);
+                if (!v.ok) { scwin._showFieldError('inp_status', v.msg); }
+                else        { scwin._clearFieldError('inp_status'); }
+            });
+        }
+    } catch(e) {}
+};
+
 /* Lock/unlock các field theo chế độ; cập nhật label nút Edit/Save */
 scwin._setEditFields = function (editable) {
     /* inp_fileName: w2:input works fine with setReadOnly */
@@ -458,14 +707,77 @@ scwin._setEditFields = function (editable) {
             if (tNode) { tNode.nodeValue = editable ? 'Save Changes' : 'Edit Metadata'; }
         }
     } catch(e) {}
+    /* Gắn live validation sau khi DOM đã được WebSquare cập nhật */
+    if (editable) { window.setTimeout(scwin._attachLiveValidation, 60); }
 };
 
-/* Cập nhật DataList tại chỗ và gọi PUT /api/dam/assets/{id} lưu metadata */
+/* ─── Version helpers (dùng chung logic với file_browser.xml) ───────── */
+
+/* Phân tích verNo thành số nguyên để so sánh (v2.3 → 2000003) */
+scwin._parseVerNo = function (verNo) {
+    var m = String(verNo || '').trim().match(/^(?:v|V)?(\d+)(?:\.(\d+))?$/);
+    if (m) { return parseInt(m[1], 10) * 1000000 + parseInt(m[2] || '0', 10); }
+    return -1;
+};
+
+/* Tính version number tiếp theo (v1.2 → v1.3, v1.9 → v1.10) */
+scwin._nextVersionNo = function (currentVerNo) {
+    var m = String(currentVerNo || '').trim().match(/^(?:v|V)?(\d+)(?:\.(\d+))?$/);
+    var major = 1, minor = 0;
+    if (m) { major = parseInt(m[1], 10) || 1; minor = parseInt(m[2] || '0', 10) || 0; }
+    return 'v' + major + '.' + (minor + 1);
+};
+
+/* Chọn version mới nhất từ danh sách (ưu tiên verNo, tie-break bằng verId) */
+scwin._pickLatestVersion = function (versions) {
+    var list = versions || [];
+    if (!list.length) { return null; }
+    var latest = list[0];
+    for (var i = 1; i < list.length; i++) {
+        var cur = list[i];
+        var cNo = scwin._parseVerNo(cur.verNo), lNo = scwin._parseVerNo(latest.verNo);
+        if (cNo > lNo) { latest = cur; continue; }
+        if (cNo === lNo && parseInt(cur.verId, 10) > parseInt(latest.verId, 10)) { latest = cur; }
+    }
+    return latest;
+};
+
+/* Tự động sinh change log dựa trên field nào thay đổi so với giá trị gốc */
+scwin._generateChangeLog = function (original, fileNm, tags, status) {
+    var changed = [];
+    if ((original.FILE_NM || '') !== (fileNm  || '')) { changed.push('File Name'); }
+    if ((original.TAGS    || '') !== (tags    || '')) { changed.push('Tags'); }
+    if ((original.STATUS  || '') !== (status  || '')) { changed.push('Status'); }
+    var d = new Date(), pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+    var ts = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+           + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    return (changed.length ? 'Updated ' + changed.join(', ') : 'Metadata reviewed') + ' — ' + ts;
+};
+
+/* Hiện toast nhỏ ở góc phải dưới sau khi save + tạo version thành công */
+scwin._showSaveToast = function (msg) {
+    var old = document.getElementById('dam_save_toast');
+    if (old && old.parentNode) { old.parentNode.removeChild(old); }
+    var t = document.createElement('div');
+    t.id = 'dam_save_toast';
+    t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#1f2733;color:#fff;'
+        + 'padding:0.75rem 1.25rem;border-radius:0.5rem;font-size:0.82rem;z-index:9999;'
+        + 'box-shadow:0 4px 12px rgba(0,0,0,.25);max-width:340px;line-height:1.5;';
+    t.innerHTML = '<strong style="color:#4ade80;">✓ Saved & versioned</strong>'
+        + '<br><span style="color:#94a3b8;font-size:0.78rem;">' + msg + '</span>';
+    document.body.appendChild(t);
+    window.setTimeout(function () { if (t.parentNode) { t.parentNode.removeChild(t); } }, 4500);
+};
+
+/* Cập nhật DataList tại chỗ, PUT metadata, rồi tự động POST version mới với change log tự sinh */
 scwin._saveMetadata = function (idx) {
     try {
         var count = dlAsset.getRowCount ? dlAsset.getRowCount() : 0;
         var rows = [];
         for (var r = 0; r < count; r++) { rows.push(dlAsset.getRowJSON(r)); }
+
+        /* Lưu giá trị gốc trước khi overwrite — dùng để sinh change log */
+        var original = { FILE_NM: rows[idx].FILE_NM, TAGS: rows[idx].TAGS, STATUS: rows[idx].STATUS };
         var fileNm = inp_fileName.getValue();
         var tags   = inp_assetTags.getValue() || '';
         var status = inp_status.getValue();
@@ -473,40 +785,67 @@ scwin._saveMetadata = function (idx) {
         rows[idx].TAGS    = tags;
         rows[idx].STATUS  = status;
         dlAsset.setJSON(rows);
+
         var assetId = rows[idx].ASSET_ID;
-        if (assetId) {
-            fetch('/api/dam/assets/' + assetId, {
-                method: 'PUT',
+        if (!assetId) { return; }
+
+        var changeLog = scwin._generateChangeLog(original, fileNm, tags, status);
+        var creator   = rows[idx].CREATOR || '';
+        var fileType  = rows[idx].FILE_TYPE || null;
+
+        /* Bước 1 — PUT cập nhật metadata asset */
+        fetch('/api/dam/assets/' + assetId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileNm: fileNm, tags: tags, status: status, fileType: fileType })
+        })
+        .then(function (r) { return r.json(); })
+        /* Bước 2 — GET version list để tính nextVerNo */
+        .then(function () { return fetch('/api/dam/assets/' + assetId); })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            var latest  = scwin._pickLatestVersion((res && res.versions) || []);
+            var nextVer = scwin._nextVersionNo(latest ? latest.verNo : 'v1.0');
+            /* Bước 3 — POST tạo version mới với change log tự sinh */
+            return fetch('/api/dam/assets/' + assetId + '/versions', {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fileNm: fileNm, tags: tags, status: status })
-            }).then(function (r) { return r.json(); })
-              .then(function (data) { })
-              .catch(function (e) { console.warn('[Asset] saveMetadata API error', e); });
-        }
+                body: JSON.stringify({ verNo: nextVer, changeLog: changeLog, ownerNm: creator, fileUrl: fileNm })
+            });
+        })
+        .then(function (r) { return r.json(); })
+        .then(function () { scwin._showSaveToast(changeLog); })
+        .catch(function (e) { console.warn('[Asset] saveMetadata error', e); });
     } catch(e) { console.warn('[Asset] saveMetadata error', e); }
 };
 
-/* Toggle chế độ view/edit; validate File Name và confirm trước khi lưu */
+/* Toggle chế độ view/edit; validate các field rồi confirm trước khi lưu */
 scwin.btn_edit_onclick = function () {
     if (scwin._lastDetailRow < 0) { return; }
     if (!scwin._editMode) {
         scwin._editMode = true;
+        scwin._clearFieldErrors();
         scwin._setEditFields(true);
-    } else {
-        /* validate trước khi save */
-        var fileNm = '';
-        try { fileNm = inp_fileName.getValue(); } catch(e) {}
-        if (!fileNm || fileNm.trim() === '') {
-            com.win.alert('File Name không được để trống.');
-            return;
-        }
-        com.win.confirm('Bạn có chắc muốn lưu thay đổi?', 'scwin._onConfirmSave');
+        return;
     }
-};
+    /* Thu thập giá trị hiện tại */
+    var fileNm = ''; try { fileNm = inp_fileName.getValue();      } catch(e) {}
+    var status = ''; try { status = inp_status.getValue();        } catch(e) {}
+    var tags   = ''; try { tags   = inp_assetTags.getValue() || '';} catch(e) {}
 
-/* callback từ com.win.confirm */
-scwin._onConfirmSave = function (result) {
-    if (!result) { return; }
+    /* Chạy validation từng field */
+    scwin._clearFieldErrors();
+    var vfn = scwin._validateFileName(fileNm);
+    var vst = scwin._validateStatus(status);
+    var vtg = scwin._validateTags(tags);
+
+    var hasError = false;
+    if (!vfn.ok) { scwin._showFieldError('inp_fileName',  vfn.msg); hasError = true; }
+    if (!vst.ok) { scwin._showFieldError('inp_status',    vst.msg); hasError = true; }
+    if (!vtg.ok) { scwin._showFieldError('inp_assetTags', vtg.msg); hasError = true; }
+    if (hasError) { return; }
+
+    if (!window.confirm('Bạn có chắc muốn lưu thay đổi?')) { return; }
     var idx = scwin._lastDetailRow;
     scwin._saveMetadata(idx);
     scwin._editMode = false;
@@ -553,12 +892,31 @@ scwin.btn_editTags_onclick = function () {
     if (popup) { popup.style.display = ''; }
 };
 
-/* Thu thập checkbox đã chọn, ghi vào inp_assetTags và đóng popup */
+/* Thu thập checkbox đã chọn; validate trước khi đóng popup */
 scwin.btn_confirmTags_onclick = function () {
     var checked = document.querySelectorAll('.dam-tag-popup-body input[type="checkbox"]:checked');
     var vals = [];
     for (var i = 0; i < checked.length; i++) { vals.push(checked[i].value); }
-    try { inp_assetTags.setValue(vals.join(',')); } catch(e) {}
+    var tagStr = vals.join(',');
+    var v = scwin._validateTags(tagStr);
+    if (!v.ok) {
+        /* Hiện lỗi bên trong popup thay vì đóng */
+        var errEl = document.getElementById('dam_tag_popup_err');
+        if (!errEl) {
+            errEl = document.createElement('p');
+            errEl.id = 'dam_tag_popup_err';
+            errEl.style.cssText = 'color:#ef4444;font-size:0.75rem;margin:0 0 0.5rem;font-weight:500;';
+            var foot = document.querySelector('.dam-tag-popup-foot');
+            if (foot) { foot.parentNode.insertBefore(errEl, foot); }
+        }
+        errEl.textContent = v.msg;
+        return;
+    }
+    /* Xóa lỗi cũ nếu có, đóng popup, cập nhật field */
+    var errOld = document.getElementById('dam_tag_popup_err');
+    if (errOld) { errOld.textContent = ''; }
+    try { inp_assetTags.setValue(tagStr); } catch(e) {}
+    scwin._clearFieldError('inp_assetTags');
     var popup = document.querySelector('.dam-tag-popup');
     if (popup) { popup.style.display = 'none'; }
 };
@@ -618,7 +976,7 @@ scwin.btn_cancelTags_onclick = function () {
                                 <xf:trigger id="btn_filesSort" class="dam-icon-btn" title="Sort">
                                     <xf:label><![CDATA[↑↓]]></xf:label>
                                 </xf:trigger>
-                                <xf:trigger id="btn_filesFilter" class="dam-icon-btn" title="Filter">
+                                <xf:trigger id="btn_filesFilter" class="dam-icon-btn" title="Filter" ev:onclick="scwin.btn_filesFilter_onclick">
                                     <xf:label><![CDATA[▽]]></xf:label>
                                 </xf:trigger>
                             </xf:group>

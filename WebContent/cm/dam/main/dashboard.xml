@@ -215,6 +215,7 @@ scwin.drawTrendChart = function(dataList) {
 
 /* Callback nhận dữ liệu thống kê, cập nhật 3 stat card */
 scwin.sbm_getStats_submitdone = function (e) {
+    scwin._hideApiError();
     var response = (e && e.responseJSON) ? e.responseJSON : {};
     var body = response.body ? response.body : response;
     var payload = body.dma_stats ? body.dma_stats : {};
@@ -275,8 +276,23 @@ scwin._renderRecentUploads = function (rows) {
     }
 };
 
-/* Xử lý lỗi API — silent, WebSquare đã hiển thị thông báo lỗi */
+/* Hiển thị error banner khi ít nhất 1 API call thất bại */
+scwin._showApiError = function (msg) {
+    var banner = document.getElementById('dam_api_error_banner');
+    if (!banner) { return; }
+    banner.textContent = '⚠ ' + (msg || 'Không thể tải dữ liệu. Vui lòng thử lại sau.');
+    banner.style.display = 'block';
+};
+
+/* Ẩn error banner khi tất cả API đã load thành công */
+scwin._hideApiError = function () {
+    var banner = document.getElementById('dam_api_error_banner');
+    if (banner) { banner.style.display = 'none'; }
+};
+
+/* Xử lý lỗi submission — hiển thị banner thay vì im lặng */
 scwin.sbm_submiterror = function () {
+    scwin._showApiError('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
 };
 
 /* Format số thành chuỗi "X.XX GB" */
@@ -306,6 +322,9 @@ setTimeout(function () {
     <body ev:onpageload="scwin.onpageload">
         <xf:group class="dam-page">
             <w2:textbox id="txt_pageTitle" class="dam-title" label="Dashboard"></w2:textbox>
+
+            <!-- API error banner — ẩn mặc định, hiện khi sbm_submiterror -->
+            <xf:group id="dam_api_error_banner" class="dam-api-error-banner" style="display:none;"></xf:group>
 
             <xf:group class="dam-dashboard-grid">
                 <!-- Stats -->
