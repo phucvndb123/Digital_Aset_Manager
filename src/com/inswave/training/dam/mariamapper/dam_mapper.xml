@@ -100,13 +100,13 @@
 
 	<update id="updateAsset">
 		UPDATE DAM_ASSET
-		SET FILE_NM = #{vo.fileNm},
-		     FILE_TYPE = #{vo.fileType},
-		    FILE_SIZE = #{vo.fileSize},
-		    OWNER_NM = COALESCE(#{vo.ownerNm}, OWNER_NM),
-		    TAGS = #{vo.tags},
-		    DESCRIPTION = #{vo.description},
-		    STATUS = #{vo.status}
+		SET FILE_NM     = #{vo.fileNm},
+		    FILE_TYPE   = COALESCE(#{vo.fileType},    FILE_TYPE),
+		    FILE_SIZE   = COALESCE(#{vo.fileSize},    FILE_SIZE),
+		    OWNER_NM    = COALESCE(#{vo.ownerNm},     OWNER_NM),
+		    TAGS        = #{vo.tags},
+		    DESCRIPTION = COALESCE(#{vo.description}, DESCRIPTION),
+		    STATUS      = #{vo.status}
 		WHERE ASSET_ID = #{vo.assetId}
 	</update>
 
