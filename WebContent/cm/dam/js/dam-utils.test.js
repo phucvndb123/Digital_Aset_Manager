@@ -1,15 +1,15 @@
 /**
  * dam-utils.test.js
- * Chạy bằng Node.js:  node dam-utils.test.js
- * Hoặc mở dam-utils.test.html trong trình duyệt.
+ * Run with Node.js:
+ *   node WebContent\cm\dam\js\dam-utils.test.js
  */
 
 'use strict';
 
 var DamUtils = require('./dam-utils');
 
-/* ─── Minimal test runner ───────────────────────────────────────────── */
-var _pass = 0, _fail = 0;
+var _pass = 0;
+var _fail = 0;
 
 function describe(suiteName, fn) {
     console.log('\n  ' + suiteName);
@@ -19,10 +19,10 @@ function describe(suiteName, fn) {
 function it(label, fn) {
     try {
         fn();
-        console.log('    \x1b[32m✓\x1b[0m ' + label);
+        console.log('    PASS ' + label);
         _pass++;
     } catch (e) {
-        console.error('    \x1b[31m✗\x1b[0m ' + label);
+        console.error('    FAIL ' + label);
         console.error('      ' + e.message);
         _fail++;
     }
@@ -36,7 +36,8 @@ function expect(actual) {
             }
         },
         toEqual: function (expected) {
-            var a = JSON.stringify(actual), b = JSON.stringify(expected);
+            var a = JSON.stringify(actual);
+            var b = JSON.stringify(expected);
             if (a !== b) { throw new Error('Expected ' + b + ' but got ' + a); }
         },
         toContain: function (sub) {
@@ -53,7 +54,6 @@ function expect(actual) {
     };
 }
 
-/* ─── formatFileSize ─────────────────────────────────────────────────── */
 describe('formatFileSize', function () {
     it('returns "-" for 0', function () {
         expect(DamUtils.formatFileSize(0)).toBe('-');
@@ -62,7 +62,7 @@ describe('formatFileSize', function () {
         expect(DamUtils.formatFileSize(null)).toBe('-');
         expect(DamUtils.formatFileSize(undefined)).toBe('-');
     });
-    it('formats bytes < 1024 as B', function () {
+    it('formats bytes under 1024 as B', function () {
         expect(DamUtils.formatFileSize(512)).toBe('512 B');
     });
     it('formats KB correctly', function () {
@@ -79,23 +79,20 @@ describe('formatFileSize', function () {
     });
 });
 
-/* ─── buildFolderRows ────────────────────────────────────────────────── */
 describe('buildFolderRows', function () {
     it('returns [] for empty input', function () {
         expect(DamUtils.buildFolderRows([])).toEqual([]);
         expect(DamUtils.buildFolderRows(null)).toEqual([]);
     });
-
     it('single root folder has DEPTH "1"', function () {
         var result = DamUtils.buildFolderRows([{ folderId: 1, folderNm: 'Root', parentFolderId: null }]);
         expect(result.length).toBe(1);
         expect(result[0].DEPTH).toBe('1');
         expect(result[0].FOLDER_NM).toBe('Root');
     });
-
     it('child folder has DEPTH "2"', function () {
         var folders = [
-            { folderId: 1, folderNm: 'Root',  parentFolderId: null },
+            { folderId: 1, folderNm: 'Root', parentFolderId: null },
             { folderId: 2, folderNm: 'Child', parentFolderId: 1 }
         ];
         var result = DamUtils.buildFolderRows(folders);
@@ -104,8 +101,7 @@ describe('buildFolderRows', function () {
         expect(result[1].FOLDER_NM).toBe('Child');
         expect(result[1].DEPTH).toBe('2');
     });
-
-    it('preserves DFS order (parent before children)', function () {
+    it('preserves DFS order with parent before children', function () {
         var folders = [
             { folderId: 3, folderNm: 'C', parentFolderId: 1 },
             { folderId: 1, folderNm: 'A', parentFolderId: null },
@@ -114,7 +110,6 @@ describe('buildFolderRows', function () {
         var result = DamUtils.buildFolderRows(folders);
         expect(result[0].FOLDER_NM).toBe('A');
     });
-
     it('FOLDER_ID is always a string', function () {
         var result = DamUtils.buildFolderRows([{ folderId: 42, folderNm: 'X', parentFolderId: null }]);
         expect(typeof result[0].FOLDER_ID).toBe('string');
@@ -122,7 +117,21 @@ describe('buildFolderRows', function () {
     });
 });
 
-/* ─── validateFileName ───────────────────────────────────────────────── */
+describe('common messages', function () {
+    it('resolves message keys with placeholders', function () {
+        var message = DamUtils.getMessage('dam.asset.submitSuccess', ['v1.2']);
+        expect(message).toContain('v1.2');
+        expect(message).toContain('Submitted successfully');
+    });
+    it('uses English validation messages', function () {
+        expect(DamUtils.getMessage('dam.validation.required', ['File Name'])).toBe('Please enter File Name.');
+        expect(DamUtils.getMessage('dam.confirm.saveChanges')).toBe('Are you sure you want to save these changes?');
+    });
+    it('formats raw messages with placeholders', function () {
+        expect(DamUtils.resolveMessage('Hello {0}', ['DAM'])).toBe('Hello DAM');
+    });
+});
+
 describe('validateFileName', function () {
     it('fails for empty string', function () {
         expect(DamUtils.validateFileName('').ok).toBeFalsy();
@@ -148,12 +157,11 @@ describe('validateFileName', function () {
     it('passes for normal file name', function () {
         expect(DamUtils.validateFileName('my-document_v2.pdf').ok).toBeTruthy();
     });
-    it('passes for Vietnamese characters', function () {
-        expect(DamUtils.validateFileName('tài liệu quan trọng.docx').ok).toBeTruthy();
+    it('passes for user-friendly file names', function () {
+        expect(DamUtils.validateFileName('tai-lieu-quan-trong.docx').ok).toBeTruthy();
     });
 });
 
-/* ─── validateStatus ─────────────────────────────────────────────────── */
 describe('validateStatus', function () {
     it('fails for empty string', function () {
         expect(DamUtils.validateStatus('').ok).toBeFalsy();
@@ -166,23 +174,22 @@ describe('validateStatus', function () {
     });
     it('fails for unknown status', function () {
         expect(DamUtils.validateStatus('Active').ok).toBeFalsy();
-        expect(DamUtils.validateStatus('DRAFT').ok).toBeFalsy();   // case-sensitive
+        expect(DamUtils.validateStatus('DRAFT').ok).toBeFalsy();
     });
 });
 
-/* ─── validateTags ───────────────────────────────────────────────────── */
 describe('validateTags', function () {
-    it('passes for empty/null (tags are optional)', function () {
+    it('passes for empty/null because tags are optional', function () {
         expect(DamUtils.validateTags('').ok).toBeTruthy();
         expect(DamUtils.validateTags(null).ok).toBeTruthy();
         expect(DamUtils.validateTags('   ').ok).toBeTruthy();
     });
     it('passes for 10 tags', function () {
-        var tags = ['A','B','C','D','E','F','G','H','I','J'].join(',');
+        var tags = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'].join(',');
         expect(DamUtils.validateTags(tags).ok).toBeTruthy();
     });
     it('fails for 11 tags', function () {
-        var tags = ['A','B','C','D','E','F','G','H','I','J','K'].join(',');
+        var tags = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'].join(',');
         expect(DamUtils.validateTags(tags).ok).toBeFalsy();
         expect(DamUtils.validateTags(tags).msg).toContain('10');
     });
@@ -197,16 +204,6 @@ describe('validateTags', function () {
     it('trims whitespace around tags before counting', function () {
         var tags = ' A , B , C ';
         expect(DamUtils.validateTags(tags).ok).toBeTruthy();
-    });
-});
-
-/* ─── makeFileIcon ───────────────────────────────────────────────────── */
-describe('common messages', function () {
-    it('resolves message keys with placeholders', function () {
-        expect(DamUtils.getMessage('dam.asset.submitSuccess', ['v1.2'])).toContain('v1.2');
-    });
-    it('formats raw messages with placeholders', function () {
-        expect(DamUtils.resolveMessage('Hello {0}', ['DAM'])).toBe('Hello DAM');
     });
 });
 
@@ -302,18 +299,17 @@ describe('makeFileIcon', function () {
         var url = decodeURIComponent(DamUtils.makeFileIcon('XYZ').split(',')[1]);
         expect(url).toContain('#546e7a');
     });
-    it('uses correct color for PDF (red)', function () {
+    it('uses correct color for PDF red', function () {
         var url = decodeURIComponent(DamUtils.makeFileIcon('PDF').split(',')[1]);
         expect(url).toContain('#f44336');
     });
-    it('uses correct color for MP3 (indigo)', function () {
+    it('uses correct color for MP3 indigo', function () {
         var url = decodeURIComponent(DamUtils.makeFileIcon('MP3').split(',')[1]);
         expect(url).toContain('#3949ab');
     });
 });
 
-/* ─── Summary ────────────────────────────────────────────────────────── */
-console.log('\n' + '─'.repeat(40));
-console.log('  Tests: ' + (_pass + _fail) + '  |  Pass: \x1b[32m' + _pass + '\x1b[0m  |  Fail: \x1b[31m' + _fail + '\x1b[0m');
-console.log('─'.repeat(40));
+console.log('\n' + '-'.repeat(40));
+console.log('  Tests: ' + (_pass + _fail) + '  |  Pass: ' + _pass + '  |  Fail: ' + _fail);
+console.log('-'.repeat(40));
 if (_fail > 0) { process.exit(1); }
