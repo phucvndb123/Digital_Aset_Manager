@@ -18,6 +18,9 @@ import com.inswave.training.dam.vo.DamVersionVo;
 import com.inswave.training.dam.service.DamService;
 import com.inswave.training.dam.vo.DamAssetVo;
 
+/**
+ * Handles Digital Asset Manager API requests for folder, asset, and version data.
+ */
 @Controller
 @RequestMapping("/api/dam")
 public class DamController {
@@ -25,18 +28,27 @@ public class DamController {
 	@Autowired
 	private DamService damService;
 
+	/**
+	 * Returns the full folder tree used by WebSquare tree views.
+	 */
 	@GetMapping("/folders")
 	@ResponseBody
 	public ResponseEntity<?> getFolders() {
 		return ResponseEntity.ok(damService.getFolderTree());
 	}
 
+	/**
+	 * Returns assets that belong to a selected folder.
+	 */
 	@GetMapping("/assets")
 	@ResponseBody
 	public ResponseEntity<?> getAssets(@RequestParam("folderId") Integer folderId) {
 		return ResponseEntity.ok(damService.getAssetsByFolderId(folderId));
 	}
 
+	/**
+	 * Returns an asset together with its version history.
+	 */
 	@GetMapping("/assets/{assetId}")
 	@ResponseBody
 	public ResponseEntity<?> getAsset(@PathVariable("assetId") Integer assetId) {
@@ -46,6 +58,9 @@ public class DamController {
 		return ResponseEntity.ok(result);
 	}
 
+	/**
+	 * Updates editable metadata for an asset.
+	 */
 	@PutMapping("/assets/{assetId}")
 	@ResponseBody
 	public ResponseEntity<?> updateAsset(@PathVariable("assetId") Integer assetId,
@@ -56,6 +71,10 @@ public class DamController {
 		result.put("updated", updated);
 		return ResponseEntity.ok(result);
 	}
+
+	/**
+	 * Updates an existing version row for the selected asset.
+	 */
 	@PutMapping("/assets/{assetId}/versions/{verId}")
 	@ResponseBody
 	public ResponseEntity<?> updateVersion(@PathVariable("assetId") Integer assetId,
@@ -68,6 +87,10 @@ public class DamController {
 		result.put("updated", updated);
 		return ResponseEntity.ok(result);
 	}
+
+	/**
+	 * Creates a new version row for the selected asset.
+	 */
 	@PostMapping("/assets/{assetId}/versions")
 	@ResponseBody
 	public ResponseEntity<?> createVersion(@PathVariable("assetId") Integer assetId,

@@ -201,6 +201,91 @@ describe('validateTags', function () {
 });
 
 /* ─── makeFileIcon ───────────────────────────────────────────────────── */
+describe('common messages', function () {
+    it('resolves message keys with placeholders', function () {
+        expect(DamUtils.getMessage('dam.asset.submitSuccess', ['v1.2'])).toContain('v1.2');
+    });
+    it('formats raw messages with placeholders', function () {
+        expect(DamUtils.resolveMessage('Hello {0}', ['DAM'])).toBe('Hello DAM');
+    });
+});
+
+describe('validateNumber', function () {
+    it('passes integer and decimal input', function () {
+        expect(DamUtils.validateNumber('1,234.5', { label: 'Amount' }).ok).toBeTruthy();
+        expect(DamUtils.parseNumber('1,234.5')).toBe(1234.5);
+    });
+    it('fails non-numeric input', function () {
+        expect(DamUtils.validateNumber('12MB', { label: 'Amount' }).ok).toBeFalsy();
+    });
+    it('enforces min and max', function () {
+        expect(DamUtils.validateNumber('5', { min: 6, label: 'Amount' }).ok).toBeFalsy();
+        expect(DamUtils.validateNumber('10', { max: 9, label: 'Amount' }).ok).toBeFalsy();
+    });
+});
+
+describe('validateEmail', function () {
+    it('passes valid email input', function () {
+        expect(DamUtils.validateEmail('user@example.com').ok).toBeTruthy();
+    });
+    it('fails invalid email input', function () {
+        expect(DamUtils.validateEmail('user@example').ok).toBeFalsy();
+    });
+});
+
+describe('validatePhone', function () {
+    it('passes local and international phone input', function () {
+        expect(DamUtils.validatePhone('0912 345 678').ok).toBeTruthy();
+        expect(DamUtils.validatePhone('+84 912 345 678').ok).toBeTruthy();
+    });
+    it('fails invalid phone input', function () {
+        expect(DamUtils.validatePhone('abc-123').ok).toBeFalsy();
+    });
+});
+
+describe('parseFileSize and validateFileSize', function () {
+    it('parses formatted file size text to bytes', function () {
+        expect(DamUtils.parseFileSize('1.5 KB')).toBe(1536);
+        expect(DamUtils.parseFileSize('2 MB')).toBe(2097152);
+    });
+    it('fails invalid file size text', function () {
+        expect(DamUtils.validateFileSize('size-large').ok).toBeFalsy();
+    });
+});
+
+describe('validateAssetMetadata', function () {
+    it('passes a valid asset payload', function () {
+        var result = DamUtils.validateAssetMetadata({
+            fileNm: 'campaign.pdf',
+            fileType: 'Documents',
+            tags: 'Marketing,Campaign',
+            status: 'Draft',
+            fileSize: '2 MB',
+            ownerNm: 'Admin'
+        }, { requireChangeLog: true, changeLog: 'Initial upload' });
+        expect(result.ok).toBeTruthy();
+    });
+    it('collects field-level errors', function () {
+        var result = DamUtils.validateAssetMetadata({
+            fileNm: '',
+            fileType: 'Unknown',
+            tags: 'A,B,C,D,E,F,G,H,I,J,K',
+            status: 'Bad',
+            fileSize: 'large'
+        }, { requireChangeLog: true, changeLog: '' });
+        expect(result.ok).toBeFalsy();
+        expect(result.errors.length > 1).toBeTruthy();
+    });
+});
+
+describe('validateVersionPayload', function () {
+    it('requires version number, contributors, and change notes', function () {
+        var result = DamUtils.validateVersionPayload({ verNo: '', ownerNm: '', changeLog: '' });
+        expect(result.ok).toBeFalsy();
+        expect(result.errors.length).toBe(3);
+    });
+});
+
 describe('makeFileIcon', function () {
     it('returns a data URL starting with data:image/svg+xml', function () {
         expect(DamUtils.makeFileIcon('PDF')).toContain('data:image/svg+xml');

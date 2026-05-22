@@ -1,5 +1,8 @@
 package com.inswave.training.dam.vo;
 
+/**
+ * Value object for audit log entries related to asset access or changes.
+ */
 public class DamAccessLogVo {
 	private Integer logId;
 	private Integer assetId;

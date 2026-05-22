@@ -15,12 +15,18 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+/**
+ * Exposes a lightweight database health endpoint for local verification.
+ */
 @Controller
 public class DbHealthController {
 
 	@Autowired
 	private DataSource dataSource;
 
+	/**
+	 * Executes a minimal query and returns database connection metadata.
+	 */
 	@GetMapping("/health/db")
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> dbHealth() {

@@ -1,5 +1,8 @@
 package com.inswave.training.dam.vo;
 
+/**
+ * Value object representing editable metadata for a digital asset.
+ */
 public class DamAssetVo {
 	private Integer assetId;
 	private String fileNm;

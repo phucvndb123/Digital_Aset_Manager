@@ -11,6 +11,7 @@
     	<commonPath>
     		<path src="/cm/js/commonGlobal.js"/>
     		<path src="/cm/js/commonScope.js"/>
+            <path src="/cm/dam/js/dam-utils.js"/>
     		<path src="/cm/js/main.js"/>
     	</commonPath>
     </wpack>

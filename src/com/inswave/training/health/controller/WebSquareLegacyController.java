@@ -14,12 +14,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+/**
+ * Provides legacy WebSquare endpoints expected by the runtime bootstrap scripts.
+ */
 @Controller
 public class WebSquareLegacyController {
 
     private static final String DEFAULT_LANG = "ko";
     private static final String DEFAULT_PATTERN = "yyyyMMddHHmmssSSS";
 
+    /**
+     * Returns the current server time formatted with a WebSquare-compatible pattern.
+     */
     @GetMapping({"/serverTime.wq", "/websquare/serverTime.wq"})
     public ResponseEntity<String> getServerTime(
             @RequestParam(name = "pattern", defaultValue = DEFAULT_PATTERN) String pattern) {
@@ -33,6 +39,9 @@ public class WebSquareLegacyController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(now);
     }
 
+    /**
+     * Returns the current JVM timezone offset in minutes.
+     */
     @GetMapping({"/serverTimeZone.wq", "/websquare/serverTimeZone.wq"})
     public ResponseEntity<String> getServerTimeZone() {
         int offsetMinutes = ZoneId.systemDefault().getRules()
@@ -40,6 +49,9 @@ public class WebSquareLegacyController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(String.valueOf(offsetMinutes));
     }
 
+    /**
+     * Redirects legacy language-pack requests to the bundled WebSquare language files.
+     */
     @GetMapping({"/message/getLanguagePack/{lang}", "/langpack/{lang}.js"})
     public ResponseEntity<Void> getLanguagePack(@PathVariable String lang) {
         String resolved = (lang != null && (lang.equalsIgnoreCase("en") || lang.equalsIgnoreCase("ko") || lang.equalsIgnoreCase("ch")))

@@ -80,6 +80,75 @@
                 scwin.loadFolders();
             };
 
+            /**
+             * Return the shared DAM utility object when common JS has loaded.
+             */
+            scwin._du = function() {
+                return window.DamUtils || null;
+            };
+
+            /**
+             * Show a user-facing alert through the common message layer.
+             */
+            scwin._alert = function(messageKey, args) {
+                var du = scwin._du();
+                if (du && du.showAlert) { return du.showAlert(messageKey, args); }
+                alert(du && du.resolveMessage ? du.resolveMessage(messageKey, args) : messageKey);
+                return Promise.resolve(true);
+            };
+
+            /**
+             * Show a user-facing confirm through the common message layer.
+             */
+            scwin._confirm = function(messageKey, args) {
+                var du = scwin._du();
+                if (du && du.showConfirm) { return du.showConfirm(messageKey, args); }
+                return Promise.resolve(confirm(du && du.resolveMessage ? du.resolveMessage(messageKey, args) : messageKey));
+            };
+
+            /**
+             * Show a lightweight toast when the operation does not need to block the user.
+             */
+            scwin._toast = function(messageKey, args, type) {
+                var du = scwin._du();
+                if (du && du.showToast) { du.showToast(messageKey, args, type || "info"); }
+            };
+
+            /**
+             * Show the first validation error returned by common validators.
+             */
+            scwin._showValidationResult = function(result, mapOverride) {
+                var du = scwin._du();
+                if (!result || result.ok || !result.errors || !result.errors.length) {
+                    if (du && du.clearFieldError) { du.clearFieldError(); }
+                    return true;
+                }
+                var fieldMap = {
+                    fileNm: "inpFileNm",
+                    description: "taDescription",
+                    fileType: "inpFileType",
+                    tags: "inpTags",
+                    status: "selAssetData",
+                    fileSize: "inpFileSize",
+                    ownerNm: "inpOwnerNm",
+                    changeLog: "taChangeLog"
+                };
+                if (mapOverride) {
+                    for (var key in mapOverride) {
+                        if (mapOverride.hasOwnProperty(key)) { fieldMap[key] = mapOverride[key]; }
+                    }
+                }
+                if (du && du.clearFieldError && du.showFieldError) {
+                    du.clearFieldError();
+                    for (var i = 0; i < result.errors.length; i++) {
+                        var fieldId = fieldMap[result.errors[i].field];
+                        if (fieldId) { du.showFieldError(fieldId, result.errors[i].msg); }
+                    }
+                }
+                scwin._alert(result.errors[0].msg);
+                return false;
+            };
+
             scwin.callApi = function(url, callback) {
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", url, true);
@@ -113,13 +182,14 @@
                     if (xhr.status >= 200 && xhr.status < 300) {
                         callback(JSON.parse(xhr.responseText || "{}"));
                     } else {
-                        alert("Lưu thất bại. HTTP " + xhr.status);
+                        scwin._alert("dam.api.saveFailed", [xhr.status]);
                     }
                 };
                 xhr.send(JSON.stringify(payload || {}));
             };
 
             scwin._formatFileSize = function(bytes) {
+                if (window.DamUtils && DamUtils.formatFileSize) { return DamUtils.formatFileSize(bytes); }
                 var n = parseFloat(bytes || 0);
                 if (!n || n <= 0) { return "0 B"; }
                 var kb = 1024;
@@ -142,6 +212,7 @@
             };
 
             scwin._makeFileIcon = function(ext) {
+                if (window.DamUtils && DamUtils.makeFileIcon) { return DamUtils.makeFileIcon(ext); }
                 var color = scwin._FILE_ICON_COLORS[ext] || "#546e7a";
                 var lbl = String(ext || "FILE").substring(0, 4);
                 var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40">'
@@ -191,7 +262,9 @@
             scwin._STATUS_VALUES = {
                 "Draft": true,
                 "Published": true,
-                "Archived": true
+                "Archived": true,
+                "Review": true,
+                "Inactive": true
             };
 
             scwin._normalizeEnumValue = function(value, allowed, fallback) {
@@ -320,6 +393,7 @@
 	            };
 
 	            scwin._buildFolderRows = function(folders) {
+	                if (window.DamUtils && DamUtils.buildFolderRows) { return DamUtils.buildFolderRows(folders || []); }
 	                var list = folders || [];
 	                var childrenMap = {};
 	                var allIds = {};
@@ -711,18 +785,20 @@
 
             scwin.btn_asset_detail_submit_onclick = function() {
                 var assetId = scwin._selectedAssetId;
+                var du = scwin._du();
                 if (!assetId) {
-                    alert("Vui lòng chọn asset trước khi submit.");
+                    scwin._alert("dam.asset.selectRequired");
                     return;
                 }
                 scwin._syncDetailFromForm();
                   var changeLog = scwin._getDetailValue("taChangeLog", "CHANGE_LOG").trim();
                 if (!changeLog) {
-                    alert("Change Log là bắt buộc để tạo version mới.");
+                    scwin._alert("dam.asset.changeLogRequired");
                     return;
                 }
                 var rawFileSize = scwin._getDetailValue("inpFileSize", "FILE_SIZE");
-                var parsedFileSize = parseInt(String(rawFileSize || "").replace(/[^0-9]/g, ""), 10);
+                var parsedFileSize = du && du.parseFileSize ? du.parseFileSize(rawFileSize)
+                    : parseInt(String(rawFileSize || "").replace(/[^0-9]/g, ""), 10);
                 var assetPayload = {
                     fileNm: scwin._getDetailValue("inpFileNm", "FILE_NM"),
                     description: scwin._getDetailValue("taDescription", "DESCRIPTION"),
@@ -732,8 +808,27 @@
                     ownerNm: scwin._getDetailValue("inpOwnerNm", "OWNER_NM"),
                     fileSize: isNaN(parsedFileSize) ? null : parsedFileSize
                 };
+                var validationPayload = {
+                    fileNm: assetPayload.fileNm,
+                    description: assetPayload.description,
+                    fileType: assetPayload.fileType,
+                    tags: assetPayload.tags,
+                    status: assetPayload.status,
+                    ownerNm: assetPayload.ownerNm,
+                    fileSize: rawFileSize
+                };
+                var validation = du && du.validateAssetMetadata
+                    ? du.validateAssetMetadata(validationPayload, { requireChangeLog: true, changeLog: changeLog })
+                    : { ok: true, errors: [] };
+                if (!scwin._showValidationResult(validation, {
+                    verNo: "inpFbVerNo",
+                    ownerNm: "inpFbContributors",
+                    changeLog: "taFbChangeNotes"
+                })) { return; }
 
-                scwin.callApi("/api/dam/assets/" + encodeURIComponent(assetId), function(res) {
+                scwin._confirm("dam.confirm.submitVersion").then(function(ok) {
+                    if (!ok) { return; }
+                    scwin.callApi("/api/dam/assets/" + encodeURIComponent(assetId), function(res) {
                     var latest = scwin._pickLatestVersion(res && res.versions ? res.versions : []);
                     var nextVer = scwin._nextVersionNo(latest ? latest.verNo : "v1.0");
                     if (assetPayload.fileSize == null) { assetPayload.fileSize = (res && res.asset && res.asset.fileSize != null) ? res.asset.fileSize : 0; }
@@ -747,17 +842,18 @@
 
                     scwin.callApiJson("PUT", "/api/dam/assets/" + encodeURIComponent(assetId), assetPayload, function(updateRes) {
                         if (!updateRes || Number(updateRes.updated || 0) < 1) {
-                            alert("Không cập nhật được thông tin asset trong DB.");
+                            scwin._alert("dam.asset.updateFailed");
                             return;
                         }
                         scwin.callApiJson("POST", "/api/dam/assets/" + encodeURIComponent(assetId) + "/versions", versionPayload, function(createRes) {
                             if (!createRes || Number(createRes.created || 0) < 1) {
-                                alert("Không tạo được version mới trong DB.");
+                                scwin._alert("dam.asset.versionCreateFailed");
                                 return;
                             }
-                            alert("Submit thành công. Đã cập nhật asset và tạo version mới: " + nextVer);
+                            scwin._toast("dam.asset.submitSuccess", [nextVer], "success");
                             scwin.loadAssetsByFolder();
                         });
+                    });
                     });
                 });
             };
@@ -772,7 +868,7 @@
                 var assetId = dmPopup.get("ASSET_ID");
                 var verId = dmPopup.get("VER_ID");
                 if (!assetId) {
-                    alert("Không tìm thấy asset để cập nhật.");
+                    scwin._alert("dam.version.assetMissing");
                     return;
                 }
                 var payload = {
@@ -783,15 +879,21 @@
                     fileUrl: dmPopup.get("FILE_NM") || ""
                 };
                    if (!verId) {
-                    alert("Không có version trong database để cập nhật.");
+                    scwin._alert("dam.version.notFound");
                     return;
                 }
+                var du = scwin._du();
+                var validation = du && du.validateVersionPayload ? du.validateVersionPayload(payload) : { ok: true, errors: [] };
+                if (!scwin._showValidationResult(validation)) { return; }
                 var method = "PUT";
                 var url = "/api/dam/assets/" + encodeURIComponent(assetId) + "/versions/" + encodeURIComponent(verId);
-                scwin.callApiJson(method, url, payload, function() {
-                    alert("Cập nhật version thành công.");
-                    scwin.btn_fb_cancel_onclick();
-                    scwin.loadAssetsByFolder();
+                scwin._confirm("dam.confirm.updateVersion").then(function(ok) {
+                    if (!ok) { return; }
+                    scwin.callApiJson(method, url, payload, function() {
+                        scwin._toast("dam.version.updateSuccess", [], "success");
+                        scwin.btn_fb_cancel_onclick();
+                        scwin.loadAssetsByFolder();
+                    });
                 });
             };
         ]]></script>
@@ -901,6 +1003,8 @@
 								<option value="Draft">Draft</option>
 								<option value="Published">Published</option>
 								<option value="Archived">Archived</option>
+								<option value="Review">Review</option>
+								<option value="Inactive">Inactive</option>
 							</select>
 						</xf:group>
 						<xf:group class="dam-form-row">
@@ -934,12 +1038,12 @@
 		<w2:textbox id="txt_fb_popup_title" class="dam-fb-upload-modal-title" label="Version Info" tagname="h2" style=";margin-left:3%;padding-bottom:2%;padding-top:2%;"/>
 					</xf:group>
 					<xf:group class="dam-fb-upload-modal-body" style="padding:16px 20px;">
-						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Version Number (DB)" /><xf:input ref="data:dmPopup/NEW_VER_NO" readOnly="true" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Version Number (DB)" /><xf:input id="inpFbVerNo" ref="data:dmPopup/NEW_VER_NO" readOnly="true" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="File Name" /><xf:input ref="data:dmPopup/FILE_NM" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="File Type" /><xf:input ref="data:dmPopup/POPUP_FILE_TYPE" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="File Extension" /><xf:input ref="data:dmPopup/POPUP_FILE_EXT" readOnly="true" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
-						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Contributors" /><xf:input ref="data:dmPopup/CONTRIBUTORS" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
-						<xf:group class="dam-fb-upload-row dam-fb-upload-row-notes"><w2:textbox class="dam-fb-upload-label" label="Change Notes" /><xf:textarea ref="data:dmPopup/CHANGE_NOTES" class="dam-fb-popup-textarea" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row"><w2:textbox class="dam-fb-upload-label" label="Contributors" /><xf:input id="inpFbContributors" ref="data:dmPopup/CONTRIBUTORS" class="dam-fb-popup-input" style="width:100%;" /></xf:group>
+						<xf:group class="dam-fb-upload-row dam-fb-upload-row-notes"><w2:textbox class="dam-fb-upload-label" label="Change Notes" /><xf:textarea id="taFbChangeNotes" ref="data:dmPopup/CHANGE_NOTES" class="dam-fb-popup-textarea" style="width:100%;" /></xf:group>
 						<xf:group class="dam-fb-upload-row dam-fb-upload-preview-block"><w2:textbox class="dam-fb-upload-label" label="Preview" /><xf:group class="dam-fb-upload-preview-wrap" style="margin-top:6px;border:1px solid #d1d5db;border-radius:8px;background:#f8fafc;padding:12px;height:180px;display:flex;align-items:center;justify-content:center;overflow:hidden;"><xf:image id="img_fb_popup_preview" class="dam-fb-upload-preview-img" src="/cm/dam/images/preview/document.svg" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;" /></xf:group></xf:group>
 					</xf:group>
 					<xf:group class="dam-fb-upload-modal-footer" style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px 16px;border-top:1px solid #e5e7eb;"><xf:trigger class="dam-fb-btn-secondary" ev:onclick="scwin.btn_fb_cancel_onclick" style=";background-color:red;border:1px solid #d1d5db;width:5em;"><xf:label>Cancel</xf:label></xf:trigger><xf:trigger class="dam-fb-btn-primary" ev:onclick="scwin.btn_fb_submit_onclick" style=";background-color:green;border:1px solid #d1d5db;width:5em;"><xf:label>Submit</xf:label></xf:trigger></xf:group>

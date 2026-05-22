@@ -62,6 +62,7 @@ scwin._loadData = function () {
 
 /* Chuyển flat list API thành rows có DEPTH cho w2:treeview dataType="listed" */
 scwin._buildFolderRows = function (folders) {
+    if (window.DamUtils && DamUtils.buildFolderRows) { return DamUtils.buildFolderRows(folders || []); }
     var childrenMap = {};
     var allIds = {};
     for (var i = 0; i < folders.length; i++) { allIds[folders[i].folderId] = true; }
@@ -104,6 +105,7 @@ scwin._loadFolders = function () {
 
 /* Format kích thước file; dùng com.num.formatByte nếu có, fallback thủ công nếu com chưa load */
 scwin._formatFileSize = function (bytes) {
+    if (window.DamUtils && DamUtils.formatFileSize) { return DamUtils.formatFileSize(bytes); }
     if (!bytes || Number(bytes) === 0) { return '-'; }
     try {
         if (window.com && com.num && com.num.formatByte) {
@@ -195,6 +197,7 @@ scwin._FILE_ICON_COLORS = {
 
 /* Tạo data URL SVG hình tài liệu (thân trắng, góc gấp, band màu dưới + chữ extension) */
 scwin._makeFileIcon = function (ext) {
+    if (window.DamUtils && DamUtils.makeFileIcon) { return DamUtils.makeFileIcon(ext); }
     var color = scwin._FILE_ICON_COLORS[ext] || '#546e7a';
     var lbl   = ext.substring(0, 4);
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40">'
@@ -636,6 +639,17 @@ scwin._clearFieldError = function (fieldId) {
 };
 
 /* Gắn real-time validation: File Name blur + Status change + Tags qua popup */
+/* Delegate validation and inline errors to common DAM utilities when loaded. */
+if (window.DamUtils) {
+    scwin._VALID_STATUSES = DamUtils.VALID_STATUSES;
+    scwin._validateFileName = function (name) { return DamUtils.validateFileName(name); };
+    scwin._validateStatus = function (status) { return DamUtils.validateStatus(status); };
+    scwin._validateTags = function (tagStr) { return DamUtils.validateTags(tagStr); };
+    scwin._showFieldError = function (fieldId, msg) { DamUtils.showFieldError(fieldId, msg); };
+    scwin._clearFieldErrors = function () { DamUtils.clearFieldError(); };
+    scwin._clearFieldError = function (fieldId) { DamUtils.clearFieldError(fieldId); };
+}
+
 scwin._attachLiveValidation = function () {
     /* File Name — xóa error khi user bắt đầu nhập, kiểm tra khi rời field */
     try {
@@ -756,6 +770,10 @@ scwin._generateChangeLog = function (original, fileNm, tags, status) {
 
 /* Hiện toast nhỏ ở góc phải dưới sau khi save + tạo version thành công */
 scwin._showSaveToast = function (msg) {
+    if (window.DamUtils && DamUtils.showToast) {
+        DamUtils.showToast('Saved & versioned: ' + msg, [], 'success');
+        return;
+    }
     var old = document.getElementById('dam_save_toast');
     if (old && old.parentNode) { old.parentNode.removeChild(old); }
     var t = document.createElement('div');
@@ -845,13 +863,22 @@ scwin.btn_edit_onclick = function () {
     if (!vtg.ok) { scwin._showFieldError('inp_assetTags', vtg.msg); hasError = true; }
     if (hasError) { return; }
 
-    if (!window.confirm('Bạn có chắc muốn lưu thay đổi?')) { return; }
     var idx = scwin._lastDetailRow;
-    scwin._saveMetadata(idx);
-    scwin._editMode = false;
-    scwin._lastDetailRow = -1;
-    scwin._setEditFields(false);
-    scwin._applyDetail(idx);
+    var saveConfirmed = function () {
+        scwin._saveMetadata(idx);
+        scwin._editMode = false;
+        scwin._lastDetailRow = -1;
+        scwin._setEditFields(false);
+        scwin._applyDetail(idx);
+    };
+    if (window.DamUtils && DamUtils.showConfirm) {
+        DamUtils.showConfirm('dam.confirm.saveChanges').then(function (ok) {
+            if (ok) { saveConfirmed(); }
+        });
+        return;
+    }
+    if (!window.confirm('Bạn có chắc muốn lưu thay đổi?')) { return; }
+    saveConfirmed();
 };
 
 /* Danh sách 21 tag có thể chọn cho asset */
