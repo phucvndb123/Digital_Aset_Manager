@@ -116,3 +116,147 @@
    background: #0f172a !important;
    border-color: #0f172a !important;
 }
+
+/* ----- Shared validation states ----- */
+.dam-form-input.is-invalid,
+.dam-form-input input.is-invalid,
+.dam-form-input textarea.is-invalid,
+.dam-native-select.is-invalid,
+.is-invalid input,
+.is-invalid textarea,
+.is-invalid select {
+   border-color: #ef4444 !important;
+   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12) !important;
+}
+
+.dam-field-error {
+   display: block !important;
+   color: #dc2626 !important;
+   font-size: 0.72rem !important;
+   font-weight: 600 !important;
+   line-height: 1.4 !important;
+   margin-top: 0.2rem !important;
+}
+
+textarea.dam-form-input,
+.dam-form-input textarea {
+   min-height: 4.5rem !important;
+   resize: vertical !important;
+}
+
+/* ----- Shared alert/confirm message ----- */
+.dam-message-backdrop {
+   position: fixed !important;
+   inset: 0 !important;
+   z-index: 10000 !important;
+   display: flex !important;
+   align-items: center !important;
+   justify-content: center !important;
+   padding: 1.5rem !important;
+   background: rgba(15, 23, 42, 0.42) !important;
+   box-sizing: border-box !important;
+}
+
+.dam-message-dialog {
+   width: min(420px, 100%) !important;
+   border: 1px solid #dbe3ef !important;
+   border-radius: 0.5rem !important;
+   background: #ffffff !important;
+   box-shadow: 0 22px 48px rgba(15, 23, 42, 0.24) !important;
+   overflow: hidden !important;
+}
+
+.dam-message-head {
+   padding: 1rem 1.1rem 0.75rem !important;
+   border-bottom: 1px solid #e2e8f0 !important;
+   background: #f8fafc !important;
+}
+
+.dam-message-title {
+   color: #0f172a !important;
+   font-size: 0.98rem !important;
+   font-weight: 800 !important;
+   line-height: 1.35 !important;
+}
+
+.dam-message-body {
+   color: #334155 !important;
+   font-size: 0.88rem !important;
+   line-height: 1.55 !important;
+   padding: 1rem 1.1rem !important;
+   white-space: pre-wrap !important;
+}
+
+.dam-message-foot {
+   display: flex !important;
+   justify-content: flex-end !important;
+   gap: 0.5rem !important;
+   padding: 0.85rem 1.1rem 1rem !important;
+   border-top: 1px solid #f1f5f9 !important;
+}
+
+.dam-message-btn {
+   min-width: 5.25rem !important;
+   height: 2.15rem !important;
+   padding: 0 0.85rem !important;
+   border-radius: 0.375rem !important;
+   border: 1px solid transparent !important;
+   cursor: pointer !important;
+   font-size: 0.82rem !important;
+   font-weight: 700 !important;
+}
+
+.dam-message-btn-cancel {
+   background: #ffffff !important;
+   color: #334155 !important;
+   border-color: #cbd5e1 !important;
+}
+
+.dam-message-btn-cancel:hover {
+   background: #f8fafc !important;
+}
+
+.dam-message-btn-ok {
+   background: #1f2733 !important;
+   color: #ffffff !important;
+   border-color: #1f2733 !important;
+}
+
+.dam-message-btn-ok:hover {
+   background: #0f172a !important;
+}
+
+/* ----- Shared toast ----- */
+.dam-toast-container {
+   position: fixed !important;
+   right: 1.25rem !important;
+   bottom: 1.25rem !important;
+   z-index: 10001 !important;
+   display: flex !important;
+   flex-direction: column !important;
+   gap: 0.5rem !important;
+   width: min(360px, calc(100vw - 2.5rem)) !important;
+}
+
+.dam-toast {
+   border: 1px solid #dbe3ef !important;
+   border-left-width: 4px !important;
+   border-radius: 0.5rem !important;
+   background: #ffffff !important;
+   color: #1f2733 !important;
+   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16) !important;
+   padding: 0.75rem 0.9rem !important;
+   font-size: 0.82rem !important;
+   line-height: 1.45 !important;
+   transition: opacity 0.2s ease, transform 0.2s ease !important;
+}
+
+.dam-toast-success { border-left-color: #16a34a !important; }
+.dam-toast-warning { border-left-color: #f59e0b !important; }
+.dam-toast-error   { border-left-color: #dc2626 !important; }
+.dam-toast-info    { border-left-color: #2563eb !important; }
+
+.dam-toast.is-leaving {
+   opacity: 0 !important;
+   transform: translateY(0.5rem) !important;
+}

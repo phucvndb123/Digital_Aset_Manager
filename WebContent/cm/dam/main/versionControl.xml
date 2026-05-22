@@ -54,6 +54,7 @@ scwin._loadData = function () {
 };
 
 scwin._buildFolderRows = function (folders) {
+    if (window.DamUtils && DamUtils.buildFolderRows) { return DamUtils.buildFolderRows(folders || []); }
     var childrenMap = {};
     var allIds = {};
     for (var i = 0; i < folders.length; i++) { allIds[folders[i].folderId] = true; }
@@ -94,6 +95,7 @@ scwin._loadFolders = function () {
 };
 
 scwin._formatFileSize = function (bytes) {
+    if (window.DamUtils && DamUtils.formatFileSize) { return DamUtils.formatFileSize(bytes); }
     var n = Number(bytes);
     if (!bytes || isNaN(n) || n === 0) { return '-'; }
     if (n >= 1073741824) { return (n / 1073741824).toFixed(2) + ' GB'; }
@@ -220,6 +222,7 @@ scwin._FILE_ICON_COLORS = {
 };
 
 scwin._makeFileIcon = function (ext) {
+    if (window.DamUtils && DamUtils.makeFileIcon) { return DamUtils.makeFileIcon(ext); }
     var color = scwin._FILE_ICON_COLORS[ext] || "#546e7a";
     var lbl = String(ext || "FILE").substring(0, 4);
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40">'

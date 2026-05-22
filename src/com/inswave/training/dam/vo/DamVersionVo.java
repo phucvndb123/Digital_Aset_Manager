@@ -1,5 +1,8 @@
 package com.inswave.training.dam.vo;
 
+/**
+ * Value object representing one saved version of a digital asset.
+ */
 public class DamVersionVo {
 	private Integer verId;
 	private Integer assetId;

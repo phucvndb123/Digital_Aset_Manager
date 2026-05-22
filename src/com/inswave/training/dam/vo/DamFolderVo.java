@@ -1,5 +1,8 @@
 package com.inswave.training.dam.vo;
 
+/**
+ * Value object representing one folder node in the DAM folder tree.
+ */
 public class DamFolderVo {
 	private Integer folderId;
 	private String folderNm;

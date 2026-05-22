@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.inswave.training.dam.common.ApiResponse;
 import com.inswave.training.dam.service.DashboardService;
 
+/**
+ * Provides dashboard metrics and chart data in the response shape expected by WebSquare.
+ */
 @Controller
 @RequestMapping("/api/dashboard")
 public class DashboardController {
@@ -19,6 +22,9 @@ public class DashboardController {
     @Autowired
     private DashboardService dashboardService;
 
+    /**
+     * Returns top-level file, storage, and upload counters.
+     */
     @PostMapping("/getStats")
     @ResponseBody
     public Map<String, Object> getStats() {
@@ -27,6 +33,9 @@ public class DashboardController {
         return ApiResponse.success(body);
     }
 
+    /**
+     * Returns file-type distribution rows for the donut chart.
+     */
     @PostMapping("/getDistribution")
     @ResponseBody
     public Map<String, Object> getDistribution() {
@@ -35,6 +44,9 @@ public class DashboardController {
         return ApiResponse.success(body);
     }
 
+    /**
+     * Returns monthly storage trend rows for the line chart.
+     */
     @PostMapping("/getStorageTrend")
     @ResponseBody
     public Map<String, Object> getStorageTrend() {
@@ -43,6 +55,9 @@ public class DashboardController {
         return ApiResponse.success(body);
     }
 
+    /**
+     * Returns recent upload rows for the dashboard activity list.
+     */
     @PostMapping("/getRecentUploads")
     @ResponseBody
     public Map<String, Object> getRecentUploads() {

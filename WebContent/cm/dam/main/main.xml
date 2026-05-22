@@ -84,7 +84,13 @@ scwin.btn_navVersionControl_onclick = function () { scwin._setActive(3); };
 
 /* Mở hộp thoại xác nhận trước khi đăng xuất */
 scwin.btn_logout_onclick = function () {
-    com.win.confirm('Bạn có chắc muốn đăng xuất?', 'scwin._onConfirmLogout');
+    if (window.DamUtils && DamUtils.showConfirm) {
+        DamUtils.showConfirm('Bạn có chắc muốn đăng xuất?').then(function (ok) {
+            scwin._onConfirmLogout(ok);
+        });
+        return;
+    }
+    scwin._onConfirmLogout(confirm('Bạn có chắc muốn đăng xuất?'));
 };
 
 /* Callback xử lý kết quả xác nhận đăng xuất */
